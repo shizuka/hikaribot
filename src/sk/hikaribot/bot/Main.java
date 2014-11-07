@@ -34,21 +34,20 @@
  */
 package sk.hikaribot.bot;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.Properties;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jibble.pircbot.IrcException;
 
 /**
  * Executable.
  */
 public class Main {
 
-  private static final Logger log = LogManager.getLogger("Bot");
+  private static final Logger log = LogManager.getLogger("Exe");
   private static final String[] reqProps = {
     "nick",
     "owner",
@@ -71,6 +70,7 @@ public class Main {
 
     Properties config = new Properties();
 
+    /* Sanity check the config file */
     try {
 
       FileReader configFile = new FileReader(args[0]);
@@ -98,7 +98,21 @@ public class Main {
     } catch (MissingRequiredPropertyException ex) {
       log.fatal("Config file was missing property '" + ex.getMessage() + "'!");
       System.exit(1);
+    } /* end config file sanity checking */
+    
+    /* Initialize and Connect bot */
+    HikariBot bot = new HikariBot(config);
+    bot.setVerbose(true); //TODO config option to do it
+    try {
+      bot.connect(config.getProperty("server"));
+    } catch (IOException | IrcException ex) {
+      log.fatal("Failed to connect! ", ex);
     }
+    log.info("Connected!");
+    bot.setMode(bot.getNick(), "+B");
+    log.info("Set my bot flag!");
+    bot.joinChannel(config.getProperty("chan"));
+    log.info("Joined " + config.getProperty("chan"));
   }
 
   private static class MissingRequiredPropertyException extends Exception {
