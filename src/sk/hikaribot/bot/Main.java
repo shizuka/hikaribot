@@ -73,7 +73,7 @@ public class Main {
     /* Sanity check the config file */
     try {
 
-      FileReader configFile = new FileReader(args[0]);
+      FileReader configFile = new FileReader("config.properties");
       //TODO - assume config.properties is in pwd with twitter4j.properties?
       config.load(configFile);
       log.info("Config file loaded, sanity checking...");
@@ -88,9 +88,6 @@ public class Main {
 
     } catch (FileNotFoundException ex) {
       log.fatal("I couldn't find the config file!");
-      System.exit(1);
-    } catch (ArrayIndexOutOfBoundsException ex) {
-      log.fatal("You must pass me a config properties file as an argument!");
       System.exit(1);
     } catch (IOException ex) {
       log.fatal("I couldn't read the config file!");
