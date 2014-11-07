@@ -61,8 +61,7 @@ public class Main {
    */
   public static void main(String[] args) {
     /**
-     * Read in IRC configuration and connect. Expecting one argument, the path
-     * to a config properties file
+     * Read in IRC configuration and connect.
      */
 
     java.util.Date date = new java.util.Date();
@@ -75,7 +74,7 @@ public class Main {
     try {
 
       FileReader configFile = new FileReader("config.properties");
-      //TODO - assume config.properties is in pwd with twitter4j.properties?
+      //assume config.properties is in pwd with twitter4j.properties?
       config.load(configFile);
       log.info("Config file loaded, sanity checking...");
 
@@ -97,7 +96,7 @@ public class Main {
       log.fatal("Config file was missing property '" + ex.getMessage() + "'!");
       System.exit(1);
     } /* end config file sanity checking */
-    
+
     /* Initialize and Connect bot */
     HikariBot bot = new HikariBot(config);
     bot.setVerbose(true); //TODO config option to do it
