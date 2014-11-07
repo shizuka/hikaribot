@@ -1,5 +1,5 @@
 /*
- * Hikari IRC Bot - Main
+ * Hikari IRC Bot - Executable
  * Shizuka Kamishima - 2014-11-06
  * Executable
  */
@@ -32,19 +32,79 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-
 package sk.hikaribot.bot;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.Properties;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * Executable.
  */
 public class Main {
 
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String[] args) {
-      //must be fed location of configuration file
-    }
+  private static final Logger log = LogManager.getLogger("Bot");
+  private static final String[] reqProps = {
+    "nick",
+    "owner",
+    "chan",
+    "server"
+  };
 
+  /**
+   * @param args the command line arguments
+   */
+  public static void main(String[] args) {
+    /**
+     * Read in IRC configuration and connect. Expecting one argument, the path
+     * to a config properties file
+     */
+
+    java.util.Date date = new java.util.Date();
+    String startTimestamp = date.toString();
+    log.info("Hikari started - " + startTimestamp);
+
+    Properties config = new Properties();
+
+    try {
+
+      FileReader configFile = new FileReader(args[0]);
+      //TODO - assume config.properties is in pwd with twitter4j.properties?
+      config.load(configFile);
+      log.info("Config file loaded, sanity checking...");
+
+      for (String prop : reqProps) {
+        if (config.getProperty(prop) == null) {
+          throw new MissingRequiredPropertyException(prop);
+        }
+        log.trace(prop + " : " + config.getProperty(prop));
+      }
+      log.info("Config file is sane");
+
+    } catch (FileNotFoundException ex) {
+      log.fatal("I couldn't find the config file!");
+      System.exit(1);
+    } catch (ArrayIndexOutOfBoundsException ex) {
+      log.fatal("You must pass me a config properties file as an argument!");
+      System.exit(1);
+    } catch (IOException ex) {
+      log.fatal("I couldn't read the config file!");
+      System.exit(1);
+    } catch (MissingRequiredPropertyException ex) {
+      log.fatal("Config file was missing property '" + ex.getMessage() + "'!");
+      System.exit(1);
+    }
+  }
+
+  private static class MissingRequiredPropertyException extends Exception {
+
+    public MissingRequiredPropertyException(String prop) {
+      super(prop);
+    }
+  }
 }
