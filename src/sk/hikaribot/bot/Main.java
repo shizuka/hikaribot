@@ -50,6 +50,7 @@ public class Main {
   private static final Logger log = LogManager.getLogger("Exe");
   private static final String[] reqProps = {
     "nick",
+    "pass",
     "owner",
     "chan",
     "server"
