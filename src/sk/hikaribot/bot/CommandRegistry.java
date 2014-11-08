@@ -11,15 +11,17 @@ import org.jibble.pircbot.PircBot;
 import sk.hikaribot.cmd.Command;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import sk.hikaribot.cmd.Command.ImproperArgsException;
 
 /**
  * Maintains registry of commands, methods to get command handler.
  */
 public class CommandRegistry {
-  
+
   protected static final Logger log = LogManager.getLogger("Cmd");
 
   private final PircBot bot;
+  private final String delimiter;
 
   private final List<Command> commands;
 
@@ -28,8 +30,9 @@ public class CommandRegistry {
    *
    * @param bot the bot that commands will act upon
    */
-  public CommandRegistry(PircBot bot) {
+  public CommandRegistry(PircBot bot, String delimiter) {
     this.bot = bot;
+    this.delimiter = delimiter;
     this.commands = new ArrayList();
   }
 
@@ -39,7 +42,7 @@ public class CommandRegistry {
    * @param command
    */
   public void add(Command command) {
-    command.setBot(bot);
+    command.setup(bot, this);
     commands.add(command);
   }
 
@@ -53,26 +56,34 @@ public class CommandRegistry {
    * @throws sk.hikaribot.bot.CommandRegistry.CommandNotFoundException
    * @throws sk.hikaribot.bot.CommandRegistry.InsufficientPermissionsException
    */
-  public void execute(String channel, String sender, int senderPerm, String message) throws CommandNotFoundException, InsufficientPermissionsException {
-    Command cmd = this.getCommand(message);
-    if (cmd == null) {
-      throw new CommandNotFoundException(message);
-    }
+  public void execute(String channel, String sender, int senderPerm, String message) throws CommandNotFoundException, InsufficientPermissionsException, ImproperArgsException {
+    String[] args = message.split(" ", 2);
+    Command cmd = this.getCommand(args[0].substring(1));
     if (senderPerm < cmd.reqPerm) {
       throw new InsufficientPermissionsException(message);
     }
-    cmd.execute(channel, sender, message);
+    try {
+      if (args.length > 1) {
+        cmd.execute(channel, sender, args[1]);
+      } else {
+        cmd.execute(channel, sender);
+      }
+    } catch (ImproperArgsException ex) {
+      this.getCommand("help").execute(channel, sender, args[0]);
+    }
   }
 
-  private Command getCommand(String message) {
-    String command = message.split(" ")[0]; //get first word, the command, remainder of message is parameter(s)
-    command = command.substring(1); //strip the delimiter
+  public Command getCommand(String command) throws CommandNotFoundException {
     for (Command cmdObj : commands) {
       if (cmdObj.name.equals(command)) {
         return cmdObj;
       }
     }
-    return null;
+    throw new CommandNotFoundException(command);
+  }
+
+  public String getDelimiter() {
+    return this.delimiter;
   }
 
   public static class CommandNotFoundException extends Exception {
