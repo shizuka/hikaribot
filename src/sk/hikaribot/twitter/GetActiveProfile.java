@@ -7,6 +7,9 @@ package sk.hikaribot.twitter;
 
 import sk.hikaribot.cmd.Command;
 
+/**
+ * Prints active Twitter profile.
+ */
 public class GetActiveProfile extends Command {
 
   public GetActiveProfile() {

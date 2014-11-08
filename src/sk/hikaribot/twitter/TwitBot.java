@@ -85,6 +85,7 @@ public class TwitBot {
 
   /**
    * Loads access token for given @profile.
+   *
    * @param profile
    * @return name of profile just activated
    * @throws IOException If token file could not be read
@@ -115,7 +116,7 @@ public class TwitBot {
     activeTwitName = user.getScreenName();
     log.info("Active Twitter profile set to @" + activeTwitName + " id:" + activeTwitId);
   }
-  
+
   public void clearAccessToken() {
     twitter.setOAuthAccessToken(null);
     activeTwitId = -1;
@@ -220,7 +221,7 @@ public class TwitBot {
       log.error("Token request cancelled");
     }
   }
-  
+
   public Status tweet(String message) throws NoProfileLoadedException, TweetTooLongException, TwitterException {
     if (activeTwitId == -1) {
       throw new NoProfileLoadedException();

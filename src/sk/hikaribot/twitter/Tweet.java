@@ -10,6 +10,9 @@ import sk.hikaribot.cmd.Command;
 import twitter4j.Status;
 import twitter4j.TwitterException;
 
+/**
+ * Posts a tweet as the active profile.
+ */
 public class Tweet extends Command {
 
   public Tweet() {

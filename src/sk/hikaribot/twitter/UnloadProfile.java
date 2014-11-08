@@ -7,6 +7,9 @@ package sk.hikaribot.twitter;
 
 import sk.hikaribot.cmd.Command;
 
+/**
+ * Unloads active Twitter profile.
+ */
 public class UnloadProfile extends Command {
 
   public UnloadProfile() {
