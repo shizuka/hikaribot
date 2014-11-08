@@ -215,14 +215,14 @@ public class TwitBot {
     }
   }
   
-  public void tweet(String message) throws NoProfileLoadedException, TweetTooLongException, TwitterException {
+  public Status tweet(String message) throws NoProfileLoadedException, TweetTooLongException, TwitterException {
     if (activeTwitId == -1) {
       throw new NoProfileLoadedException();
     }
     if (message.length() >= 140) {
       throw new TweetTooLongException();
     }
-    twitter.updateStatus(message);
+    return twitter.updateStatus(message);
   }
 
   public static class NoProfileLoadedException extends Exception {

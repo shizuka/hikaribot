@@ -5,7 +5,9 @@
  */
 package sk.hikaribot.twitter;
 
+import org.jibble.pircbot.Colors;
 import sk.hikaribot.cmd.Command;
+import twitter4j.Status;
 import twitter4j.TwitterException;
 
 public class Tweet extends Command {
@@ -22,7 +24,9 @@ public class Tweet extends Command {
   public void execute(String channel, String sender, String params) throws ImproperArgsException {
     TwitBot twit = bot.getTwitBot();
     try {
-      twit.tweet(params);
+      Status tweet = twit.tweet(params);
+      bot.sendMessage(channel, Colors.BLUE + "TWEET @" + twit.getActiveTwitName() + ": "
+              + Colors.NORMAL + "https://twitter.com/" + twit.getActiveTwitName() + "/status/" + tweet.getId());
     } catch (TwitBot.NoProfileLoadedException ex) {
       bot.sendMessage(channel, sender + ": No profile loaded!");
     } catch (TwitBot.TweetTooLongException ex) {
