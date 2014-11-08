@@ -46,6 +46,7 @@ public class HikariBot extends PircBot {
     cmdRegistry.add(new sk.hikaribot.cmd.DoAction());
     cmdRegistry.add(new sk.hikaribot.cmd.Version());
     cmdRegistry.add(new sk.hikaribot.twitter.LoadProfile());
+    cmdRegistry.add(new sk.hikaribot.twitter.UnloadProfile());
     cmdRegistry.add(new sk.hikaribot.twitter.GetActiveProfile());
     cmdRegistry.add(new sk.hikaribot.twitter.RequestNewToken());
     cmdRegistry.add(new sk.hikaribot.twitter.ConfirmNewToken());
