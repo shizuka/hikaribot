@@ -15,7 +15,7 @@ public class Help extends Command {
     this.numArgs = 1;
     this.helpArgs.add("command");
     this.helpInfo = "gives help on commands";
-    this.reqPerm = 0; //anyone
+    this.reqPerm = 1; //voice and up
   }
 
   @Override
