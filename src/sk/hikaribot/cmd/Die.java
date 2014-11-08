@@ -12,15 +12,20 @@ public class Die extends Command {
 
   public Die() {
     this.name = "die";
-    this.arg = "";
-    this.info = "this kills the bot";
+    this.numArgs = 0;
+    this.help = "this kills the bot";
     this.reqPerm = 3;
   }
 
   @Override
-  public void execute(String channel, String sender, String message) {
+  public void execute(String channel, String sender) {
     log.info("DIE from " + sender);
     super.bot.quitServer("Killed by " + sender);
+  }
+
+  @Override
+  public void execute(String channel, String sender, String params) {
+    execute(channel, sender);
   }
 
 }

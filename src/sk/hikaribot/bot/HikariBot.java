@@ -9,6 +9,7 @@ import java.util.Properties;
 import org.jibble.pircbot.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import sk.hikaribot.cmd.Command;
 
 /**
  * Class description
@@ -17,39 +18,42 @@ public class HikariBot extends PircBot {
 
   private static final Logger log = LogManager.getLogger("Bot");
   private final Properties config;
-  private final CommandRegistry cmdRegistry = new CommandRegistry(this);
+  protected final CommandRegistry cmdRegistry;
 
   public HikariBot(Properties config) {
     this.config = config;
     this.setName(config.getProperty("nick"));
+    this.cmdRegistry = new CommandRegistry(this, config.getProperty("delimiter"));
     /* register commands */
     cmdRegistry.add(new sk.hikaribot.cmd.Help());
     cmdRegistry.add(new sk.hikaribot.cmd.Die());
   }
 
   private void command(String channel, String sender, String message) {
-    int permission;
-    User invoker = this.getUser(channel, sender);
-    if (invoker.equals(config.getProperty("owner"))) {
-      permission = 3; //owner
-    } else if (invoker.isOp()) {
-      permission = 2; //channel operator
-    } else if (invoker.hasVoice()) {
-      permission = 1; //is voiced
-    } else {
-      permission = 0; //normal user
-    }
-    //TODO - 0-banned 3-superuser 4-owner
-    //maintain access lists of superusers and banned users
-
     try {
+      int permission;
+      User invoker = this.getUser(channel, sender);
+      if (invoker.equals(config.getProperty("owner"))) {
+        permission = 3; //owner
+      } else if (invoker.isOp()) {
+        permission = 2; //channel operator
+      } else if (invoker.hasVoice()) {
+        permission = 1; //is voiced
+      } else {
+        permission = 0; //normal user
+      }
       cmdRegistry.execute(channel, sender, permission, message);
     } catch (CommandRegistry.CommandNotFoundException ex) {
-      log.error("Command " + ex.getMessage() + " not found");
-      this.sendMessage(channel, sender + ": I couldn't find command '" + ex.getMessage() + "'");
+      if (this.getUser(channel, sender).isOp()) { //only 404 if it was an op
+        log.error("Command " + ex.getMessage() + " not found");
+        this.sendMessage(channel, sender + ": I couldn't find command '" + ex.getMessage() + "'");
+      }
     } catch (CommandRegistry.InsufficientPermissionsException ex) {
       log.error(sender + " has insufficient permissions to invoke " + ex.getMessage());
       this.sendMessage(channel, sender + ": You do not have permission to do that.");
+    } catch (Command.ImproperArgsException ex) {
+      log.fatal("This should have been caught by help!");
+      this.quitServer("Fatal exception");
     }
   }
 
@@ -91,7 +95,7 @@ public class HikariBot extends PircBot {
     log.info("Finished joining " + channel);
   }
 
-  private User getUser(String channel, String nick) {
+  public User getUser(String channel, String nick) {
     User[] users = this.getUsers(channel);
     for (User user : users) {
       if (user.equals(nick)) {
@@ -99,5 +103,9 @@ public class HikariBot extends PircBot {
       }
     }
     return null;
+  }
+
+  public CommandRegistry getCommandRegistry() {
+    return cmdRegistry;
   }
 }
