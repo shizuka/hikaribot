@@ -115,6 +115,12 @@ public class TwitBot {
     activeTwitName = user.getScreenName();
     log.info("Active Twitter profile set to @" + activeTwitName + " id:" + activeTwitId);
   }
+  
+  public void clearAccessToken() {
+    twitter.setOAuthAccessToken(null);
+    activeTwitId = -1;
+    activeTwitName = null;
+  }
 
   public static class TokenMismatchException extends Exception {
 
