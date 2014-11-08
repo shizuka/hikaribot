@@ -29,30 +29,23 @@ public class HikariBot extends PircBot {
     cmdRegistry.add(new sk.hikaribot.cmd.Die());
     cmdRegistry.add(new sk.hikaribot.cmd.Join());
     cmdRegistry.add(new sk.hikaribot.cmd.Part());
+    cmdRegistry.add(new sk.hikaribot.cmd.Say());
   }
 
   private void command(String channel, String sender, String message) {
+    int permission = this.getUserPermission(channel, sender);
     try {
-      int permission;
-      User invoker = this.getUser(channel, sender);
-      if (invoker.equals(config.getProperty("owner"))) {
-        permission = 3; //owner
-      } else if (invoker.isOp()) {
-        permission = 2; //channel operator
-      } else if (invoker.hasVoice()) {
-        permission = 1; //is voiced
-      } else {
-        permission = 0; //normal user
-      }
       cmdRegistry.execute(channel, sender, permission, message);
     } catch (CommandRegistry.CommandNotFoundException ex) {
-      if (this.getUser(channel, sender).isOp()) { //only 404 if it was an op
+      if (permission > 0) { //only 404 if it was an op
         log.error("Command " + ex.getMessage() + " not found");
         this.sendMessage(channel, sender + ": I couldn't find command '" + ex.getMessage() + "'");
       }
     } catch (CommandRegistry.InsufficientPermissionsException ex) {
-      log.error(sender + " has insufficient permissions to invoke " + ex.getMessage());
-      this.sendMessage(channel, sender + ": You do not have permission to do that.");
+      log.error(sender + " in " + channel + " has insufficient permissions to invoke " + ex.getMessage());
+      if (permission > 0) {
+        this.sendMessage(channel, sender + ": You do not have permission to do that.");
+      }
     } catch (Command.ImproperArgsException ex) {
       log.fatal("This should have been caught by help!");
       this.quitServer("Fatal exception");
@@ -109,5 +102,18 @@ public class HikariBot extends PircBot {
 
   public CommandRegistry getCommandRegistry() {
     return cmdRegistry;
+  }
+
+  public int getUserPermission(String channel, String nick) {
+    User user = this.getUser(channel, nick);
+    if (user.equals(config.getProperty("owner"))) {
+      return 3; //owner
+    } else if (user.isOp()) {
+      return 2; //channel operator
+    } else if (user.hasVoice()) {
+      return 1; //is voiced
+    } else {
+      return 0; //normal user
+    }
   }
 }
