@@ -9,6 +9,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Properties;
+import java.util.logging.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jibble.pircbot.PircBot;
@@ -35,7 +36,9 @@ public class TwitBot {
   private final Properties twitConfig;
 
   private String activeTwitName;
-  private int activeTwitId;
+  private long activeTwitId;
+  private RequestToken tempRequestToken;
+  private long tempRequestId;
 
   /**
    * Feed TwitBot its parent Bot and runtime properties.
@@ -52,20 +55,6 @@ public class TwitBot {
     twitter.setOAuthConsumer(twitConfig.getProperty("consumer.key"), twitConfig.getProperty("consumer.secret"));
   }
 
-  /**
-   * Sets the active AccessToken.
-   *
-   * @param profile
-   * @throws TokenMismatchException
-   * @throws IOException
-   * @throws sk.hikaribot.bot.Main.MissingRequiredPropertyException
-   */
-  public void setProfile(String profile) throws TokenMismatchException, IOException, Main.MissingRequiredPropertyException {
-    AccessToken token = this.loadAccessToken(profile); //will also set activeTwitName and activeTwitId
-    twitter.setOAuthAccessToken(token);
-    log.info("Active Twitter profile set to @" + activeTwitName + " id:" + activeTwitId);
-  }
-
   /* Bot dies if sanity check fails */
   private void sanityCheckToken(Properties props) throws Main.MissingRequiredPropertyException {
     for (String prop : reqTokenProps) {
@@ -76,13 +65,13 @@ public class TwitBot {
   }
 
   /* Writes AccessToken to @profile.properties */
-  private String storeAccessToken(int useId, AccessToken accessToken) throws IOException {
+  private String storeAccessToken(long userId, AccessToken accessToken) throws IOException {
     String name = accessToken.getScreenName();
     log.debug("Storing token for @" + accessToken.getScreenName());
     FileWriter proFile = new FileWriter("@" + name + ".properties");
     Properties props = new Properties();
     props.setProperty("accessToken.name", name);
-    props.setProperty("accessToken.id", Integer.toString(useId));
+    props.setProperty("accessToken.id", Long.toString(userId));
     props.setProperty("accessToken.token", accessToken.getToken());
     props.setProperty("accessToken.secret", accessToken.getTokenSecret());
     props.store(proFile, null);
@@ -90,8 +79,16 @@ public class TwitBot {
     return name;
   }
 
-  /* Reads AccessToken from @profile.properties */
-  private AccessToken loadAccessToken(String profile) throws IOException, TokenMismatchException, Main.MissingRequiredPropertyException {
+  /**
+   * Loads access token for given @profile.
+   * @param profile
+   * @return name of profile just activated
+   * @throws IOException If token file could not be read
+   * @throws TokenMismatchException If supplied name did not match stored name
+   * @throws Main.MissingRequiredPropertyException If token file was incomplete
+   * @throws TwitterException If something went wrong with Twitter
+   */
+  public String loadAccessToken(String profile) throws IOException, TokenMismatchException, Main.MissingRequiredPropertyException, TwitterException {
     log.debug("Loading token for @" + profile);
     FileReader proFile = new FileReader("@" + profile + ".properties");
     Properties props = new Properties();
@@ -99,13 +96,20 @@ public class TwitBot {
     if (!props.getProperty("accessToken.name").equals(profile)) { //no reason we should fetch @bar if we wanted @foo.properties
       throw new TokenMismatchException(profile, props.getProperty("accessToken.name"));
     }
-    sanityCheckToken(props); //throws MissingRequiredPropertyException
+    this.sanityCheckToken(props); //throws MissingRequiredPropertyException
     log.debug("Token for @" + profile + " is sane");
-    this.activeTwitName = props.getProperty("accessToken.name");
-    this.activeTwitId = Integer.parseInt(props.getProperty("accessToken.id"));
     String token = props.getProperty("accessToken.token");
     String tokenSecret = props.getProperty("accessToken.secret");
-    return new AccessToken(token, tokenSecret);
+    this.setAccessToken(new AccessToken(token, tokenSecret));
+    return twitter.verifyCredentials().getScreenName();
+  }
+
+  private void setAccessToken(AccessToken accessToken) throws TwitterException {
+    twitter.setOAuthAccessToken(accessToken);
+    User user = twitter.verifyCredentials();
+    activeTwitId = user.getId();
+    activeTwitName = user.getScreenName();
+    log.info("Active Twitter profile set to @" + activeTwitName + " id:" + activeTwitId);
   }
 
   public static class TokenMismatchException extends Exception {
@@ -120,8 +124,91 @@ public class TwitBot {
     return activeTwitName;
   }
 
-  public int getActiveTwitId() {
+  public long getActiveTwitId() {
     return activeTwitId;
+  }
+
+  public long getRequestId() {
+    return tempRequestId;
+  }
+
+  /**
+   * Generates a new requestToken. Starts request process
+   *
+   * @return authorization URL to direct user to
+   * @throws RequestCancelledException
+   * @throws RequestInProgressException
+   */
+  public String requestNewToken() throws RequestInProgressException, RequestCancelledException {
+    if (tempRequestToken == null) {
+      //we already have a request going
+      throw new RequestInProgressException();
+    }
+    try {
+      RequestToken requestToken = twitter.getOAuthRequestToken();
+      String authUrl = requestToken.getAuthorizationURL();
+      tempRequestToken = requestToken;
+      tempRequestId = requestToken.hashCode();
+      log.info("Request token " + tempRequestId + " was generated at: " + authUrl);
+      return authUrl;
+    } catch (TwitterException ex) {
+      cancelNewToken();
+      throw new RequestCancelledException();
+    }
+  }
+
+  /**
+   * Exchanges requestToken for accessToken given authorization PIN.
+   *
+   * @param pin the 7-digit number from the authorization process
+   * @return username we just authorized for
+   * @throws RequestCancelledException
+   */
+  public String confirmNewToken(String pin) throws RequestCancelledException {
+    try {
+      AccessToken accessToken = twitter.getOAuthAccessToken(tempRequestToken, pin);
+      //at this point we either threw TwitterException or have authorized
+      //and are now acting as this token
+      long userId = accessToken.getUserId();
+      String name = accessToken.getScreenName();
+      log.info("Successfully got accessToken for @" + name + " id:" + userId);
+      this.storeAccessToken(userId, accessToken);
+      this.setAccessToken(accessToken);
+      return twitter.verifyCredentials().getScreenName();
+    } catch (TwitterException ex) {
+      if (ex.getStatusCode() == 401) { //UNAUTHORIZED
+        log.error("PIN was not authorized");
+      } else {
+        log.error("Twitter exception");
+      }
+      cancelNewToken();
+      throw new RequestCancelledException(); //to be caught by command
+    } catch (IOException ex) {
+      java.util.logging.Logger.getLogger(TwitBot.class.getName()).log(Level.SEVERE, null, ex);
+    }
+    return null;
+  }
+
+  public void cancelNewToken() {
+    tempRequestId = 0;
+    tempRequestToken = null;
+    log.info("Token request cancelled");
+  }
+
+  public static class RequestInProgressException extends Exception {
+
+    public RequestInProgressException() {
+      super();
+      log.error("Token request already in progress");
+    }
+  }
+
+  private static class RequestCancelledException extends Exception {
+
+    public RequestCancelledException() {
+      super();
+      log.error("Token request cancelled");
+    }
   }
 
 }
