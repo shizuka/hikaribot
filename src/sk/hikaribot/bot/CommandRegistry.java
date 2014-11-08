@@ -69,7 +69,7 @@ public class CommandRegistry {
         cmd.execute(channel, sender);
       }
     } catch (ImproperArgsException ex) {
-      this.getCommand("help").execute(channel, sender, args[0]);
+      this.getCommand("help").execute(channel, sender, ex.getMessage());
     }
   }
 

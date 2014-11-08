@@ -22,7 +22,7 @@ public abstract class Command {
   protected static final Logger log = LogManager.getLogger("Cmd");
 
   /**
-   * Command name, 'foo' in ":foo [bar] - baz" help string.
+   * Command name, 'foo' in ":foo [bar] - baz" helpInfo string.
    */
   public String name = "command";
 
@@ -32,14 +32,14 @@ public abstract class Command {
   public int numArgs = 0;
 
   /**
-   * Command argument (if any), 'bar' in ":foo [bar] - baz" help string.
+   * Command argument (if any), 'bar' in ":foo [bar] - baz" helpInfo string.
    */
-  public List<String> args = new ArrayList();
+  public List<String> helpArgs = new ArrayList();
 
   /**
-   * Invocation help, 'baz' in ":foo [bar] - baz" help string.
+   * Invocation helpInfo, 'baz' in ":foo [bar] - baz" helpInfo string.
    */
-  public String help = "help not implemented for this command";
+  public String helpInfo = "help not implemented for this command";
 
   /**
    * Required permission level to invoke. Defaults to owner.
@@ -66,6 +66,12 @@ public abstract class Command {
     return this;
   }
 
+  /**
+   * Initialize this Command with bot and registry.
+   *
+   * @param bot PircBot we act on
+   * @param cmdRegistry Parent command registry
+   */
   public void setup(PircBot bot, CommandRegistry cmdRegistry) {
     this.bot = bot;
     this.cmdRegistry = cmdRegistry;
@@ -77,10 +83,18 @@ public abstract class Command {
    * @param channel channel command was sent from
    * @param sender
    * @param params
+   * @throws sk.hikaribot.cmd.Command.ImproperArgsException
    * @pahe line after stripping :command
    */
   public abstract void execute(String channel, String sender, String params) throws ImproperArgsException;
 
+  /**
+   * Self evident. Should be called only if invoker is allowed.
+   *
+   * @param channel
+   * @param sender
+   * @throws ImproperArgsException
+   */
   public abstract void execute(String channel, String sender) throws ImproperArgsException;
 
   public static class ImproperArgsException extends Exception {
