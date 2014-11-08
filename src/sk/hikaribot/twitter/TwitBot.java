@@ -51,6 +51,10 @@ public class TwitBot {
     AccessToken token;
     this.bot = bot;
     this.twitConfig = twitConfig;
+    this.activeTwitId = -1;
+    this.activeTwitName = null;
+    this.tempRequestId = -1;
+    this.tempRequestToken = null;
     twitter = TwitterFactory.getSingleton();
     twitter.setOAuthConsumer(twitConfig.getProperty("consumer.key"), twitConfig.getProperty("consumer.secret"));
   }
@@ -140,7 +144,7 @@ public class TwitBot {
    * @throws RequestInProgressException
    */
   public String requestNewToken() throws RequestInProgressException, RequestCancelledException {
-    if (tempRequestToken == null) {
+    if (tempRequestToken != null) {
       //we already have a request going
       throw new RequestInProgressException();
     }
@@ -190,7 +194,7 @@ public class TwitBot {
   }
 
   public void cancelNewToken() {
-    tempRequestId = 0;
+    tempRequestId = -1;
     tempRequestToken = null;
     log.info("Token request cancelled");
   }
@@ -203,11 +207,37 @@ public class TwitBot {
     }
   }
 
-  private static class RequestCancelledException extends Exception {
+  public static class RequestCancelledException extends Exception {
 
     public RequestCancelledException() {
       super();
       log.error("Token request cancelled");
+    }
+  }
+  
+  public void tweet(String message) throws NoProfileLoadedException, TweetTooLongException, TwitterException {
+    if (activeTwitId == -1) {
+      throw new NoProfileLoadedException();
+    }
+    if (message.length() >= 140) {
+      throw new TweetTooLongException();
+    }
+    twitter.updateStatus(message);
+  }
+
+  public static class NoProfileLoadedException extends Exception {
+
+    public NoProfileLoadedException() {
+      super();
+      log.error("No profile loaded");
+    }
+  }
+
+  public static class TweetTooLongException extends Exception {
+
+    public TweetTooLongException() {
+      super();
+      log.error("Tweet is too long");
     }
   }
 
