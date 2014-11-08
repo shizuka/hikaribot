@@ -5,6 +5,8 @@
  */
 package sk.hikaribot.cmd;
 
+import org.jibble.pircbot.Colors;
+
 /**
  * Kills the bot.
  */
@@ -19,8 +21,14 @@ public class Die extends Command {
 
   @Override
   public void execute(String channel, String sender) {
+    bot.sendMessage(channel, Colors.RED + "The wicked enchantress has cursed them all!");
     log.fatal("DIE requested by " + sender + " in " + channel);
-    super.bot.quitServer("Killed by " + sender);
+    try {
+      Thread.sleep(1000);
+    } catch (InterruptedException ex) {
+      log.error("Something threw an InterruptedException at me");
+    }
+    bot.quitServer("Killed by " + sender);
   }
 
   @Override
