@@ -3,9 +3,7 @@
  * Shizuka Kamishima - 2014-11-07
  * Licensed under bsd3
  */
-
 package sk.hikaribot.cmd;
-
 
 public class Version extends Command {
 

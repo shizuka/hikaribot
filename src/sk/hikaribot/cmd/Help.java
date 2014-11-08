@@ -34,10 +34,10 @@ public class Help extends Command {
         help += "- " + command.helpInfo;
       }
       bot.sendMessage(channel, help);
-      log.info("HELP " + cmdName + " from " + sender + " in " + channel);
+      log.info("HELP " + cmdName + " requested by " + sender + " in " + channel);
     } catch (sk.hikaribot.bot.CommandRegistry.CommandNotFoundException ex) {
       bot.sendMessage(channel, sender + ": Command '" + cmdName + "' was not found");
-      log.error("HELP " + cmdName + " from " + sender + " in " + channel + " was not found");
+      log.error("HELP " + cmdName + " requested by " + sender + " in " + channel + " was not found");
     }
   }
 

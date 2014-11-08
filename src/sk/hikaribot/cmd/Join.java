@@ -28,7 +28,7 @@ public class Join extends Command {
     }
     bot.joinChannel(params);
     bot.sendMessage(channel, sender + ": I have joined channel " + params);
-    log.info("JOIN " + params + " from " + sender + " in " + channel);
+    log.info("JOIN " + params + " requested by " + sender + " in " + channel);
   }
 
   @Override

@@ -3,9 +3,7 @@
  * Shizuka Kamishima - 2014-11-07
  * Licensed under bsd3
  */
-
 package sk.hikaribot.cmd;
-
 
 public class Say extends Command {
 
@@ -23,12 +21,12 @@ public class Say extends Command {
     if (params.split(" ").length < numArgs) {
       throw new ImproperArgsException("say");
     }
-    String[] args = params.split(" ",2);
+    String[] args = params.split(" ", 2);
     if (!args[0].startsWith("#")) {
       args[0] = "#" + args[0];
     }
     bot.sendMessage(args[0], args[1]);
-    log.info(sender + " in " + channel + " has me SAY to " + args[0] + ": " + args[1]);
+    log.info("SAY " + args[0] + " requested by " + sender + " in " + channel + ": " + args[1]);
   }
 
   @Override

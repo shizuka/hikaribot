@@ -27,8 +27,10 @@ public class Part extends Command {
       params = "#" + params;
     }
     bot.partChannel(params, "THE HORROR!");
-    if (!params.equals(channel)) { bot.sendMessage(channel, sender + ": I have parted channel " + params); }
-    log.info("PART " + params + " from " + sender + " in " + channel);
+    if (!params.equals(channel)) {
+      bot.sendMessage(channel, sender + ": I have parted channel " + params);
+    }
+    log.info("PART " + params + " requested by " + sender + " in " + channel);
   }
 
   @Override

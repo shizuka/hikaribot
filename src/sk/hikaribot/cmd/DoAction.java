@@ -24,12 +24,12 @@ public class DoAction extends Command {
     if (params.split(" ").length < numArgs) {
       throw new ImproperArgsException("do");
     }
-    String[] args = params.split(" ",2);
+    String[] args = params.split(" ", 2);
     if (!args[0].startsWith("#")) {
       args[0] = "#" + args[0];
     }
     bot.sendAction(args[0], args[1]);
-    log.info(sender + " in " + channel + " has me ACTION to " + args[0] + ": " + args[1]);
+    log.info("DO " + args[0] + " requested by " + sender + " in " + channel + ": " + args[1]);
   }
 
   @Override
