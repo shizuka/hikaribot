@@ -7,12 +7,15 @@ package sk.hikaribot.twitter;
 
 import sk.hikaribot.cmd.Command;
 
+/**
+ * Exchanges pending RequestToken for an AccessToken and stores.
+ */
 public class ConfirmNewToken extends Command {
 
   public ConfirmNewToken() {
     this.name = "twitConfirmReq";
     this.numArgs = 1;
-    this.helpArgs.add("pin");
+    this.helpArgs.add("PIN");
     this.helpInfo = "confirms authorization using pin";
     this.reqPerm = 2; //ops
   }

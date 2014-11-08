@@ -7,6 +7,9 @@ package sk.hikaribot.twitter;
 
 import sk.hikaribot.cmd.Command;
 
+/**
+ * Generates new requestToken URL for authorization.
+ */
 public class RequestNewToken extends Command {
 
   public RequestNewToken() {
@@ -28,11 +31,11 @@ public class RequestNewToken extends Command {
     try {
       authUrl = twit.requestNewToken();
       bot.sendMessage(sender, "Open the following URL and grant access to the target account: " + authUrl);
-      bot.sendMessage(sender, "Then use '" + cmdRegistry.getDelimiter() + "twitConfirmNew <PIN>' in " +
-              channel + " to complete the process, where <PIN> is the seven digit code given on that page");
+      bot.sendMessage(sender, "Then use '" + cmdRegistry.getDelimiter() + "twitConfirmNew <PIN>' in "
+              + channel + " to complete the process, where <PIN> is the seven digit code given on that page");
     } catch (TwitBot.RequestInProgressException ex) {
-      bot.sendMessage(channel, sender + ": A token request is already in progress. Please complete that request with '" +
-              cmdRegistry.getDelimiter() + "twitConfirmReq <PIN>' or '" + cmdRegistry.getDelimiter() + "twitCancelReq' to cancel");
+      bot.sendMessage(channel, sender + ": A token request is already in progress. Please complete that request with '"
+              + cmdRegistry.getDelimiter() + "twitConfirmReq <PIN>' or '" + cmdRegistry.getDelimiter() + "twitCancelReq' to cancel");
     } catch (TwitBot.RequestCancelledException ex) {
       bot.sendMessage(channel, sender + ": Token request was cancelled due to a Twitter error");
     }

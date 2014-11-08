@@ -10,6 +10,9 @@ import sk.hikaribot.bot.Main;
 import sk.hikaribot.cmd.Command;
 import twitter4j.TwitterException;
 
+/**
+ * Loads AccessToken profile to tweet as.
+ */
 public class LoadProfile extends Command {
 
   public LoadProfile() {
@@ -22,8 +25,8 @@ public class LoadProfile extends Command {
 
   @Override
   public void execute(String channel, String sender, String params) throws ImproperArgsException {
-    if (params.split(" ").length != numArgs ||
-            params.startsWith("@")) {
+    if (params.split(" ").length != numArgs
+            || params.startsWith("@")) {
       throw new ImproperArgsException(this.name);
     }
     log.info("LOADTWIT " + params + " requested by " + sender + " in " + channel);

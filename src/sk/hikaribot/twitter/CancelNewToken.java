@@ -7,6 +7,9 @@ package sk.hikaribot.twitter;
 
 import sk.hikaribot.cmd.Command;
 
+/**
+ * Cancels pending RequestToken process.
+ */
 public class CancelNewToken extends Command {
 
   public CancelNewToken() {
