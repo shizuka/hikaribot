@@ -26,10 +26,8 @@ public class Join extends Command {
     if (!params.startsWith("#")) {
       params = "#" + params;
     }
-
     bot.joinChannel(params);
-
-    bot.sendMessage(channel, "I want to join channel " + params + " but I don't know how yet D:");
+    bot.sendMessage(channel, sender + ": I have joined channel " + params);
     log.info("JOIN " + params + " from " + sender + " in " + channel);
   }
 
