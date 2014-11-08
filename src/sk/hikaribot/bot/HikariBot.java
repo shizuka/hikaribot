@@ -35,6 +35,7 @@ public class HikariBot extends PircBot {
     this.cmdRegistry = new CommandRegistry(this, config.getProperty("delimiter"));
     this.twit = new TwitBot(this, twitConfig);
     /* register commands */
+    log.debug("Registering commands...");
     cmdRegistry.add(new sk.hikaribot.cmd.Verbose());
     cmdRegistry.add(new sk.hikaribot.cmd.NoVerbose());
     cmdRegistry.add(new sk.hikaribot.cmd.Help());
@@ -44,6 +45,13 @@ public class HikariBot extends PircBot {
     cmdRegistry.add(new sk.hikaribot.cmd.Say());
     cmdRegistry.add(new sk.hikaribot.cmd.DoAction());
     cmdRegistry.add(new sk.hikaribot.cmd.Version());
+    cmdRegistry.add(new sk.hikaribot.twitter.LoadProfile());
+    cmdRegistry.add(new sk.hikaribot.twitter.GetActiveProfile());
+    cmdRegistry.add(new sk.hikaribot.twitter.RequestNewToken());
+    cmdRegistry.add(new sk.hikaribot.twitter.ConfirmNewToken());
+    cmdRegistry.add(new sk.hikaribot.twitter.CancelNewToken());
+    cmdRegistry.add(new sk.hikaribot.twitter.Tweet());
+    log.debug("Commands registered");
   }
 
   /**
@@ -156,5 +164,9 @@ public class HikariBot extends PircBot {
     } else {
       return 0; //normal user
     }
+  }
+  
+  public TwitBot getTwitBot() {
+    return twit;
   }
 }

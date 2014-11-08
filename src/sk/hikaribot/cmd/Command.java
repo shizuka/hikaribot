@@ -9,8 +9,8 @@ import java.util.ArrayList;
 import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jibble.pircbot.PircBot;
 import sk.hikaribot.bot.CommandRegistry;
+import sk.hikaribot.bot.HikariBot;
 
 /**
  * Defines a :command to be run from IRC.
@@ -52,7 +52,7 @@ public abstract class Command {
   /**
    * The bot we act on. Commands must super() pass the bot.
    */
-  protected PircBot bot;
+  protected HikariBot bot;
 
   protected CommandRegistry cmdRegistry;
 
@@ -69,10 +69,10 @@ public abstract class Command {
   /**
    * Initialize this Command with bot and registry.
    *
-   * @param bot PircBot we act on
+   * @param bot HikariBot we act on
    * @param cmdRegistry Parent command registry
    */
-  public void setup(PircBot bot, CommandRegistry cmdRegistry) {
+  public void setup(HikariBot bot, CommandRegistry cmdRegistry) {
     this.bot = bot;
     this.cmdRegistry = cmdRegistry;
   }

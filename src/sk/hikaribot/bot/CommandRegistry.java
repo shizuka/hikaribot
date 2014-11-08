@@ -20,7 +20,7 @@ public class CommandRegistry {
 
   protected static final Logger log = LogManager.getLogger("Cmd");
 
-  private final PircBot bot;
+  private final HikariBot bot;
   private final String delimiter;
 
   private final List<Command> commands;
@@ -31,7 +31,7 @@ public class CommandRegistry {
    * @param bot the bot that commands will act upon
    * @param delimiter the character that denotes a command
    */
-  public CommandRegistry(PircBot bot, String delimiter) {
+  public CommandRegistry(HikariBot bot, String delimiter) {
     this.bot = bot;
     this.delimiter = delimiter;
     this.commands = new ArrayList();
@@ -78,7 +78,7 @@ public class CommandRegistry {
 
   public Command getCommand(String command) throws CommandNotFoundException {
     for (Command cmdObj : commands) {
-      if (cmdObj.name.equals(command)) {
+      if (cmdObj.name.equalsIgnoreCase(command)) {
         return cmdObj;
       }
     }
