@@ -6,14 +6,14 @@
 package sk.hikaribot.cmd;
 
 /**
- * Kills the bot. From owner anywhere, :die
+ * Kills the bot.
  */
 public class Die extends Command {
 
   public Die() {
     this.name = "die";
     this.numArgs = 0;
-    this.help = "this kills the bot";
+    this.helpInfo = "this kills the bot";
     this.reqPerm = 3;
   }
 

@@ -5,18 +5,17 @@
  */
 package sk.hikaribot.cmd;
 
-import sk.hikaribot.bot.CommandRegistry;
-
 /**
- * Prints help string. From anyone in channel, :help [command]
+ * Prints helpInfo string.
  */
 public class Help extends Command {
 
   public Help() {
     this.name = "help";
-    this.args.add("command");
-    this.help = "gives help on commands";
-    this.reqPerm = 0;
+    this.numArgs = 1;
+    this.helpArgs.add("command");
+    this.helpInfo = "gives help on commands";
+    this.reqPerm = 0; //anyone
   }
 
   @Override
@@ -26,17 +25,17 @@ public class Help extends Command {
     try {
       Command command = this.cmdRegistry.getCommand(cmdName);
       String help = sender + ": " + cmdRegistry.getDelimiter() + command.name + " ";
-      if (command.args.isEmpty()) {
-        help += " - " + command.help;
+      if (command.helpArgs.isEmpty()) {
+        help += " - " + command.helpInfo;
       } else {
-        for (String arg : command.args) {
+        for (String arg : command.helpArgs) {
           help += "<" + arg + "> ";
         }
-        help += "- " + command.help;
+        help += "- " + command.helpInfo;
       }
       bot.sendMessage(channel, help);
       log.info("HELP " + cmdName + " from " + sender + " in " + channel);
-    } catch (CommandRegistry.CommandNotFoundException ex) {
+    } catch (sk.hikaribot.bot.CommandRegistry.CommandNotFoundException ex) {
       bot.sendMessage(channel, sender + ": Command '" + cmdName + "' was not found");
       log.error("HELP " + cmdName + " from " + sender + " in " + channel + " was not found");
     }

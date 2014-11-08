@@ -27,6 +27,7 @@ public class HikariBot extends PircBot {
     /* register commands */
     cmdRegistry.add(new sk.hikaribot.cmd.Help());
     cmdRegistry.add(new sk.hikaribot.cmd.Die());
+    cmdRegistry.add(new sk.hikaribot.cmd.Join());
   }
 
   private void command(String channel, String sender, String message) {
