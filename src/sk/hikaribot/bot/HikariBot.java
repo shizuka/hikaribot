@@ -23,6 +23,7 @@ public class HikariBot extends PircBot {
   public HikariBot(Properties config) {
     this.config = config;
     this.setName(config.getProperty("nick"));
+    this.setVersion(config.getProperty("version"));
     this.cmdRegistry = new CommandRegistry(this, config.getProperty("delimiter"));
     /* register commands */
     cmdRegistry.add(new sk.hikaribot.cmd.Help());
@@ -31,8 +32,16 @@ public class HikariBot extends PircBot {
     cmdRegistry.add(new sk.hikaribot.cmd.Part());
     cmdRegistry.add(new sk.hikaribot.cmd.Say());
     cmdRegistry.add(new sk.hikaribot.cmd.DoAction());
+    cmdRegistry.add(new sk.hikaribot.cmd.Version());
   }
 
+  /**
+   * Handles PRIVMSG detected to start with command delimiter.
+   *
+   * @param channel
+   * @param sender
+   * @param message
+   */
   private void command(String channel, String sender, String message) {
     int permission = this.getUserPermission(channel, sender);
     try {
@@ -69,10 +78,12 @@ public class HikariBot extends PircBot {
    */
   @Override
   protected void onPrivateMessage(String sender, String login, String hostname, String message) {
+    /* //disabled until i have better access control in place
     message = Colors.removeFormattingAndColors(message);
     if (message.startsWith(config.getProperty("delimiter"))) { //then it's a command
       this.command(sender, sender, message);
     }
+    */
   }
 
   @Override
@@ -91,6 +102,26 @@ public class HikariBot extends PircBot {
     log.info("Finished joining " + channel);
   }
 
+  @Override
+  protected void onFinger(String sourceNick, String sourceLogin, String sourceHostname, String target) {
+    //we're ignoring finger
+  }
+
+  @Override
+  protected void onIncomingChatRequest(DccChat chat) {
+    //we're ignoring DCC
+  }
+
+  @Override
+  protected void onFileTransferFinished(DccFileTransfer transfer, Exception e) {
+    //we're ignoring DCC
+  }
+
+  @Override
+  protected void onIncomingFileTransfer(DccFileTransfer transfer) {
+    //we're ignoring DCC
+  }
+  
   public User getUser(String channel, String nick) {
     User[] users = this.getUsers(channel);
     for (User user : users) {
