@@ -26,6 +26,8 @@ public class HikariBot extends PircBot {
     this.setVersion(config.getProperty("version"));
     this.cmdRegistry = new CommandRegistry(this, config.getProperty("delimiter"));
     /* register commands */
+    cmdRegistry.add(new sk.hikaribot.cmd.Verbose());
+    cmdRegistry.add(new sk.hikaribot.cmd.NoVerbose());
     cmdRegistry.add(new sk.hikaribot.cmd.Help());
     cmdRegistry.add(new sk.hikaribot.cmd.Die());
     cmdRegistry.add(new sk.hikaribot.cmd.Join());
@@ -79,11 +81,11 @@ public class HikariBot extends PircBot {
   @Override
   protected void onPrivateMessage(String sender, String login, String hostname, String message) {
     /* //disabled until i have better access control in place
-    message = Colors.removeFormattingAndColors(message);
-    if (message.startsWith(config.getProperty("delimiter"))) { //then it's a command
-      this.command(sender, sender, message);
-    }
-    */
+     message = Colors.removeFormattingAndColors(message);
+     if (message.startsWith(config.getProperty("delimiter"))) { //then it's a command
+     this.command(sender, sender, message);
+     }
+     */
   }
 
   @Override
@@ -93,13 +95,13 @@ public class HikariBot extends PircBot {
 
   @Override
   protected void onDisconnect() {
-    log.info("Disconnected, exiting...");
+    log.debug("Disconnected, exiting...");
     System.exit(0);
   }
 
   @Override
   protected void onUserList(String channel, User[] users) {
-    log.info("Finished joining " + channel);
+    log.info("Joined " + channel);
   }
 
   @Override
@@ -121,7 +123,7 @@ public class HikariBot extends PircBot {
   protected void onIncomingFileTransfer(DccFileTransfer transfer) {
     //we're ignoring DCC
   }
-  
+
   public User getUser(String channel, String nick) {
     User[] users = this.getUsers(channel);
     for (User user : users) {
