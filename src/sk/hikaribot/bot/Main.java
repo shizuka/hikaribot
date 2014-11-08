@@ -82,7 +82,7 @@ public class Main {
         if (config.getProperty(prop) == null) {
           throw new MissingRequiredPropertyException(prop);
         }
-        log.trace(prop + " : " + config.getProperty(prop));
+        log.trace("OK " + prop);
       }
       log.debug("HikariBot config file is sane");
       
@@ -95,7 +95,7 @@ public class Main {
         if (twitConfig.getProperty(prop) == null) {
           throw new MissingRequiredPropertyException(prop);
         }
-        log.trace(prop + " : " + twitConfig.getProperty(prop));
+        log.trace("OK " + prop);
       }
       log.debug("TwitBot config file is sane");
 
