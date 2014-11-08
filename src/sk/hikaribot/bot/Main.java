@@ -56,6 +56,10 @@ public class Main {
     "chan",
     "server"
   };
+  private static final String[] reqTwitProps = {
+    "consumer.key",
+    "consumer.secret"
+  };
 
   /**
    * @param args the command line arguments
@@ -65,19 +69,14 @@ public class Main {
      * Read in IRC configuration and connect.
      */
 
-    java.util.Date date = new java.util.Date();
-    String startTimestamp = date.toString();
-    log.info("Hikari started - " + startTimestamp);
-
     Properties config = new Properties();
+    Properties twitConfig = new Properties();
 
-    /* Sanity check the config file */
     try {
-
+      /* Sanity check the config file */
       FileReader configFile = new FileReader("config.properties");
-      //assume config.properties is in pwd with twitter4j.properties?
       config.load(configFile);
-      log.info("Config file loaded, sanity checking...");
+      log.debug("HikariBot config file loaded, checking sanity...");
 
       for (String prop : reqProps) {
         if (config.getProperty(prop) == null) {
@@ -85,7 +84,20 @@ public class Main {
         }
         log.trace(prop + " : " + config.getProperty(prop));
       }
-      log.info("Config file is sane");
+      log.debug("HikariBot config file is sane");
+      
+      /* Sanity check the twitbot config file */
+      FileReader twitConfigFile = new FileReader("twitbot.properties");
+      twitConfig.load(twitConfigFile);
+      log.debug("TwitBot config file loaded, checking sanity...");
+
+      for (String prop : reqTwitProps) {
+        if (twitConfig.getProperty(prop) == null) {
+          throw new MissingRequiredPropertyException(prop);
+        }
+        log.trace(prop + " : " + twitConfig.getProperty(prop));
+      }
+      log.debug("TwitBot config file is sane");
 
     } catch (FileNotFoundException ex) {
       log.fatal("I couldn't find the config file!");
@@ -94,12 +106,11 @@ public class Main {
       log.fatal("I couldn't read the config file!");
       System.exit(1);
     } catch (MissingRequiredPropertyException ex) {
-      log.fatal("Config file was missing property '" + ex.getMessage() + "'!");
       System.exit(1);
     } /* end config file sanity checking */
 
     /* Initialize and Connect bot */
-    HikariBot bot = new HikariBot(config);
+    HikariBot bot = new HikariBot(config, twitConfig);
     try {
       bot.connect(config.getProperty("server"));
     } catch (IOException | IrcException ex) {
@@ -112,10 +123,11 @@ public class Main {
     bot.joinChannel(config.getProperty("chan"));
   }
 
-  private static class MissingRequiredPropertyException extends Exception {
+  public static class MissingRequiredPropertyException extends Exception {
 
     public MissingRequiredPropertyException(String prop) {
       super(prop);
+      log.fatal("Config file was missing property: " + prop + "");
     }
   }
 }

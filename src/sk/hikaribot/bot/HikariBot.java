@@ -10,21 +10,30 @@ import org.jibble.pircbot.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import sk.hikaribot.cmd.Command;
+import sk.hikaribot.twitter.TwitBot;
 
 /**
- * Class description
+ * Our heroine, the Hikari IRC Bot.
  */
 public class HikariBot extends PircBot {
 
   private static final Logger log = LogManager.getLogger("Bot");
   private final Properties config;
   protected final CommandRegistry cmdRegistry;
+  public final TwitBot twit;
 
-  public HikariBot(Properties config) {
+  /**
+   * Start HikariBot with runtime properties.
+   * @param config config.properties settings
+   * @param twitConfig twitbot.properties settings
+   */
+  public HikariBot(Properties config, Properties twitConfig) {
+    log.trace("HikariBot started...");
     this.config = config;
     this.setName(config.getProperty("nick"));
     this.setVersion(config.getProperty("version"));
     this.cmdRegistry = new CommandRegistry(this, config.getProperty("delimiter"));
+    this.twit = new TwitBot(this, twitConfig);
     /* register commands */
     cmdRegistry.add(new sk.hikaribot.cmd.Verbose());
     cmdRegistry.add(new sk.hikaribot.cmd.NoVerbose());
@@ -50,16 +59,14 @@ public class HikariBot extends PircBot {
       cmdRegistry.execute(channel, sender, permission, message);
     } catch (CommandRegistry.CommandNotFoundException ex) {
       if (permission > 0) { //only 404 if it was an op
-        log.error("Command " + ex.getMessage() + " not found");
         this.sendMessage(channel, sender + ": I couldn't find command '" + ex.getMessage() + "'");
       }
     } catch (CommandRegistry.InsufficientPermissionsException ex) {
-      log.error(sender + " in " + channel + " has insufficient permissions to invoke " + ex.getMessage());
       if (permission > 0) {
         this.sendMessage(channel, sender + ": You do not have permission to do that.");
       }
     } catch (Command.ImproperArgsException ex) {
-      log.fatal("This should have been caught by help!");
+      log.fatal("This should have been caught by HELP!");
       this.quitServer("Fatal exception");
     }
   }

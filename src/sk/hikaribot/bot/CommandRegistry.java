@@ -29,6 +29,7 @@ public class CommandRegistry {
    * Initializes registry. Caller should run series of add()s after
    *
    * @param bot the bot that commands will act upon
+   * @param delimiter the character that denotes a command
    */
   public CommandRegistry(PircBot bot, String delimiter) {
     this.bot = bot;
@@ -55,12 +56,13 @@ public class CommandRegistry {
    * @param message
    * @throws sk.hikaribot.bot.CommandRegistry.CommandNotFoundException
    * @throws sk.hikaribot.bot.CommandRegistry.InsufficientPermissionsException
+   * @throws sk.hikaribot.cmd.Command.ImproperArgsException
    */
   public void execute(String channel, String sender, int senderPerm, String message) throws CommandNotFoundException, InsufficientPermissionsException, ImproperArgsException {
     String[] args = message.split(" ", 2);
     Command cmd = this.getCommand(args[0].substring(1));
     if (senderPerm < cmd.reqPerm) {
-      throw new InsufficientPermissionsException(message);
+      throw new InsufficientPermissionsException(message, sender, channel, senderPerm, cmd.reqPerm);
     }
     try {
       if (args.length > 1) {
@@ -90,13 +92,15 @@ public class CommandRegistry {
 
     public CommandNotFoundException(String command) {
       super(command);
+      log.error("Command " + command + " not found");
     }
   }
 
   public static class InsufficientPermissionsException extends Exception {
 
-    public InsufficientPermissionsException(String command) {
+    public InsufficientPermissionsException(String command, String sender, String channel, int userPerm, int reqPerm) {
       super(command);
+      log.error(sender + " in " + channel + " has insufficient permissions to invoke " + command + ", has:" + userPerm + " needs:" + reqPerm);
     }
   }
 
