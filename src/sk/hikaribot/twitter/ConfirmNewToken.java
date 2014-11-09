@@ -30,14 +30,14 @@ public class ConfirmNewToken extends Command {
     log.info("TWITCONFIRM " + params + " from " + sender + " in " + channel);
 
     if (!twit.pendingRequest()) {
-      bot.sendMessage(channel, Colors.RED + "TWITCONFIRM: " + Colors.NORMAL + "No pending request");
+      bot.sendMessage(channel, Colors.YELLOW + "TWITCONFIRM: " + Colors.NORMAL + "No pending request");
       log.error("TWITCONFIRM No pending request");
       return;
     }
 
     try {
       String name = twit.confirmNewToken(params);
-      bot.sendMessage(channel, Colors.BLUE + "TWITCONFIRM: " + Colors.NORMAL + "Confirmed! I am now tweeting as @" + name);
+      bot.sendMessage(channel, Colors.GREEN + "TWITCONFIRM: " + Colors.NORMAL + "Confirmed! I am now tweeting as @" + name);
       log.info("TWITCONFIRM OK: " + name);
     } catch (TwitBot.RequestCancelledException ex) {
       bot.sendMessage(channel, Colors.RED + "TWITCONFIRM: " + Colors.NORMAL + "Confirmation failed. Token request is cancelled");
