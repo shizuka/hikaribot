@@ -23,21 +23,21 @@ public class Part extends Command {
   @Override
   public void execute(String channel, String sender, String params) throws ImproperArgsException {
     if (params.split(" ").length != numArgs) {
-      throw new ImproperArgsException("part");
+      throw new ImproperArgsException(this.name);
     }
     if (!params.startsWith("#")) {
       params = "#" + params;
     }
     bot.partChannel(params, "THE HORROR!");
     if (!params.equals(channel)) {
-      bot.sendMessage(channel, Colors.RED + "PART: " + Colors.NORMAL + "Parted channel " + params);
+      bot.sendMessage(channel, Colors.BLUE + "PART: " + Colors.NORMAL + "Parted channel " + params);
     }
-    log.info("PART " + params + " requested by " + sender + " in " + channel);
+    log.info("PART " + params + " from " + sender + " in " + channel);
   }
 
   @Override
   public void execute(String channel, String sender) throws ImproperArgsException {
-    throw new ImproperArgsException("part");
+    throw new ImproperArgsException(this.name);
   }
 
 }

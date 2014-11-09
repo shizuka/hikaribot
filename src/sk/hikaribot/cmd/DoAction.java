@@ -22,19 +22,19 @@ public class DoAction extends Command {
   @Override
   public void execute(String channel, String sender, String params) throws ImproperArgsException {
     if (params.split(" ").length < numArgs) {
-      throw new ImproperArgsException("do");
+      throw new ImproperArgsException(this.name);
     }
     String[] args = params.split(" ", 2);
     if (!args[0].startsWith("#")) {
       args[0] = "#" + args[0];
     }
     bot.sendAction(args[0], args[1]);
-    log.info("DO " + args[0] + " requested by " + sender + " in " + channel + ": " + args[1]);
+    log.info("DO " + args[0] + " from " + sender + " in " + channel + ": " + args[1]);
   }
 
   @Override
   public void execute(String channel, String sender) throws ImproperArgsException {
-    throw new ImproperArgsException("do");
+    throw new ImproperArgsException(this.name);
   }
 
 }

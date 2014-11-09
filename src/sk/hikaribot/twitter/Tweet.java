@@ -19,23 +19,28 @@ public class Tweet extends Command {
     this.name = "tweet";
     this.numArgs = 1;
     this.helpArgs.add("message");
-    this.helpInfo = "tweet to the current profile, check with .whoisTwit";
-    this.reqPerm = 1; //voice
+    this.helpInfo = "tweet to the current profile, check with .twitWhoAmI";
+    this.reqPerm = 2; //ops
   }
 
   @Override
   public void execute(String channel, String sender, String params) throws ImproperArgsException {
     TwitBot twit = bot.getTwitBot();
+    log.info("TWEET from " + sender + " in " + channel + ": " + params);
     try {
       Status tweet = twit.tweet(params);
       bot.sendMessage(channel, Colors.BLUE + "TWEET @" + twit.getActiveTwitName() + ": "
               + Colors.NORMAL + "https://twitter.com/" + twit.getActiveTwitName() + "/status/" + tweet.getId());
+      log.info("TWEET OK: " + "https://twitter.com/" + twit.getActiveTwitName() + "/status/" + tweet.getId());
     } catch (TwitBot.NoProfileLoadedException ex) {
-      bot.sendMessage(channel, Colors.RED + "TWEET: " + Colors.NORMAL + "No profile loaded!");
+      bot.sendMessage(channel, Colors.YELLOW + "TWEET: " + Colors.NORMAL + "No profile loaded");
+      log.error("TWEET No profile loaded");
     } catch (TwitBot.TweetTooLongException ex) {
-      bot.sendMessage(channel, Colors.RED + "TWEET: " + Colors.NORMAL + "Message too long! What part of 140 characters have you forgotten?");
+      bot.sendMessage(channel, Colors.YELLOW + "TWEET: " + Colors.NORMAL + "Message too long! What part of 140 characters have you forgotten?");
+      log.error("TWEET Message too long");
     } catch (TwitterException ex) {
       bot.sendMessage(channel, Colors.RED + "TWEET: " + Colors.NORMAL + "TwitterException occurred");
+      log.error("TWEET Twitter Exception");
     }
   }
 

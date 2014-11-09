@@ -73,11 +73,11 @@ public class HikariBot extends PircBot {
       cmdRegistry.execute(channel, sender, permission, message);
     } catch (CommandRegistry.CommandNotFoundException ex) {
       if (permission > 0) { //only 404 if it was an op
-        this.sendMessage(channel, sender + ": I couldn't find command '" + ex.getMessage() + "'");
+        this.sendMessage(channel, Colors.RED + "404: " + Colors.NORMAL + "Command not found '" + ex.getMessage() + "'");
       }
     } catch (CommandRegistry.InsufficientPermissionsException ex) {
       if (permission > 0) {
-        this.sendMessage(channel, sender + ": You do not have permission to do that.");
+        this.sendMessage(channel, Colors.RED + "401: " + Colors.NORMAL + "Insufficient permissions - you: " + permission + ", needed: " + ex.getMessage());
       }
     } catch (Command.ImproperArgsException ex) {
       log.fatal("This should have been caught by HELP!");

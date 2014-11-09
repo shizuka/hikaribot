@@ -37,7 +37,7 @@ public class GetActiveProfile extends Command {
       friendlyname = "no one";
     }
     bot.sendMessage(channel, Colors.BLUE + "WHOAMI: " + Colors.NORMAL + "Currently tweeting as " + friendlyname);
-    log.info("TWITWHOAMI requested by " + sender + " in " + channel);
+    log.info("TWITWHOAMI from " + sender + " in " + channel);
   }
 
 }

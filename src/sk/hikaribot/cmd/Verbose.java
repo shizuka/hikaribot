@@ -26,10 +26,10 @@ public class Verbose extends Command {
 
   @Override
   public void execute(String channel, String sender) throws ImproperArgsException {
-    log.info("VERBOSE command given by " + sender + " in " + channel);
+    log.info("VERBOSE from " + sender + " in " + channel);
     log.warn("All rawlines will now be logged");
     bot.setVerbose(true);
-    bot.sendMessage(channel, "Verbose logging " + Colors.YELLOW + "ENABLED");
+    bot.sendMessage(channel, Colors.YELLOW + "VERBOSE: " + Colors.NORMAL + "Enabled");
   }
 
 }
