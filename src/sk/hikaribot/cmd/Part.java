@@ -5,6 +5,8 @@
  */
 package sk.hikaribot.cmd;
 
+import org.jibble.pircbot.Colors;
+
 /**
  * Parts a channel.
  */
@@ -28,7 +30,7 @@ public class Part extends Command {
     }
     bot.partChannel(params, "THE HORROR!");
     if (!params.equals(channel)) {
-      bot.sendMessage(channel, sender + ": I have parted channel " + params);
+      bot.sendMessage(channel, Colors.RED + "PART: " + Colors.NORMAL + "Parted channel " + params);
     }
     log.info("PART " + params + " requested by " + sender + " in " + channel);
   }

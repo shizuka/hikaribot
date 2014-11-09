@@ -5,6 +5,8 @@
  */
 package sk.hikaribot.cmd;
 
+import org.jibble.pircbot.Colors;
+
 /**
  * Sets HikariBot to verbose logging.
  */
@@ -27,7 +29,7 @@ public class Verbose extends Command {
     log.info("VERBOSE command given by " + sender + " in " + channel);
     log.warn("All rawlines will now be logged");
     bot.setVerbose(true);
-    bot.sendMessage(channel, "Verbose logging enabled");
+    bot.sendMessage(channel, "Verbose logging " + Colors.YELLOW + "ENABLED");
   }
 
 }

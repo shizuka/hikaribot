@@ -5,6 +5,8 @@
  */
 package sk.hikaribot.cmd;
 
+import org.jibble.pircbot.Colors;
+
 /**
  * Sets HikariBot to disable verbose logging.
  */
@@ -27,7 +29,7 @@ public class NoVerbose extends Command {
     log.info("NOVERBOSE requested by " + sender + " in " + channel);
     log.warn("Only bot commands will be logged");
     bot.setVerbose(false);
-    bot.sendMessage(channel, "Verbose logging disabled");
+    bot.sendMessage(channel, "Verbose logging " + Colors.YELLOW + "DISABLED");
   }
 
 }

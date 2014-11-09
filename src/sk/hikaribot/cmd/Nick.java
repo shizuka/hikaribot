@@ -5,6 +5,8 @@
  */
 package sk.hikaribot.cmd;
 
+import org.jibble.pircbot.Colors;
+
 /**
  * Changes nick.
  */
@@ -26,7 +28,7 @@ public class Nick extends Command {
     bot.changeNick(params);
 
     if (!bot.getNick().equals(params)) {
-      bot.sendMessage(channel, sender + ": Unable to change nick!");
+      bot.sendMessage(channel, Colors.RED + "NICK: " + Colors.NORMAL + "Unable to change nick!");
       log.error("NICK " + params + " from " + sender + " in " + channel + " FAILED");
     } else {
       log.info("NICK " + params + " from " + sender + " in " + channel);

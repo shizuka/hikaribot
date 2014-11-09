@@ -5,6 +5,8 @@
  */
 package sk.hikaribot.cmd;
 
+import org.jibble.pircbot.Colors;
+
 /**
  * Joins a channel.
  */
@@ -27,7 +29,8 @@ public class Join extends Command {
       params = "#" + params;
     }
     bot.joinChannel(params);
-    bot.sendMessage(channel, sender + ": I have joined channel " + params);
+    bot.sendMessage(channel, Colors.BLUE + "JOIN: " + Colors.NORMAL + "Joined channel " + params);
+    //TODO detect joinfail
     log.info("JOIN " + params + " requested by " + sender + " in " + channel);
   }
 

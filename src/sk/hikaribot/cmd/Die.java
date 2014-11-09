@@ -5,8 +5,6 @@
  */
 package sk.hikaribot.cmd;
 
-import org.jibble.pircbot.Colors;
-
 /**
  * Kills the bot.
  */
