@@ -30,14 +30,8 @@ public class Join extends Command {
       params = "#" + params;
     }
     bot.joinChannel(params);
-    String[] channels = bot.getChannels();
-    if (Arrays.asList(channels).contains(params)) {
-      bot.sendMessage(channel, Colors.GREEN + "JOIN: " + Colors.NORMAL + "Joined channel " + params);
-      log.info("JOIN " + params + " from " + sender + " in " + channel);
-    } else {
-      bot.sendMessage(channel, Colors.RED + "JOIN: " + Colors.NORMAL + "Unable to join " + params);
-      log.error("JOIN " + params + " from " + sender + " in " + channel + " FAILED");
-    }
+    bot.sendMessage(channel, Colors.GREEN + "JOIN: " + Colors.NORMAL + "Joined channel " + params);
+    log.info("JOIN " + params + " from " + sender + " in " + channel);
   }
 
   @Override
