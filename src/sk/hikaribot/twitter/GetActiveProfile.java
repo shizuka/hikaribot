@@ -5,6 +5,7 @@
  */
 package sk.hikaribot.twitter;
 
+import org.jibble.pircbot.Colors;
 import sk.hikaribot.cmd.Command;
 
 /**
@@ -13,7 +14,7 @@ import sk.hikaribot.cmd.Command;
 public class GetActiveProfile extends Command {
 
   public GetActiveProfile() {
-    this.name = "whoisTwit";
+    this.name = "twitWhoAmI";
     this.numArgs = 0;
     this.helpInfo = "who am I currently tweeting as";
     this.reqPerm = 2; //ops
@@ -35,8 +36,8 @@ public class GetActiveProfile extends Command {
     } else {
       friendlyname = "no one";
     }
-    bot.sendMessage(channel, sender + ": Currently tweeting as " + friendlyname);
-    log.info("WHOISTWIT requested by " + sender + " in " + channel);
+    bot.sendMessage(channel, Colors.BLUE + "WHOAMI: " + Colors.NORMAL + "Currently tweeting as " + friendlyname);
+    log.info("TWITWHOAMI requested by " + sender + " in " + channel);
   }
 
 }

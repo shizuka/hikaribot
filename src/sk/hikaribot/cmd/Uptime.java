@@ -5,6 +5,8 @@
  */
 package sk.hikaribot.cmd;
 
+import org.jibble.pircbot.Colors;
+
 /**
  * Prints uptime of bot.
  */
@@ -27,7 +29,7 @@ public class Uptime extends Command {
     long started = bot.getTimeStarted();
     long now = System.currentTimeMillis();
     long ms = now - started;
-    
+
     long x = ms / 1000;
     long secsElapsed = x % 60;
     x /= 60;
@@ -36,9 +38,9 @@ public class Uptime extends Command {
     long hrsElapsed = x % 24;
     x /= 24;
     long daysElapsed = x;
-    
-    String timeElapsed = String.format("%02d", hrsElapsed) +  ":" + String.format("%02d", minsElapsed) + ":" + String.format("%02d", secsElapsed);
-    bot.sendMessage(channel, sender + ": up " + daysElapsed + " days, " + timeElapsed);
+
+    String timeElapsed = String.format("%02d", hrsElapsed) + ":" + String.format("%02d", minsElapsed) + ":" + String.format("%02d", secsElapsed);
+    bot.sendMessage(channel, Colors.BLUE + "UPTIME: " + Colors.NORMAL + "up " + daysElapsed + " days, " + timeElapsed);
     log.info("UPTIME from " + sender + " in " + channel);
   }
 

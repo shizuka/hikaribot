@@ -31,11 +31,11 @@ public class Tweet extends Command {
       bot.sendMessage(channel, Colors.BLUE + "TWEET @" + twit.getActiveTwitName() + ": "
               + Colors.NORMAL + "https://twitter.com/" + twit.getActiveTwitName() + "/status/" + tweet.getId());
     } catch (TwitBot.NoProfileLoadedException ex) {
-      bot.sendMessage(channel, sender + ": No profile loaded!");
+      bot.sendMessage(channel, Colors.RED + "TWEET: " + Colors.NORMAL + "No profile loaded!");
     } catch (TwitBot.TweetTooLongException ex) {
-      bot.sendMessage(channel, sender + ": Message too long! What part of 140 characters have you forgotten?");
+      bot.sendMessage(channel, Colors.RED + "TWEET: " + Colors.NORMAL + "Message too long! What part of 140 characters have you forgotten?");
     } catch (TwitterException ex) {
-      bot.sendMessage(channel, sender + ": TwitterException occurred");
+      bot.sendMessage(channel, Colors.RED + "TWEET: " + Colors.NORMAL + "TwitterException occurred");
     }
   }
 

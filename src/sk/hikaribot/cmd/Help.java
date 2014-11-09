@@ -5,6 +5,8 @@
  */
 package sk.hikaribot.cmd;
 
+import org.jibble.pircbot.Colors;
+
 /**
  * Prints helpInfo string.
  */
@@ -24,19 +26,17 @@ public class Help extends Command {
     String cmdName = params.split(" ", 1)[0];
     try {
       Command command = this.cmdRegistry.getCommand(cmdName);
-      String help = sender + ": " + cmdRegistry.getDelimiter() + command.name + " ";
-      if (command.helpArgs.isEmpty()) {
-        help += " - " + command.helpInfo;
-      } else {
+      String help = Colors.BLUE + "HELP: " + cmdRegistry.getDelimiter() + command.name + " ";
+      if (!command.helpArgs.isEmpty()) {
         for (String arg : command.helpArgs) {
           help += "<" + arg + "> ";
         }
-        help += "- " + command.helpInfo;
       }
+      help += Colors.NORMAL + "- " + command.helpInfo;
       bot.sendMessage(channel, help);
       log.info("HELP " + cmdName + " requested by " + sender + " in " + channel);
     } catch (sk.hikaribot.bot.CommandRegistry.CommandNotFoundException ex) {
-      bot.sendMessage(channel, sender + ": Command '" + cmdName + "' was not found");
+      bot.sendMessage(channel, Colors.RED + "HELP: " + Colors.NORMAL + "Command '" + cmdName + "' was not found");
       log.error("HELP " + cmdName + " requested by " + sender + " in " + channel + " was not found");
     }
   }

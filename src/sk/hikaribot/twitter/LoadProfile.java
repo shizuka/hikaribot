@@ -6,6 +6,7 @@
 package sk.hikaribot.twitter;
 
 import java.io.IOException;
+import org.jibble.pircbot.Colors;
 import sk.hikaribot.bot.Main;
 import sk.hikaribot.cmd.Command;
 import twitter4j.TwitterException;
@@ -16,7 +17,7 @@ import twitter4j.TwitterException;
 public class LoadProfile extends Command {
 
   public LoadProfile() {
-    this.name = "loadTwit";
+    this.name = "twitLoad";
     this.numArgs = 1;
     this.helpArgs.add("username");
     this.helpInfo = "no @ - change who I will tweet as";
@@ -29,21 +30,26 @@ public class LoadProfile extends Command {
             || params.startsWith("@")) {
       throw new ImproperArgsException(this.name);
     }
-    log.info("LOADTWIT " + params + " requested by " + sender + " in " + channel);
+    log.info("TWITLOAD " + params + " requested by " + sender + " in " + channel);
     TwitBot twit = this.bot.getTwitBot();
     try {
       twit.loadAccessToken(params);
+      bot.sendMessage(channel, Colors.BLUE + "TOKEN: " + Colors.NORMAL + "Success, I will now be tweeting as @" + params);
+      log.info("TWITLOAD successful");
     } catch (IOException ex) {
-      bot.sendMessage(channel, sender + ": Unable to read token file for " + params);
+      bot.sendMessage(channel, Colors.RED + "TOKEN: " + Colors.NORMAL + "Unable to read token file for " + params);
+      log.error("TWITLOAD Unable to read token file for " + params);
     } catch (TwitBot.TokenMismatchException ex) {
-      bot.sendMessage(channel, sender + ": Token file and contents did not match for " + params);
+      bot.sendMessage(channel, Colors.RED + "TOKEN: " + Colors.NORMAL + "Token file and contents did not match for " + params);
+      log.error("TWITLOAD Token file and contents did not match for " + params);
     } catch (Main.MissingRequiredPropertyException ex) {
-      bot.sendMessage(channel, sender + ": Token file for " + params + " was not sane");
+      bot.sendMessage(channel, Colors.RED + "TOKEN: " + Colors.NORMAL + "Token file for " + params + " was not sane");
+      log.error("TWITLOAD Token file for " + params + " was not sane");
     } catch (TwitterException ex) {
-      bot.sendMessage(channel, sender + ": Unable to authenticate with token file for " + params);
+      bot.sendMessage(channel, Colors.RED + "TOKEN: " + Colors.NORMAL + "Unable to authenticate with token file for " + params);
+      log.error("TWITLOAD Unable to authenticate with token file for " + params);
     }
-    bot.sendMessage(channel, sender + ": Success, I will now be tweeting as @" + params);
-    log.info("LOADTWIT successful");
+    
   }
 
   @Override

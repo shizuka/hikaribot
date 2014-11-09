@@ -151,7 +151,7 @@ public class TwitBot {
    * @throws RequestInProgressException
    */
   public String requestNewToken() throws RequestInProgressException, RequestCancelledException {
-    if (tempRequestToken != null) {
+    if (pendingRequest()) {
       //we already have a request going
       throw new RequestInProgressException();
     }
@@ -204,6 +204,10 @@ public class TwitBot {
     tempRequestId = -1;
     tempRequestToken = null;
     log.info("Token request cancelled");
+  }
+  
+  public boolean pendingRequest() {
+    return (tempRequestToken != null);
   }
 
   public static class RequestInProgressException extends Exception {

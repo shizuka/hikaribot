@@ -5,6 +5,7 @@
  */
 package sk.hikaribot.twitter;
 
+import org.jibble.pircbot.Colors;
 import sk.hikaribot.cmd.Command;
 
 /**
@@ -13,7 +14,7 @@ import sk.hikaribot.cmd.Command;
 public class UnloadProfile extends Command {
 
   public UnloadProfile() {
-    this.name = "unloadTwit";
+    this.name = "twitUnload";
     this.numArgs = 0;
     this.helpInfo = "clears active profile";
     this.reqPerm = 2; //ops
@@ -26,10 +27,10 @@ public class UnloadProfile extends Command {
 
   @Override
   public void execute(String channel, String sender) throws ImproperArgsException {
-    log.info("UNLOADTWIT requested by " + sender + " in " + channel);
+    log.info("TWITUNLOAD requested by " + sender + " in " + channel);
     TwitBot twit = bot.getTwitBot();
     twit.clearAccessToken();
-    bot.sendMessage(channel, sender + ": Profile unloaded");
+    bot.sendMessage(channel, Colors.RED + "TOKEN: " + Colors.NORMAL + "Profile unloaded");
   }
 
 }

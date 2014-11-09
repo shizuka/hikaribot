@@ -5,6 +5,8 @@
  */
 package sk.hikaribot.cmd;
 
+import org.jibble.pircbot.Colors;
+
 public class Version extends Command {
 
   public Version() {
@@ -21,7 +23,7 @@ public class Version extends Command {
 
   @Override
   public void execute(String channel, String sender) throws ImproperArgsException {
-    bot.sendMessage(channel, sender + ": " + bot.getVersion());
+    bot.sendMessage(channel, Colors.BLUE + "VERSION: " + Colors.NORMAL + bot.getVersion());
     log.info("VERSION requested by " + sender + " in " + channel);
   }
 
