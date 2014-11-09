@@ -35,7 +35,7 @@ public class RequestNewToken extends Command {
       bot.sendMessage(sender, "Open the following URL and grant access to the target account: " + authUrl);
       bot.sendMessage(sender, "Then use '" + cmdRegistry.getDelimiter() + "twitConfirm <PIN>' in "
               + channel + " to complete the process, where <PIN> is the seven digit code given on that page");
-      bot.sendMessage(channel, Colors.BLUE + "TWITREQUEST: " + Colors.NORMAL + "Please check PM for further instructions");
+      bot.sendMessage(channel, Colors.GREEN + "TWITREQUEST: " + Colors.NORMAL + "Please check PM for further instructions");
       log.info("TWITREQUEST Passed to PM");
     } catch (TwitBot.RequestInProgressException ex) {
       bot.sendMessage(channel, Colors.YELLOW + "TWITREQUEST: " + Colors.NORMAL + ": A token request is already in progress. Please complete that request with '"

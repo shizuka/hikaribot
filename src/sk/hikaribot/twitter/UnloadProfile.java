@@ -30,7 +30,7 @@ public class UnloadProfile extends Command {
     log.info("TWITUNLOAD from " + sender + " in " + channel);
     TwitBot twit = bot.getTwitBot();
     twit.clearAccessToken();
-    bot.sendMessage(channel, Colors.YELLOW + "TOKEN: " + Colors.NORMAL + "Profile unloaded");
+    bot.sendMessage(channel, Colors.GREEN + "TWITUNLOAD: " + Colors.NORMAL + "Profile unloaded");
   }
 
 }
