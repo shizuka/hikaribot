@@ -80,7 +80,7 @@ public class HikariBot extends PircBot {
     } catch (CommandRegistry.InsufficientPermissionsException ex) {
       if (permission > 0) {
         this.sendMessage(channel, Colors.RED + "NO: " + Colors.NORMAL + "Insufficient permissions - "
-                + Colors.BLUE + "you: " + Colors.YELLOW + permission + Colors.BLUE + ", needed: " + Colors.RED + ex.getMessage());
+                + Colors.BLUE + "you: " + Colors.BROWN + permission + Colors.BLUE + ", needed: " + Colors.RED + ex.getMessage());
       }
     } catch (Command.ImproperArgsException ex) {
       log.fatal("This should have been caught by HELP!");

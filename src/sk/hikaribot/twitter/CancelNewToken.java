@@ -30,13 +30,13 @@ public class CancelNewToken extends Command {
     TwitBot twit = bot.getTwitBot();
 
     if (!twit.pendingRequest()) {
-      bot.sendMessage(channel, Colors.YELLOW + "TWITCANCEL: " + Colors.NORMAL + "No pending request");
+      bot.sendMessage(channel, Colors.OLIVE + "TWITCANCEL: " + Colors.NORMAL + "No pending request");
       log.error("TWITCANCEL No pending request");
       return;
     }
 
     twit.cancelNewToken();
-    bot.sendMessage(channel, Colors.GREEN + "TWITCANCEL: " + Colors.NORMAL + "Pending token request was cancelled");
+    bot.sendMessage(channel, Colors.DARK_GREEN + "TWITCANCEL: " + Colors.NORMAL + "Pending token request was cancelled");
     log.warn("TWITCANCEL Pending request was cancelled");
   }
 

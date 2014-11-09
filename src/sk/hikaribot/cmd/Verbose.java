@@ -29,7 +29,7 @@ public class Verbose extends Command {
     log.info("VERBOSE from " + sender + " in " + channel);
     log.warn("All rawlines will now be logged");
     bot.setVerbose(true);
-    bot.sendMessage(channel, Colors.YELLOW + "VERBOSE: " + Colors.NORMAL + "Enabled");
+    bot.sendMessage(channel, Colors.OLIVE + "VERBOSE: " + Colors.NORMAL + "Enabled");
   }
 
 }
