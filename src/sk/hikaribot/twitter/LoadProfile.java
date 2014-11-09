@@ -30,6 +30,7 @@ public class LoadProfile extends Command {
             || params.startsWith("@")) {
       throw new ImproperArgsException(this.name);
     }
+    params = params.toLowerCase();
     log.info("TWITLOAD " + params + " from " + sender + " in " + channel);
     TwitBot twit = this.bot.getTwitBot();
     try {

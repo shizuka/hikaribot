@@ -33,10 +33,10 @@ public class Tweet extends Command {
               + Colors.NORMAL + "https://twitter.com/" + twit.getActiveTwitName() + "/status/" + tweet.getId());
       log.info("TWEET OK: " + "https://twitter.com/" + twit.getActiveTwitName() + "/status/" + tweet.getId());
     } catch (TwitBot.NoProfileLoadedException ex) {
-      bot.sendMessage(channel, Colors.YELLOW + "TWEET: " + Colors.NORMAL + "No profile loaded");
+      bot.sendMessage(channel, Colors.RED + "TWEET: " + Colors.NORMAL + "No profile loaded");
       log.error("TWEET No profile loaded");
     } catch (TwitBot.TweetTooLongException ex) {
-      bot.sendMessage(channel, Colors.YELLOW + "TWEET: " + Colors.NORMAL + "Message too long! What part of 140 characters have you forgotten?");
+      bot.sendMessage(channel, Colors.RED + "TWEET: " + Colors.NORMAL + "Message too long! " + Colors.RED + params.length() + Colors.YELLOW + "/140");
       log.error("TWEET Message too long");
     } catch (TwitterException ex) {
       bot.sendMessage(channel, Colors.RED + "TWEET: " + Colors.NORMAL + "TwitterException occurred");
