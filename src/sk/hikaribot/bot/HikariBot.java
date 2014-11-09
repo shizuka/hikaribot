@@ -21,13 +21,16 @@ public class HikariBot extends PircBot {
   private final Properties config;
   protected final CommandRegistry cmdRegistry;
   public final TwitBot twit;
+  private final long startMillis;
 
   /**
    * Start HikariBot with runtime properties.
+   *
    * @param config config.properties settings
    * @param twitConfig twitbot.properties settings
    */
   public HikariBot(Properties config, Properties twitConfig) {
+    this.startMillis = System.currentTimeMillis();
     log.debug("HikariBot started...");
     this.config = config;
     this.setName(config.getProperty("nick"));
@@ -45,6 +48,7 @@ public class HikariBot extends PircBot {
     cmdRegistry.add(new sk.hikaribot.cmd.Say());
     cmdRegistry.add(new sk.hikaribot.cmd.DoAction());
     cmdRegistry.add(new sk.hikaribot.cmd.Version());
+    cmdRegistry.add(new sk.hikaribot.cmd.Uptime());
     cmdRegistry.add(new sk.hikaribot.twitter.LoadProfile());
     cmdRegistry.add(new sk.hikaribot.twitter.UnloadProfile());
     cmdRegistry.add(new sk.hikaribot.twitter.GetActiveProfile());
@@ -166,8 +170,13 @@ public class HikariBot extends PircBot {
       return 0; //normal user
     }
   }
-  
+
   public TwitBot getTwitBot() {
     return twit;
   }
+
+  public long getTimeStarted() {
+    return startMillis;
+  }
+
 }
