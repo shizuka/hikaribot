@@ -36,7 +36,8 @@ public class Tweet extends Command {
       bot.sendMessage(channel, Colors.RED + "TWEET: " + Colors.NORMAL + "No profile loaded");
       log.error("TWEET No profile loaded");
     } catch (TwitBot.TweetTooLongException ex) {
-      bot.sendMessage(channel, Colors.RED + "TWEET: " + Colors.NORMAL + "Message too long! " + Colors.RED + params.length() + Colors.YELLOW + "/140");
+      bot.sendMessage(channel, Colors.RED + "TWEET: " + Colors.NORMAL + "Message too long! "
+              + Colors.RED + params.length() + Colors.YELLOW + "/140 >" + Colors.NORMAL + params.substring(140));
       log.error("TWEET Message too long");
     } catch (TwitterException ex) {
       bot.sendMessage(channel, Colors.RED + "TWEET: " + Colors.NORMAL + "TwitterException occurred");
