@@ -85,6 +85,10 @@ public class CommandRegistry {
     throw new CommandNotFoundException(command);
   }
 
+  public List<Command> getRegistry() {
+    return commands;
+  }
+
   public String getDelimiter() {
     return this.delimiter;
   }

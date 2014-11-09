@@ -5,6 +5,9 @@
  */
 package sk.hikaribot.cmd;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import org.jibble.pircbot.Colors;
 
 /**
@@ -16,7 +19,7 @@ public class Help extends Command {
     this.name = "help";
     this.numArgs = 1;
     this.helpArgs.add("command");
-    this.helpInfo = "gives help on commands";
+    this.helpInfo = "prints command help, omit command for list of all commands";
     this.reqPerm = 1; //voice and up
   }
 
@@ -32,7 +35,7 @@ public class Help extends Command {
           help += "<" + arg + "> ";
         }
       }
-      help += Colors.NORMAL + "- " + command.helpInfo + " - Permission: " + command.reqPerm;
+      help += Colors.NORMAL + "- " + command.helpInfo + " - " + Colors.BLUE + "P: " + Colors.YELLOW + command.reqPerm;
       bot.sendMessage(channel, help);
       log.info("HELP " + cmdName + " from " + sender + " in " + channel);
     } catch (sk.hikaribot.bot.CommandRegistry.CommandNotFoundException ex) {
@@ -43,7 +46,22 @@ public class Help extends Command {
 
   @Override
   public void execute(String channel, String sender) {
-    execute(channel, sender, "help");
+    /* list commands */
+    List<String> commands = new ArrayList();
+    List<Command> registry = this.cmdRegistry.getRegistry();
+    /* get all command names and sort */
+    for (Command command : registry) {
+      commands.add(command.name);
+    }
+    Collections.sort(commands);
+    /* build output string */
+    String out = Colors.BLUE + "COMMANDS: " + Colors.NORMAL;
+    for (String name : commands) {
+      out += name + ", ";
+    }
+    /* print */
+    bot.sendMessage(channel, out);
+    log.info("HELP-LIST from " + sender + " in " + channel);
   }
 
 }
