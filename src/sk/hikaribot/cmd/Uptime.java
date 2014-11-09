@@ -5,9 +5,9 @@
  */
 package sk.hikaribot.cmd;
 
-import java.util.Date;
-import java.util.concurrent.TimeUnit;
-
+/**
+ * Prints uptime of bot.
+ */
 public class Uptime extends Command {
 
   public Uptime() {

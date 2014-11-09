@@ -46,6 +46,7 @@ public class HikariBot extends PircBot {
     cmdRegistry.add(new sk.hikaribot.cmd.Join());
     cmdRegistry.add(new sk.hikaribot.cmd.Part());
     cmdRegistry.add(new sk.hikaribot.cmd.Say());
+    cmdRegistry.add(new sk.hikaribot.cmd.Nick());
     cmdRegistry.add(new sk.hikaribot.cmd.DoAction());
     cmdRegistry.add(new sk.hikaribot.cmd.Version());
     cmdRegistry.add(new sk.hikaribot.cmd.Uptime());
