@@ -29,7 +29,7 @@ public class NoVerbose extends Command {
     log.info("NOVERBOSE from " + sender + " in " + channel);
     log.warn("Only bot commands will be logged");
     bot.setVerbose(false);
-    bot.sendMessage(channel, Colors.YELLOW + "VERBOSE: " + Colors.NORMAL + "Disabled");
+    bot.sendMessage(channel, Colors.OLIVE + "VERBOSE: " + Colors.NORMAL + "Disabled");
   }
 
 }

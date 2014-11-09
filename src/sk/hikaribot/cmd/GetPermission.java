@@ -26,7 +26,7 @@ public class GetPermission extends Command {
       throw new ImproperArgsException(this.name);
     }
     int permission = bot.getUserPermission(channel, params);
-    bot.sendMessage(channel, Colors.BLUE + "PERMISSION: " + Colors.NORMAL + params + " has permission level " + Colors.YELLOW + permission);
+    bot.sendMessage(channel, Colors.BLUE + "PERMISSION: " + Colors.NORMAL + params + " has permission level " + Colors.OLIVE + permission);
     log.info("PERMISSION " + params + " from " + sender + " in " + channel + ": " + permission);
   }
 

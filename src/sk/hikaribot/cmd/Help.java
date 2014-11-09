@@ -35,7 +35,7 @@ public class Help extends Command {
           help += "<" + arg + "> ";
         }
       }
-      help += Colors.NORMAL + "- " + command.helpInfo + " - " + Colors.BLUE + "P: " + Colors.YELLOW + command.reqPerm;
+      help += Colors.NORMAL + "- " + command.helpInfo + " - " + Colors.BLUE + "P: " + Colors.OLIVE + command.reqPerm;
       bot.sendMessage(channel, help);
       log.info("HELP " + cmdName + " from " + sender + " in " + channel);
     } catch (sk.hikaribot.bot.CommandRegistry.CommandNotFoundException ex) {
