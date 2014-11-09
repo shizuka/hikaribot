@@ -28,14 +28,14 @@ public class HikariBot extends PircBot {
    * @param twitConfig twitbot.properties settings
    */
   public HikariBot(Properties config, Properties twitConfig) {
-    log.trace("HikariBot started...");
+    log.debug("HikariBot started...");
     this.config = config;
     this.setName(config.getProperty("nick"));
     this.setVersion(config.getProperty("version"));
     this.cmdRegistry = new CommandRegistry(this, config.getProperty("delimiter"));
     this.twit = new TwitBot(this, twitConfig);
     /* register commands */
-    log.debug("Registering commands...");
+    log.info("Registering commands...");
     cmdRegistry.add(new sk.hikaribot.cmd.Verbose());
     cmdRegistry.add(new sk.hikaribot.cmd.NoVerbose());
     cmdRegistry.add(new sk.hikaribot.cmd.Help());
@@ -52,7 +52,7 @@ public class HikariBot extends PircBot {
     cmdRegistry.add(new sk.hikaribot.twitter.ConfirmNewToken());
     cmdRegistry.add(new sk.hikaribot.twitter.CancelNewToken());
     cmdRegistry.add(new sk.hikaribot.twitter.Tweet());
-    log.debug("Commands registered");
+    log.info("Commands registered");
   }
 
   /**
@@ -111,7 +111,7 @@ public class HikariBot extends PircBot {
 
   @Override
   protected void onDisconnect() {
-    log.debug("Disconnected, exiting...");
+    log.info("Disconnected, exiting...");
     System.exit(0);
   }
 

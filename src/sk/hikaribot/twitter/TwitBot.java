@@ -47,7 +47,7 @@ public class TwitBot {
    * @param twitConfig
    */
   public TwitBot(PircBot bot, Properties twitConfig) {
-    log.trace("TwitBot started...");
+    log.debug("TwitBot started...");
     AccessToken token;
     this.bot = bot;
     this.twitConfig = twitConfig;
@@ -71,7 +71,7 @@ public class TwitBot {
   /* Writes AccessToken to @profile.properties */
   private String storeAccessToken(long userId, AccessToken accessToken) throws IOException {
     String name = accessToken.getScreenName();
-    log.debug("Storing token for @" + accessToken.getScreenName());
+    log.info("Storing token for @" + accessToken.getScreenName());
     FileWriter proFile = new FileWriter("@" + name + ".properties");
     Properties props = new Properties();
     props.setProperty("accessToken.name", name);
@@ -79,7 +79,7 @@ public class TwitBot {
     props.setProperty("accessToken.token", accessToken.getToken());
     props.setProperty("accessToken.secret", accessToken.getTokenSecret());
     props.store(proFile, null);
-    log.debug("Token stored for @" + name);
+    log.info("Token stored for @" + name);
     return name;
   }
 
@@ -94,7 +94,7 @@ public class TwitBot {
    * @throws TwitterException If something went wrong with Twitter
    */
   public String loadAccessToken(String profile) throws IOException, TokenMismatchException, Main.MissingRequiredPropertyException, TwitterException {
-    log.debug("Loading token for @" + profile);
+    log.info("Loading token for @" + profile);
     FileReader proFile = new FileReader("@" + profile + ".properties");
     Properties props = new Properties();
     props.load(proFile);
@@ -102,7 +102,7 @@ public class TwitBot {
       throw new TokenMismatchException(profile, props.getProperty("accessToken.name"));
     }
     this.sanityCheckToken(props); //throws MissingRequiredPropertyException
-    log.debug("Token for @" + profile + " is sane");
+    log.info("Token for @" + profile + " is sane");
     String token = props.getProperty("accessToken.token");
     String tokenSecret = props.getProperty("accessToken.secret");
     this.setAccessToken(new AccessToken(token, tokenSecret));
