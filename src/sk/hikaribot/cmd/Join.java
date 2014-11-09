@@ -5,6 +5,7 @@
  */
 package sk.hikaribot.cmd;
 
+import java.util.Arrays;
 import org.jibble.pircbot.Colors;
 
 /**
@@ -23,20 +24,25 @@ public class Join extends Command {
   @Override
   public void execute(String channel, String sender, String params) throws ImproperArgsException {
     if (params.split(" ").length != numArgs) {
-      throw new ImproperArgsException("join");
+      throw new ImproperArgsException(this.name);
     }
     if (!params.startsWith("#")) {
       params = "#" + params;
     }
     bot.joinChannel(params);
-    bot.sendMessage(channel, Colors.BLUE + "JOIN: " + Colors.NORMAL + "Joined channel " + params);
-    //TODO detect joinfail
-    log.info("JOIN " + params + " requested by " + sender + " in " + channel);
+    String[] channels = bot.getChannels();
+    if (Arrays.asList(channels).contains(params)) {
+      bot.sendMessage(channel, Colors.BLUE + "JOIN: " + Colors.NORMAL + "Joined channel " + params);
+      log.info("JOIN " + params + " from " + sender + " in " + channel);
+    } else {
+      bot.sendMessage(channel, Colors.RED + "JOIN: " + Colors.NORMAL + "Unable to join " + params);
+      log.error("JOIN " + params + " from " + sender + " in " + channel + " FAILED");
+    }
   }
 
   @Override
   public void execute(String channel, String sender) throws ImproperArgsException {
-    throw new ImproperArgsException("join");
+    throw new ImproperArgsException(this.name);
   }
 
 }

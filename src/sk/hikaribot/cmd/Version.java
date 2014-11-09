@@ -24,7 +24,7 @@ public class Version extends Command {
   @Override
   public void execute(String channel, String sender) throws ImproperArgsException {
     bot.sendMessage(channel, Colors.BLUE + "VERSION: " + Colors.NORMAL + bot.getVersion());
-    log.info("VERSION requested by " + sender + " in " + channel);
+    log.info("VERSION from " + sender + " in " + channel);
   }
 
 }

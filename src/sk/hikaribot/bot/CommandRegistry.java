@@ -63,7 +63,7 @@ public class CommandRegistry {
     String[] args = message.split(" ", 2);
     Command cmd = this.getCommand(args[0].substring(1));
     if (senderPerm < cmd.reqPerm) {
-      throw new InsufficientPermissionsException(message, sender, channel, senderPerm, cmd.reqPerm);
+      throw new InsufficientPermissionsException(cmd.name, sender, channel, senderPerm, cmd.reqPerm);
     }
     try {
       if (args.length > 1) {
@@ -100,8 +100,8 @@ public class CommandRegistry {
   public static class InsufficientPermissionsException extends Exception {
 
     public InsufficientPermissionsException(String command, String sender, String channel, int userPerm, int reqPerm) {
-      super(command);
-      log.error(sender + " in " + channel + " has insufficient permissions to invoke " + command + ", has:" + userPerm + " needs:" + reqPerm);
+      super(Integer.toString(reqPerm));
+      log.error(sender + " in " + channel + " has insufficient permissions to invoke " + command.toUpperCase() + ", has:" + userPerm + " needs:" + reqPerm);
     }
   }
 

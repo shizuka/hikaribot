@@ -19,7 +19,7 @@ public class Die extends Command {
 
   @Override
   public void execute(String channel, String sender) {
-    log.fatal("DIE requested by " + sender + " in " + channel);
+    log.fatal("DIE from " + sender + " in " + channel);
     bot.quitServer("Killed by " + sender);
   }
 

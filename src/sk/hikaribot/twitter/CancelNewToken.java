@@ -28,15 +28,16 @@ public class CancelNewToken extends Command {
   @Override
   public void execute(String channel, String sender) throws ImproperArgsException {
     TwitBot twit = bot.getTwitBot();
-    
+
     if (!twit.pendingRequest()) {
-      bot.sendMessage(channel, Colors.RED + "REQUEST: " + Colors.NORMAL + "No pending request");
+      bot.sendMessage(channel, Colors.RED + "TWITCANCEL: " + Colors.NORMAL + "No pending request");
+      log.error("TWITCANCEL No pending request");
       return;
     }
-    
+
     twit.cancelNewToken();
-    bot.sendMessage(channel, Colors.RED + "REQUEST: " + Colors.NORMAL + "Pending token request was cancelled");
-    log.error("TWITREQUEST Pending request was cancelled");
+    bot.sendMessage(channel, Colors.YELLOW + "TWITCANCEL: " + Colors.NORMAL + "Pending token request was cancelled");
+    log.warn("TWITCANCEL Pending request was cancelled");
   }
 
 }

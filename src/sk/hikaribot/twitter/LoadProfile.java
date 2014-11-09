@@ -30,7 +30,7 @@ public class LoadProfile extends Command {
             || params.startsWith("@")) {
       throw new ImproperArgsException(this.name);
     }
-    log.info("TWITLOAD " + params + " requested by " + sender + " in " + channel);
+    log.info("TWITLOAD " + params + " from " + sender + " in " + channel);
     TwitBot twit = this.bot.getTwitBot();
     try {
       twit.loadAccessToken(params);
@@ -49,7 +49,7 @@ public class LoadProfile extends Command {
       bot.sendMessage(channel, Colors.RED + "TOKEN: " + Colors.NORMAL + "Unable to authenticate with token file for " + params);
       log.error("TWITLOAD Unable to authenticate with token file for " + params);
     }
-    
+
   }
 
   @Override

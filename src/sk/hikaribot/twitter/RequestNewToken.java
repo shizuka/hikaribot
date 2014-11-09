@@ -27,6 +27,7 @@ public class RequestNewToken extends Command {
 
   @Override
   public void execute(String channel, String sender) throws ImproperArgsException {
+    log.info("TWITREQUEST from " + sender + " in " + channel);
     TwitBot twit = bot.getTwitBot();
     String authUrl;
     try {
@@ -34,14 +35,18 @@ public class RequestNewToken extends Command {
       bot.sendMessage(sender, "Open the following URL and grant access to the target account: " + authUrl);
       bot.sendMessage(sender, "Then use '" + cmdRegistry.getDelimiter() + "twitConfirm <PIN>' in "
               + channel + " to complete the process, where <PIN> is the seven digit code given on that page");
+      bot.sendMessage(channel, Colors.BLUE + "TWITREQUEST: " + Colors.NORMAL + "Please check PM for further instructions");
+      log.info("TWITREQUEST Passed to PM");
     } catch (TwitBot.RequestInProgressException ex) {
-      bot.sendMessage(channel, Colors.YELLOW + "REQUEST: " + Colors.NORMAL + ": A token request is already in progress. Please complete that request with '"
+      bot.sendMessage(channel, Colors.YELLOW + "TWITREQUEST: " + Colors.NORMAL + ": A token request is already in progress. Please complete that request with '"
               + cmdRegistry.getDelimiter() + "twitConfirm <PIN>' or '" + cmdRegistry.getDelimiter() + "twitCancel' to cancel");
+      log.warn("TWITREQUEST Request already in progress");
+      return;
     } catch (TwitBot.RequestCancelledException ex) {
-      bot.sendMessage(channel, Colors.RED + "REQUEST: " + Colors.NORMAL + "Token request was cancelled due to a Twitter error");
+      bot.sendMessage(channel, Colors.RED + "TWITREQUEST: " + Colors.NORMAL + "Token request was cancelled due to a Twitter error");
+      log.error("TWITREQUEST Cancelled due to TwitterException");
+      return;
     }
-    bot.sendMessage(channel, Colors.BLUE + "REQUEST: " + Colors.NORMAL + "Please check PM for further instructions");
-    log.info("TWITREQUEST from " + sender + " in " + channel);
   }
 
 }

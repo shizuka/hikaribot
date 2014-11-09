@@ -32,12 +32,12 @@ public class Help extends Command {
           help += "<" + arg + "> ";
         }
       }
-      help += Colors.NORMAL + "- " + command.helpInfo;
+      help += Colors.NORMAL + "- " + command.helpInfo + " - Permission: " + command.reqPerm;
       bot.sendMessage(channel, help);
-      log.info("HELP " + cmdName + " requested by " + sender + " in " + channel);
+      log.info("HELP " + cmdName + " from " + sender + " in " + channel);
     } catch (sk.hikaribot.bot.CommandRegistry.CommandNotFoundException ex) {
       bot.sendMessage(channel, Colors.RED + "HELP: " + Colors.NORMAL + "Command '" + cmdName + "' was not found");
-      log.error("HELP " + cmdName + " requested by " + sender + " in " + channel + " was not found");
+      log.error("HELP " + cmdName + " from " + sender + " in " + channel + " FAILED command not found");
     }
   }
 

@@ -26,10 +26,10 @@ public class NoVerbose extends Command {
 
   @Override
   public void execute(String channel, String sender) throws ImproperArgsException {
-    log.info("NOVERBOSE requested by " + sender + " in " + channel);
+    log.info("NOVERBOSE from " + sender + " in " + channel);
     log.warn("Only bot commands will be logged");
     bot.setVerbose(false);
-    bot.sendMessage(channel, "Verbose logging " + Colors.YELLOW + "DISABLED");
+    bot.sendMessage(channel, Colors.YELLOW + "VERBOSE: " + Colors.NORMAL + "Disabled");
   }
 
 }
