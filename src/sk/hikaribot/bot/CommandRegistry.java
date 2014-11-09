@@ -45,7 +45,7 @@ public class CommandRegistry {
   public void add(Command command) {
     command.setup(bot, this);
     commands.add(command);
-    log.trace(command);
+    log.debug(command);
   }
 
   /**

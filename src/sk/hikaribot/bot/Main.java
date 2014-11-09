@@ -76,28 +76,28 @@ public class Main {
       /* Sanity check the config file */
       FileReader configFile = new FileReader("config.properties");
       config.load(configFile);
-      log.debug("HikariBot config file loaded, checking sanity...");
+      log.info("HikariBot config file loaded, checking sanity...");
 
       for (String prop : reqProps) {
         if (config.getProperty(prop) == null) {
           throw new MissingRequiredPropertyException(prop);
         }
-        log.trace("OK " + prop);
+        log.debug("OK " + prop);
       }
-      log.debug("HikariBot config file is sane");
+      log.info("HikariBot config file is sane");
       
       /* Sanity check the twitbot config file */
       FileReader twitConfigFile = new FileReader("twitbot.properties");
       twitConfig.load(twitConfigFile);
-      log.debug("TwitBot config file loaded, checking sanity...");
+      log.info("TwitBot config file loaded, checking sanity...");
 
       for (String prop : reqTwitProps) {
         if (twitConfig.getProperty(prop) == null) {
           throw new MissingRequiredPropertyException(prop);
         }
-        log.trace("OK " + prop);
+        log.debug("OK " + prop);
       }
-      log.debug("TwitBot config file is sane");
+      log.info("TwitBot config file is sane");
 
     } catch (FileNotFoundException ex) {
       log.fatal("I couldn't find the config file!");
@@ -117,9 +117,9 @@ public class Main {
       log.fatal("Failed to connect! ", ex);
       System.exit(1);
     }
-    log.debug("Connected!");
+    log.info("Connected!");
     bot.setMode(bot.getNick(), "+B");
-    log.debug("Set my bot flag!");
+    log.info("Set my bot flag!");
     bot.joinChannel(config.getProperty("chan"));
   }
 
