@@ -162,7 +162,7 @@ public class HikariBot extends PircBot {
   }
 
   public int getUserPermission(String channel, String nick) {
-    User user = this.getUser(channel, nick);
+    User user = this.getUser(channel, nick.trim());
     if (user.equals(config.getProperty("owner"))) {
       return 3; //owner
     } else if (user.isOp()) {

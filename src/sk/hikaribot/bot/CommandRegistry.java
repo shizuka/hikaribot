@@ -67,7 +67,7 @@ public class CommandRegistry {
     }
     try {
       if (args.length > 1) {
-        cmd.execute(channel, sender, args[1]);
+        cmd.execute(channel, sender, args[1].trim());
       } else {
         cmd.execute(channel, sender);
       }
