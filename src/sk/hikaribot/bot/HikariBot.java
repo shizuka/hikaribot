@@ -93,6 +93,10 @@ public class HikariBot extends PircBot {
    * Called when we get a message from a channel
    */
   protected void onMessage(String channel, String sender, String login, String hostname, String message) {
+    //ignoring opchat until permissions overhaul
+    if(channel.startsWith("@")) {
+      return;
+    }
     message = Colors.removeFormattingAndColors(message);
     if (message.startsWith(config.getProperty("delimiter"))) { //then it's a command
       this.command(channel, sender, message);
@@ -100,7 +104,7 @@ public class HikariBot extends PircBot {
   }
 
   /**
-   * Called when we get a PM or opchat
+   * Called when we get a PM
    */
   @Override
   protected void onPrivateMessage(String sender, String login, String hostname, String message) {
