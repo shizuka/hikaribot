@@ -40,7 +40,7 @@ import java.util.List;
 import sk.hikaribot.api.Command;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import sk.hikaribot.api.Command.ImproperArgsException;
+import sk.hikaribot.api.exception.ImproperArgsException;
 
 /**
  * Maintains registry of commands, methods to get command handler.

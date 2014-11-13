@@ -39,7 +39,7 @@ import java.util.Properties;
 import org.jibble.pircbot.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import sk.hikaribot.api.Command;
+import sk.hikaribot.api.exception.ImproperArgsException;
 import sk.hikaribot.twitter.TwitBot;
 
 /**
@@ -71,6 +71,7 @@ public class HikariBot extends PircBot {
     log.info("Registering commands...");
     cmdRegistry.add(new sk.hikaribot.cmd.Verbose());
     cmdRegistry.add(new sk.hikaribot.cmd.NoVerbose());
+    cmdRegistry.add(new sk.hikaribot.cmd.RawLine());
     cmdRegistry.add(new sk.hikaribot.cmd.Help());
     cmdRegistry.add(new sk.hikaribot.cmd.Die());
     cmdRegistry.add(new sk.hikaribot.cmd.Join());
@@ -112,7 +113,7 @@ public class HikariBot extends PircBot {
         this.sendMessage(channel, Colors.RED + "NO: " + Colors.NORMAL + "Insufficient permissions - "
                 + Colors.BLUE + "you: " + Colors.BROWN + permission + Colors.BLUE + ", needed: " + Colors.RED + ex.getMessage());
       }
-    } catch (Command.ImproperArgsException ex) {
+    } catch (ImproperArgsException ex) {
       log.fatal("This should have been caught by HELP!");
       this.quitServer("Fatal exception");
     }

@@ -37,6 +37,7 @@ import java.io.IOException;
 import org.jibble.pircbot.Colors;
 import sk.hikaribot.api.exception.MissingRequiredPropertyException;
 import sk.hikaribot.api.Command;
+import sk.hikaribot.api.exception.ImproperArgsException;
 import sk.hikaribot.api.exception.TokenMismatchException;
 import sk.hikaribot.twitter.TwitBot;
 import twitter4j.TwitterException;

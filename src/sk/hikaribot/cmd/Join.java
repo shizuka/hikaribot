@@ -35,6 +35,7 @@ package sk.hikaribot.cmd;
 
 import sk.hikaribot.api.Command;
 import org.jibble.pircbot.Colors;
+import sk.hikaribot.api.exception.ImproperArgsException;
 
 /**
  * Joins a channel.

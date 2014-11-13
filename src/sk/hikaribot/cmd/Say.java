@@ -34,6 +34,7 @@
 package sk.hikaribot.cmd;
 
 import sk.hikaribot.api.Command;
+import sk.hikaribot.api.exception.ImproperArgsException;
 
 public class Say extends Command {
 

@@ -34,6 +34,7 @@
  */
 package sk.hikaribot.api;
 
+import sk.hikaribot.api.exception.ImproperArgsException;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.logging.log4j.LogManager;
@@ -120,10 +121,4 @@ public abstract class Command {
    */
   public abstract void execute(String channel, String sender) throws ImproperArgsException;
 
-  public static class ImproperArgsException extends Exception {
-
-    public ImproperArgsException(String command) {
-      super(command);
-    }
-  }
 }
