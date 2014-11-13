@@ -3,12 +3,14 @@
  * Shizuka Kamishima - 2014-11-08
  * Licensed under bsd3
  */
-package sk.hikaribot.twitter;
+package sk.hikaribot.twitter.cmd;
 
 import java.io.IOException;
 import org.jibble.pircbot.Colors;
-import sk.hikaribot.bot.Main;
-import sk.hikaribot.cmd.Command;
+import sk.hikaribot.api.exception.MissingRequiredPropertyException;
+import sk.hikaribot.api.Command;
+import sk.hikaribot.api.exception.TokenMismatchException;
+import sk.hikaribot.twitter.TwitBot;
 import twitter4j.TwitterException;
 
 /**
@@ -40,10 +42,10 @@ public class LoadProfile extends Command {
     } catch (IOException ex) {
       bot.sendMessage(channel, Colors.RED + "TWITLOAD: " + Colors.NORMAL + "Unable to read token file for " + params);
       log.error("TWITLOAD Unable to read token file for " + params);
-    } catch (TwitBot.TokenMismatchException ex) {
+    } catch (TokenMismatchException ex) {
       bot.sendMessage(channel, Colors.RED + "TWITLOAD: " + Colors.NORMAL + "Token file and contents did not match for " + params);
       log.error("TWITLOAD Token file and contents did not match for " + params);
-    } catch (Main.MissingRequiredPropertyException ex) {
+    } catch (MissingRequiredPropertyException ex) {
       bot.sendMessage(channel, Colors.RED + "TWITLOAD: " + Colors.NORMAL + "Token file for " + params + " was not sane");
       log.error("TWITLOAD Token file for " + params + " was not sane");
     } catch (TwitterException ex) {

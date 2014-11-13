@@ -5,6 +5,7 @@
  */
 package sk.hikaribot.twitter;
 
+import sk.hikaribot.api.exception.TokenMismatchException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -13,7 +14,8 @@ import java.util.logging.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jibble.pircbot.PircBot;
-import sk.hikaribot.bot.Main;
+import sk.hikaribot.Main;
+import sk.hikaribot.api.exception.MissingRequiredPropertyException;
 import twitter4j.*;
 import twitter4j.auth.*;
 
@@ -60,10 +62,10 @@ public class TwitBot {
   }
 
   /* Bot dies if sanity check fails */
-  private void sanityCheckToken(Properties props) throws Main.MissingRequiredPropertyException {
+  private void sanityCheckToken(Properties props) throws MissingRequiredPropertyException {
     for (String prop : reqTokenProps) {
       if (props.getProperty(prop) == null) {
-        throw new Main.MissingRequiredPropertyException(prop);
+        throw new MissingRequiredPropertyException(prop);
       }
     }
   }
@@ -90,10 +92,11 @@ public class TwitBot {
    * @return name of profile just activated
    * @throws IOException If token file could not be read
    * @throws TokenMismatchException If supplied name did not match stored name
+   * @throws sk.hikaribot.api.exception.MissingRequiredPropertyException
    * @throws Main.MissingRequiredPropertyException If token file was incomplete
    * @throws TwitterException If something went wrong with Twitter
    */
-  public String loadAccessToken(String profile) throws IOException, TokenMismatchException, Main.MissingRequiredPropertyException, TwitterException {
+  public String loadAccessToken(String profile) throws IOException, TokenMismatchException, MissingRequiredPropertyException, TwitterException {
     profile = profile.toLowerCase();
     log.debug("Loading token for " + profile);
     FileReader proFile = new FileReader("@" + profile + ".properties");
@@ -124,13 +127,6 @@ public class TwitBot {
     activeTwitName = null;
   }
 
-  public static class TokenMismatchException extends Exception {
-
-    public TokenMismatchException(String expected, String got) {
-      super(expected);
-      log.error("Token mismatch! Accessed " + expected + " but was reported as " + got);
-    }
-  }
 
   public String getActiveTwitName() {
     return activeTwitName;

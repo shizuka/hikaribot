@@ -32,8 +32,9 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package sk.hikaribot.bot;
+package sk.hikaribot;
 
+import sk.hikaribot.api.exception.MissingRequiredPropertyException;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -41,6 +42,7 @@ import java.util.Properties;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jibble.pircbot.IrcException;
+import sk.hikaribot.bot.HikariBot;
 
 /**
  * Executable.
@@ -85,7 +87,7 @@ public class Main {
         log.debug("OK " + prop);
       }
       log.info("HikariBot config file is sane");
-      
+
       /* Sanity check the twitbot config file */
       FileReader twitConfigFile = new FileReader("twitbot.properties");
       twitConfig.load(twitConfigFile);
@@ -123,11 +125,4 @@ public class Main {
     bot.joinChannel(config.getProperty("chan"));
   }
 
-  public static class MissingRequiredPropertyException extends Exception {
-
-    public MissingRequiredPropertyException(String prop) {
-      super(prop);
-      log.fatal("Config file was missing property: " + prop + "");
-    }
-  }
 }

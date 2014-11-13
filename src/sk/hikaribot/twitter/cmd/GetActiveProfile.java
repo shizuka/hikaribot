@@ -3,10 +3,11 @@
  * Shizuka Kamishima - 2014-11-08
  * Licensed under bsd3
  */
-package sk.hikaribot.twitter;
+package sk.hikaribot.twitter.cmd;
 
 import org.jibble.pircbot.Colors;
-import sk.hikaribot.cmd.Command;
+import sk.hikaribot.api.Command;
+import sk.hikaribot.twitter.TwitBot;
 
 /**
  * Prints active Twitter profile.

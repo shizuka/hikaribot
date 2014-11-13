@@ -5,6 +5,7 @@
  */
 package sk.hikaribot.cmd;
 
+import sk.hikaribot.api.Command;
 import org.jibble.pircbot.Colors;
 
 /**
