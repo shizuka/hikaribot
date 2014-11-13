@@ -35,6 +35,7 @@ package sk.hikaribot.twitter.cmd;
 
 import org.jibble.pircbot.Colors;
 import sk.hikaribot.api.Command;
+import sk.hikaribot.api.exception.ImproperArgsException;
 import sk.hikaribot.bot.CommandRegistry;
 import sk.hikaribot.twitter.TwitBot;
 
