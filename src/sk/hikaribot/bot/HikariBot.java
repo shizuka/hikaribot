@@ -95,9 +95,9 @@ public class HikariBot extends PircBot {
   /**
    * Handles PRIVMSG detected to start with command delimiter.
    *
-   * @param channel
-   * @param sender
-   * @param message
+   * @param channel the channel command came from (sender if PM)
+   * @param sender who sent the command
+   * @param message contents of line including command and delimiter
    */
   private void command(String channel, String sender, String message) {
     int permission = this.getUserPermission(channel, sender);
