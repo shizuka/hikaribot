@@ -5,6 +5,8 @@
  */
 package sk.hikaribot.cmd;
 
+import sk.hikaribot.api.Command;
+
 public class Say extends Command {
 
   public Say() {

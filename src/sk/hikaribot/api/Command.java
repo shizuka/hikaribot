@@ -3,13 +3,12 @@
  * Shizuka Kamishima - 2014-11-06
  * Licensed under bsd3
  */
-package sk.hikaribot.cmd;
+package sk.hikaribot.api;
 
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import sk.hikaribot.bot.CommandRegistry;
 import sk.hikaribot.bot.HikariBot;
 
 /**
@@ -48,18 +47,16 @@ public abstract class Command {
    * in pm)
    */
   public int reqPerm = 0;
-
+  
   /**
-   * The bot we act on. Commands must super() pass the bot.
+   * The HikariBot we act upon.
    */
   protected HikariBot bot;
-
-  protected CommandRegistry cmdRegistry;
 
   /**
    * MUST define Strings name and info, and SHOULD define permissions/source
    *
-   * @return
+   * @return this Command
    */
   public Command Command() {
     this.bot = null;
@@ -70,30 +67,27 @@ public abstract class Command {
    * Initialize this Command with bot and registry.
    *
    * @param bot HikariBot we act on
-   * @param cmdRegistry Parent command registry
    */
-  public void setup(HikariBot bot, CommandRegistry cmdRegistry) {
+  public void setup(HikariBot bot) {
     this.bot = bot;
-    this.cmdRegistry = cmdRegistry;
   }
 
   /**
    * Self evident. Should be called only if invoker is allowed.
    *
    * @param channel channel command was sent from
-   * @param sender
-   * @param params
-   * @throws sk.hikaribot.cmd.Command.ImproperArgsException
-   * @pahe line after stripping :command
+   * @param sender nick of who sent the command
+   * @param params the rest of the command line after stripping command and delimiter
+   * @throws ImproperArgsException if command had the wrong amount of arguments passed
    */
   public abstract void execute(String channel, String sender, String params) throws ImproperArgsException;
 
   /**
    * Self evident. Should be called only if invoker is allowed.
    *
-   * @param channel
-   * @param sender
-   * @throws ImproperArgsException
+   * @param channel channel command was sent from
+   * @param sender nick of who sent the command
+   * @throws ImproperArgsException if command requires arguments
    */
   public abstract void execute(String channel, String sender) throws ImproperArgsException;
 

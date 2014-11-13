@@ -3,15 +3,19 @@
  * Shizuka Kamishima - 2014-11-08
  * Licensed under bsd3
  */
-package sk.hikaribot.twitter;
+package sk.hikaribot.twitter.cmd;
 
 import org.jibble.pircbot.Colors;
-import sk.hikaribot.cmd.Command;
+import sk.hikaribot.api.Command;
+import sk.hikaribot.bot.CommandRegistry;
+import sk.hikaribot.twitter.TwitBot;
 
 /**
  * Generates new requestToken URL for authorization.
  */
 public class RequestNewToken extends Command {
+  
+  private CommandRegistry cmdRegistry;
 
   public RequestNewToken() {
     this.name = "twitRequest";
@@ -28,6 +32,7 @@ public class RequestNewToken extends Command {
   @Override
   public void execute(String channel, String sender) throws ImproperArgsException {
     log.info("TWITREQUEST from " + sender + " in " + channel);
+    this.cmdRegistry = bot.getCommandRegistry();
     TwitBot twit = bot.getTwitBot();
     String authUrl;
     try {

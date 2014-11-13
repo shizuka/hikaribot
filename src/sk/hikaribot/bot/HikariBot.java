@@ -5,11 +5,13 @@
  */
 package sk.hikaribot.bot;
 
+import sk.hikaribot.api.exception.CommandNotFoundException;
+import sk.hikaribot.api.exception.InsufficientPermissionsException;
 import java.util.Properties;
 import org.jibble.pircbot.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import sk.hikaribot.cmd.Command;
+import sk.hikaribot.api.Command;
 import sk.hikaribot.twitter.TwitBot;
 
 /**
@@ -51,13 +53,13 @@ public class HikariBot extends PircBot {
     cmdRegistry.add(new sk.hikaribot.cmd.Version());
     cmdRegistry.add(new sk.hikaribot.cmd.Uptime());
     cmdRegistry.add(new sk.hikaribot.cmd.GetPermission());
-    cmdRegistry.add(new sk.hikaribot.twitter.LoadProfile());
-    cmdRegistry.add(new sk.hikaribot.twitter.UnloadProfile());
-    cmdRegistry.add(new sk.hikaribot.twitter.GetActiveProfile());
-    cmdRegistry.add(new sk.hikaribot.twitter.RequestNewToken());
-    cmdRegistry.add(new sk.hikaribot.twitter.ConfirmNewToken());
-    cmdRegistry.add(new sk.hikaribot.twitter.CancelNewToken());
-    cmdRegistry.add(new sk.hikaribot.twitter.Tweet());
+    cmdRegistry.add(new sk.hikaribot.twitter.cmd.LoadProfile());
+    cmdRegistry.add(new sk.hikaribot.twitter.cmd.UnloadProfile());
+    cmdRegistry.add(new sk.hikaribot.twitter.cmd.GetActiveProfile());
+    cmdRegistry.add(new sk.hikaribot.twitter.cmd.RequestNewToken());
+    cmdRegistry.add(new sk.hikaribot.twitter.cmd.ConfirmNewToken());
+    cmdRegistry.add(new sk.hikaribot.twitter.cmd.CancelNewToken());
+    cmdRegistry.add(new sk.hikaribot.twitter.cmd.Tweet());
     log.info("Commands registered");
   }
 
@@ -72,12 +74,12 @@ public class HikariBot extends PircBot {
     int permission = this.getUserPermission(channel, sender);
     try {
       cmdRegistry.execute(channel, sender, permission, message);
-    } catch (CommandRegistry.CommandNotFoundException ex) {
+    } catch (CommandNotFoundException ex) {
       /* suppressing 404 altogether
       if (permission > 0) { //only 404 if it was an op
         this.sendMessage(channel, Colors.RED + "NO: " + Colors.NORMAL + "Command not found '" + ex.getMessage() + "'");
       } */
-    } catch (CommandRegistry.InsufficientPermissionsException ex) {
+    } catch (InsufficientPermissionsException ex) {
       if (permission > 0) {
         this.sendMessage(channel, Colors.RED + "NO: " + Colors.NORMAL + "Insufficient permissions - "
                 + Colors.BLUE + "you: " + Colors.BROWN + permission + Colors.BLUE + ", needed: " + Colors.RED + ex.getMessage());

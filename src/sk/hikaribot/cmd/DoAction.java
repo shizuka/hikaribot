@@ -5,6 +5,8 @@
  */
 package sk.hikaribot.cmd;
 
+import sk.hikaribot.api.Command;
+
 /**
  * Performs /me action
  */

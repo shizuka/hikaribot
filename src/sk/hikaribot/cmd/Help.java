@@ -5,15 +5,19 @@
  */
 package sk.hikaribot.cmd;
 
+import sk.hikaribot.api.Command;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import org.jibble.pircbot.Colors;
+import sk.hikaribot.bot.CommandRegistry;
 
 /**
  * Prints helpInfo string.
  */
 public class Help extends Command {
+  
+  private CommandRegistry cmdRegistry;
 
   public Help() {
     this.name = "help";
@@ -25,6 +29,7 @@ public class Help extends Command {
 
   @Override
   public void execute(String channel, String sender, String params) {
+    this.cmdRegistry = bot.getCommandRegistry();
     /* get command associated with message, return "sender: :[name] - [info]" */
     String cmdName = params.split(" ", 1)[0];
     try {
@@ -38,7 +43,7 @@ public class Help extends Command {
       help += Colors.NORMAL + "- " + command.helpInfo + " - " + Colors.BLUE + "P: " + Colors.OLIVE + command.reqPerm;
       bot.sendMessage(channel, help);
       log.info("HELP " + cmdName + " from " + sender + " in " + channel);
-    } catch (sk.hikaribot.bot.CommandRegistry.CommandNotFoundException ex) {
+    } catch (sk.hikaribot.api.exception.CommandNotFoundException ex) {
       bot.sendMessage(channel, Colors.RED + "HELP: " + Colors.NORMAL + "Command '" + cmdName + "' was not found");
       log.error("HELP " + cmdName + " from " + sender + " in " + channel + " FAILED command not found");
     }
@@ -46,6 +51,7 @@ public class Help extends Command {
 
   @Override
   public void execute(String channel, String sender) {
+    this.cmdRegistry = bot.getCommandRegistry();
     /* list commands */
     List<String> commands = new ArrayList();
     List<Command> registry = this.cmdRegistry.getRegistry();

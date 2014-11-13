@@ -5,13 +5,14 @@
  */
 package sk.hikaribot.bot;
 
+import sk.hikaribot.api.exception.CommandNotFoundException;
+import sk.hikaribot.api.exception.InsufficientPermissionsException;
 import java.util.ArrayList;
 import java.util.List;
-import org.jibble.pircbot.PircBot;
-import sk.hikaribot.cmd.Command;
+import sk.hikaribot.api.Command;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import sk.hikaribot.cmd.Command.ImproperArgsException;
+import sk.hikaribot.api.Command.ImproperArgsException;
 
 /**
  * Maintains registry of commands, methods to get command handler.
@@ -43,7 +44,7 @@ public class CommandRegistry {
    * @param command
    */
   public void add(Command command) {
-    command.setup(bot, this);
+    command.setup(bot);
     commands.add(command);
     log.debug(command);
   }
@@ -55,9 +56,12 @@ public class CommandRegistry {
    * @param senderPerm
    * @param sender
    * @param message
-   * @throws sk.hikaribot.bot.CommandRegistry.CommandNotFoundException
-   * @throws sk.hikaribot.bot.CommandRegistry.InsufficientPermissionsException
-   * @throws sk.hikaribot.cmd.Command.ImproperArgsException
+   * @throws sk.hikaribot.api.exception.CommandNotFoundException if command was
+   * not found in the registry
+   * @throws sk.hikaribot.api.exception.InsufficientPermissionsException if
+   * sender has insufficient permission to invoke
+   * @throws sk.hikaribot.api.Command.ImproperArgsException if command was not
+   * called with appropriate args, calls HELP
    */
   public void execute(String channel, String sender, int senderPerm, String message) throws CommandNotFoundException, InsufficientPermissionsException, ImproperArgsException {
     String[] args = message.split(" ", 2);
@@ -91,22 +95,6 @@ public class CommandRegistry {
 
   public String getDelimiter() {
     return this.delimiter;
-  }
-
-  public static class CommandNotFoundException extends Exception {
-
-    public CommandNotFoundException(String command) {
-      super(command);
-      log.error("Command " + command + " not found");
-    }
-  }
-
-  public static class InsufficientPermissionsException extends Exception {
-
-    public InsufficientPermissionsException(String command, String sender, String channel, int userPerm, int reqPerm) {
-      super(Integer.toString(reqPerm));
-      log.error(sender + " in " + channel + " has insufficient permissions to invoke " + command.toUpperCase() + ", has:" + userPerm + " needs:" + reqPerm);
-    }
   }
 
 }
