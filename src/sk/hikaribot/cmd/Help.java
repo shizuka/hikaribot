@@ -45,8 +45,6 @@ import sk.hikaribot.bot.CommandRegistry;
  */
 public class Help extends Command {
 
-  private CommandRegistry cmdRegistry;
-
   public Help() {
     this.name = "help";
     this.numArgs = 1;
@@ -57,12 +55,12 @@ public class Help extends Command {
 
   @Override
   public void execute(String channel, String sender, String params) {
-    this.cmdRegistry = bot.getCommandRegistry();
+    CommandRegistry cr = bot.getCommandRegistry();
     /* get command associated with message, return "sender: :[name] - [info]" */
     String cmdName = params.split(" ", 1)[0];
     try {
-      Command command = this.cmdRegistry.getCommand(cmdName);
-      String help = Colors.BLUE + "HELP: " + cmdRegistry.getDelimiter() + command.name + " ";
+      Command command = cr.getCommand(cmdName);
+      String help = Colors.BLUE + "HELP: " + bot.getDelimiter() + command.name + " ";
       if (!command.helpArgs.isEmpty()) {
         for (String arg : command.helpArgs) {
           help += "<" + arg + "> ";
@@ -79,10 +77,10 @@ public class Help extends Command {
 
   @Override
   public void execute(String channel, String sender) {
-    this.cmdRegistry = bot.getCommandRegistry();
+    CommandRegistry cr = bot.getCommandRegistry();
     /* list commands */
     List<String> commands = new ArrayList();
-    List<Command> registry = this.cmdRegistry.getRegistry();
+    List<Command> registry = cr.getRegistry();
     /* get all command names and sort */
     for (Command command : registry) {
       commands.add(command.name);
@@ -90,8 +88,8 @@ public class Help extends Command {
     Collections.sort(commands);
     /* build output string */
     String out = Colors.BLUE + "COMMANDS: " + Colors.NORMAL;
-    for (String name : commands) {
-      out += name + ", ";
+    for (String cmdName : commands) {
+      out += cmdName + ", ";
     }
     /* print */
     bot.sendMessage(channel, out);

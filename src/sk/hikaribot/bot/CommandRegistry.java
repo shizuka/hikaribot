@@ -50,19 +50,17 @@ public class CommandRegistry {
   protected static final Logger log = LogManager.getLogger("Cmd");
 
   private final HikariBot bot;
-  private final String delimiter;
-
+  private final PermissionsManager pm;
   private final List<Command> commands;
 
   /**
    * Initializes registry. Caller should run series of add()s after
    *
    * @param bot HikariBot
-   * @param delimiter the character that denotes a command
    */
-  public CommandRegistry(HikariBot bot, String delimiter) {
+  public CommandRegistry(HikariBot bot) {
     this.bot = bot;
-    this.delimiter = delimiter;
+    this.pm = bot.getPermissionsManager();
     this.commands = new ArrayList();
   }
 
@@ -129,13 +127,6 @@ public class CommandRegistry {
    */
   public List<Command> getRegistry() {
     return commands;
-  }
-
-  /**
-   * @return the command prefix delimiter
-   */
-  public String getDelimiter() {
-    return this.delimiter;
   }
 
 }
