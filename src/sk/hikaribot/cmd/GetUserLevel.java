@@ -1,5 +1,5 @@
 /*
- * hikaribot - GetPermission
+ * hikaribot - GetUserLevel
  * Shizuka Kamishima - 2014-11-08
  * 
  * Copyright (c) 2014, Shizuka Kamishima
@@ -40,10 +40,10 @@ import sk.hikaribot.api.exception.ImproperArgsException;
  *
  * @author Shizuka Kamishima
  */
-public class GetPermission extends Command {
+public class GetUserLevel extends Command {
 
-  public GetPermission() {
-    this.name = "permLevel";
+  public GetUserLevel() {
+    this.name = "level";
     this.numArgs = 1;
     this.helpArgs.add("nick");
     this.helpInfo = "prints user permissions level, defaults to invoker";
@@ -56,7 +56,7 @@ public class GetPermission extends Command {
       throw new ImproperArgsException(this.name);
     }
     int permission = bot.getPermissionsManager().getUserLevel(params);
-    bot.sendMessage(channel, Colors.BLUE + "PERMISSION: " + Colors.NORMAL + params + " has permission level " + Colors.OLIVE + permission);
+    bot.sendMessage(channel, Colors.BLUE + "PERMISSION: " + Colors.NORMAL + params + " is level " + Colors.OLIVE + permission);
     log.info("PERMISSION " + params + " from " + sender + " in " + channel + ": " + permission);
   }
 

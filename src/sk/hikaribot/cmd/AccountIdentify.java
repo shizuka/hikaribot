@@ -1,6 +1,6 @@
 /*
- * hikaribot - GetWhois
- * Shizuka Kamishima - 2014-11-13
+ * hikaribot - AccountIdentify
+ * Shizuka Kamishima - 2014-11-14
  * 
  * Copyright (c) 2014, Shizuka Kamishima
  * All rights reserved.
@@ -31,50 +31,33 @@
  */
 package sk.hikaribot.cmd;
 
-import java.util.Observable;
-import java.util.Observer;
 import sk.hikaribot.api.Command;
-import sk.hikaribot.api.WhoisResponse;
 import sk.hikaribot.api.exception.ImproperArgsException;
+import sk.hikaribot.bot.PermissionsManager;
 
 /**
- * DEVELOPMENT - Performs WHOIS on target, prints information to console.
+ * Identifies invoker with Permissions.
  *
  * @author Shizuka Kamishima
  */
-public class GetWhois extends Command implements Observer {
+public class AccountIdentify extends Command {
 
-  public GetWhois() {
-    this.name = "whois";
-    this.helpInfo = "does a whois";
-    this.numArgs = 1;
-    this.helpArgs.add("target");
-    this.reqPerm = 3;
+  public AccountIdentify() {
+    this.name = "identify";
+    this.numArgs = 0;
+    this.helpInfo = "identifies your account";
+    this.reqPerm = 0;
   }
 
   @Override
   public void execute(String channel, String sender, String params) throws ImproperArgsException {
-    WhoisResponse wir = new WhoisResponse(params, channel);
-    wir.addObserver(this);
-    bot.sendWhois(params, wir);
-    log.info("WHOIS " + params + " from  " + sender + " in " + channel + " sent");
+    execute(channel, sender);
   }
 
   @Override
   public void execute(String channel, String sender) throws ImproperArgsException {
-    throw new ImproperArgsException(this.name);
-  }
-
-  @Override
-  public void update(Observable o, Object arg) {
-    //Called when WhoisResponse.onEndOfWhois() is called by HikariBot
-    //At this point WhoisResponse is considered complete, fetch bits
-    if (arg instanceof WhoisResponse) {
-      WhoisResponse wir = (WhoisResponse) arg;
-      log.debug("WHOIS COMMAND got whois response for " + wir.getTarget());
-      bot.getServerResponder().deleteObserver((Observer) o); //i hope this works
-      bot.sendMessage(wir.getChannel(), "Did a whois on " + wir.getTarget() + ", see console for results");
-    }
+    PermissionsManager pm = bot.getPermissionsManager();
+    pm.identify(sender, channel);
   }
 
 }
