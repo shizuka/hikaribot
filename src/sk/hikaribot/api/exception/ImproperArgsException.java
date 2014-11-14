@@ -2,9 +2,7 @@
  * hikaribot - ImproperArgsException
  * Shizuka Kamishima - 2014-11-13
  * Exception
- */
-
-/*
+ * 
  * Copyright (c) 2014, Shizuka Kamishima
  * All rights reserved.
  *
@@ -32,14 +30,19 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-
 package sk.hikaribot.api.exception;
 
 /**
- * Class description
+ * Indicates a command was called without enough arguments. Passes command to
+ * HELP for information.
+ *
+ * @author Shizuka Kamishima
  */
 public class ImproperArgsException extends Exception {
 
+  /**
+   * @param command the command that threw this Exception, to be passed to HELP
+   */
   public ImproperArgsException(String command) {
     super(command);
   }

@@ -56,14 +56,29 @@ public class WhoisResponse extends Observable implements Observer {
   private String canonicalNick;
   private boolean isIdented = false;
 
+  /**
+   * Prepares WhoisResponse to collect WHOIS information.
+   *
+   * @param target the nick we're WHOISing
+   */
   public WhoisResponse(String target) {
     this.target = target;
   }
 
-  public void onWhoisNoSuchNick(String response) {
+  /**
+   * 401 ERR_NOSUCHNICK, nick doesn't exist. Immediately followed by ENDOFWHOIS.
+   */
+  public void onWhoisNoSuchNick() {
     this.exists = false;
   }
 
+  /**
+   * 311 RPL_WHOISUSER, target's usermask.
+   *
+   * @param username 'bar' in foo!bar@baz
+   * @param hostname 'baz' in foo!bar@baz
+   * @param realname "real name" given by client
+   */
   public void onWhoisUser(String username, String hostname, String realname) {
     //bot nick <username hostname * :realname>
     this.realname = realname;
@@ -71,23 +86,49 @@ public class WhoisResponse extends Observable implements Observer {
     log.debug("WHOIS RESPONSE FOR " + this.target + ": " + this.usermask + " " + this.realname);
   }
 
+  /**
+   * 319 RPL_WHOISCHANNELS, list of visible channels the target is in. Omits any
+   * +s or +p channel the bot does not share with the target.
+   *
+   * @param channels
+   */
   public void onWhoisChannels(String[] channels) {
     //bot nick <:#channel #channel @#channelwithop #channel>
     log.debug("WHOIS RESPONSE FOR " + this.target + ": Is in channels: " + Arrays.toString(channels));
   }
 
+  /**
+   * 312 RPL_WHOISSERVER, network server the target is connected to.
+   *
+   * @param domainName server domain name
+   * @param friendlyName server's friendly name? honestly not sure what it
+   * represents
+   */
   public void onWhoisServer(String domainName, String friendlyName) {
     //bot nick <server.domain.name :friendly name>
     //don't care yet
     log.debug("WHOIS RESPONSE FOR " + this.target + ": Is connected to server " + domainName + ": " + friendlyName);
   }
 
+  /**
+   * 317 RPL_WHOISIDLE, seconds the user has been idle for. Sometimes present
+   * sometimes not. Not sure what causes it to not be sent.
+   *
+   * @param secsIdle
+   * @param signonTimestamp
+   */
   public void onWhoisIdle(String secsIdle, String signonTimestamp) {
     //bot nick <secsIdle signonTimestamp> :seconds idle, signon time
     //don't care yet
     log.debug("WHOIS RESPONSE FOR " + this.target + ": Has been idle for " + secsIdle + " seconds and signed on at timestamp " + signonTimestamp);
   }
 
+  /**
+   * 330 Nickserv login, the nickserv account the target has identified for.
+   * Absent if the target is not idented.
+   *
+   * @param canonicalNick nickserv account the target is identified for
+   */
   public void onWhoisNickserv(String canonicalNick) {
     //bot nick <canonical> :is logged in as
     this.canonicalNick = canonicalNick;
@@ -95,6 +136,11 @@ public class WhoisResponse extends Observable implements Observer {
     log.debug("WHOIS RESPONSE FOR " + this.target + ": Is logged in as: " + this.canonicalNick);
   }
 
+  /**
+   * 318 RPL_ENDOFWHOIS, all whois information has been sent by this point.
+   * Notifies Observer that the request is complete. Observer will fetch and
+   * discard this WhoisResponse.
+   */
   public void onEndOfWhois() {
     //bot nick :End of /WHOIS list.
     log.debug("WHOIS RESPONSE FOR " + this.target + " ENDS");
@@ -102,22 +148,37 @@ public class WhoisResponse extends Observable implements Observer {
     this.notifyObservers(this);
   }
 
+  /**
+   * @return the nick we're WHOISing
+   */
   public String getTarget() {
     return target;
   }
 
+  /**
+   * @return target's usermask, foo!bar@baz.quux
+   */
   public String getUsermask() {
     return usermask;
   }
 
+  /**
+   * @return target's realname field
+   */
   public String getRealname() {
     return realname;
   }
 
+  /**
+   * @return the nickserv account target has identified for, if any
+   */
   public String getCanonicalNick() {
     return canonicalNick;
   }
 
+  /**
+   * @return is the target identified with nickserv?
+   */
   public boolean isIdented() {
     return isIdented;
   }
@@ -149,6 +210,8 @@ public class WhoisResponse extends Observable implements Observer {
     if (code == RPL_WHOISUSER) {
       //botname target username hostname * :realname
       this.onWhoisUser(info[2], info[3], extra);
+    } else if (code == ERR_NOSUCHNICK) {
+      this.onWhoisNoSuchNick();
     } else if (code == RPL_WHOISCHANNELS) {
       //botname target :#channel #channel @#channelwithop
       this.onWhoisChannels(extra.split(" "));

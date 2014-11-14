@@ -1,9 +1,7 @@
 /*
  * hikaribot - GetWhois
  * Shizuka Kamishima - 2014-11-13
- */
-
-/*
+ * 
  * Copyright (c) 2014, Shizuka Kamishima
  * All rights reserved.
  *

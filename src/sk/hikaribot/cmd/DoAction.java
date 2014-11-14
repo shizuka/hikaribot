@@ -1,9 +1,7 @@
 /*
  * hikaribot - DoAction
  * Shizuka Kamishima - 2014-11-07
- */
-
-/*
+ * 
  * Copyright (c) 2014, Shizuka Kamishima
  * All rights reserved.
  *
@@ -38,6 +36,8 @@ import sk.hikaribot.api.exception.ImproperArgsException;
 
 /**
  * Performs /me action
+ *
+ * @author Shizuka Kamishima
  */
 public class DoAction extends Command {
 

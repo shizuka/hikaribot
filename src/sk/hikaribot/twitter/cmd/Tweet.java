@@ -1,9 +1,7 @@
 /*
  * hikaribot - Tweet
  * Shizuka Kamishima - 2014-11-08
- */
-
-/*
+ * 
  * Copyright (c) 2014, Shizuka Kamishima
  * All rights reserved.
  *
@@ -42,6 +40,8 @@ import twitter4j.TwitterException;
 
 /**
  * Posts a tweet as the active profile.
+ *
+ * @author Shizuka Kamishima
  */
 public class Tweet extends Command {
 

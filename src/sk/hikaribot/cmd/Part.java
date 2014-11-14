@@ -1,9 +1,7 @@
 /*
  * hikaribot - Part
  * Shizuka Kamishima - 2014-11-07
- */
-
-/*
+ * 
  * Copyright (c) 2014, Shizuka Kamishima
  * All rights reserved.
  *
@@ -39,6 +37,8 @@ import sk.hikaribot.api.exception.ImproperArgsException;
 
 /**
  * Parts a channel.
+ *
+ * @author Shizuka Kamishima
  */
 public class Part extends Command {
 

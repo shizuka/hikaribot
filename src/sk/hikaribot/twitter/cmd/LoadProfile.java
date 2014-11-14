@@ -1,9 +1,7 @@
 /*
  * hikaribot - LoadProfile
  * Shizuka Kamishima - 2014-11-08
- */
-
-/*
+ * 
  * Copyright (c) 2014, Shizuka Kamishima
  * All rights reserved.
  *
@@ -44,6 +42,8 @@ import twitter4j.TwitterException;
 
 /**
  * Loads AccessToken profile to tweet as.
+ *
+ * @author Shizuka Kamishima
  */
 public class LoadProfile extends Command {
 

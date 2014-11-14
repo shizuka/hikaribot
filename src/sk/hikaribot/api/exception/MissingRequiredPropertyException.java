@@ -2,9 +2,7 @@
  * hikaribot - MissingRequiredPropertyException
  * Shizuka Kamishima - 2014-11-13
  * Exception
- */
-
-/*
+ * 
  * Copyright (c) 2014, Shizuka Kamishima
  * All rights reserved.
  *
@@ -37,14 +35,17 @@ package sk.hikaribot.api.exception;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+/**
+ * Indicates imported .properties file was missing a required property.
+ *
+ * @author Shizuka Kamishima
+ */
 public class MissingRequiredPropertyException extends Exception {
 
   private static final Logger log = LogManager.getLogger("Exception");
 
   /**
-   * Indicates imported properties file was missing a required entry.
-   *
-   * @param prop required property missing from config file
+   * @param prop required property missing from the file
    */
   public MissingRequiredPropertyException(String prop) {
     super(prop);

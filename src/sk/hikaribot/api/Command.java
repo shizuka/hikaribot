@@ -2,9 +2,7 @@
  * hikaribot - Command Interface
  * Shizuka Kamishima - 2014-11-06
  * Interface
- */
-
-/*
+ * 
  * Copyright (c) 2014, Shizuka Kamishima
  * All rights reserved.
  *
