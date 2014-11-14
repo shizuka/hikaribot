@@ -1,9 +1,7 @@
 /*
  * hikaribot - Help
  * Shizuka Kamishima - 2014-11-07
- */
-
-/*
+ * 
  * Copyright (c) 2014, Shizuka Kamishima
  * All rights reserved.
  *
@@ -42,6 +40,8 @@ import sk.hikaribot.bot.CommandRegistry;
 
 /**
  * Prints helpInfo string.
+ *
+ * @author Shizuka Kamishima
  */
 public class Help extends Command {
 

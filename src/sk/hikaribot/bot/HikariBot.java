@@ -1,9 +1,7 @@
 /*
  * Hikari IRC Bot - HikariBot
  * Shizuka Kamishima - 2014-11-06
- */
-
-/*
+ * 
  * Copyright (c) 2014, Shizuka Kamishima
  * All rights reserved.
  *
@@ -34,25 +32,25 @@
 package sk.hikaribot.bot;
 
 import java.util.Observer;
-import sk.hikaribot.api.exception.CommandNotFoundException;
-import sk.hikaribot.api.exception.InsufficientPermissionsException;
 import java.util.Properties;
 import org.jibble.pircbot.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import sk.hikaribot.api.ServerResponse;
-import sk.hikaribot.api.exception.ImproperArgsException;
+import sk.hikaribot.api.exception.*;
 import sk.hikaribot.twitter.TwitBot;
 
 /**
  * Our heroine, the Hikari IRC Bot.
+ *
+ * @author Shizuka Kamishima
  */
 public class HikariBot extends PircBot {
 
   private static final Logger log = LogManager.getLogger("Bot");
   private final Properties config;
   protected final CommandRegistry cmdRegistry;
-  public final TwitBot twit;
+  private final TwitBot twit;
   private final long startMillis;
   private final ServerResponse sr;
 
@@ -152,17 +150,26 @@ public class HikariBot extends PircBot {
      */
   }
 
+  /**
+   * Called when we finish connecting to the server
+   */
   @Override
   protected void onConnect() {
     this.identify(this.config.getProperty("pass"));
   }
 
+  /**
+   * Called when we disconnect from the server
+   */
   @Override
   protected void onDisconnect() {
     log.info("Disconnected, exiting...");
     System.exit(0);
   }
 
+  /**
+   * Called when we get a list of users from a channel
+   */
   @Override
   protected void onUserList(String channel, User[] users) {
     log.info("Joined " + channel);
@@ -173,31 +180,31 @@ public class HikariBot extends PircBot {
     //we're ignoring finger
   }
 
-  @Override
-  protected void onIncomingChatRequest(DccChat chat) {
-    //we're ignoring DCC
-  }
-
-  @Override
-  protected void onFileTransferFinished(DccFileTransfer transfer, Exception e) {
-    //we're ignoring DCC
-  }
-
-  @Override
-  protected void onIncomingFileTransfer(DccFileTransfer transfer) {
-    //we're ignoring DCC
-  }
-
+  /**
+   * Requests a WHOIS for a nick.
+   *
+   * @param target nick to WHOIS
+   * @param wiResponse WhoisResponse to subscribe to ServerResponse, for
+   * collecting WHOIS responses
+   */
   public void sendWhois(String target, Observer wiResponse) {
     sr.addObserver(wiResponse);
     this.sendRawLine("WHOIS " + target);
   }
 
+  /**
+   * Catch known server responses and send them to our Observable intermediary
+   */
   @Override
   public synchronized void onServerResponse(int code, String response) {
     sr.onServerResponse(code, response);
   }
 
+  /**
+   * @param channel the channel to fetch from
+   * @param nick the nick to fetch
+   * @return User object for the nick
+   */
   public User getUser(String channel, String nick) {
     User[] users = this.getUsers(channel);
     for (User user : users) {
@@ -208,6 +215,9 @@ public class HikariBot extends PircBot {
     return null;
   }
 
+  /**
+   * @return the CommandRegistry object
+   */
   public CommandRegistry getCommandRegistry() {
     return cmdRegistry;
   }
@@ -225,14 +235,23 @@ public class HikariBot extends PircBot {
     }
   }
 
+  /**
+   * @return the TwitBot object
+   */
   public TwitBot getTwitBot() {
     return twit;
   }
 
+  /**
+   * @return System.getCurrentMillis() from when the bot started up
+   */
   public long getTimeStarted() {
     return startMillis;
   }
 
+  /**
+   * @return the ServerResponse intermediary
+   */
   public ServerResponse getServerResponder() {
     return sr;
   }

@@ -2,9 +2,7 @@
  * Hikari IRC Bot - Executable
  * Shizuka Kamishima - 2014-11-06
  * Executable
- */
-
-/*
+ * 
  * Copyright (c) 2014, Shizuka Kamishima
  * All rights reserved.
  *
@@ -46,6 +44,8 @@ import sk.hikaribot.bot.HikariBot;
 
 /**
  * Executable.
+ * 
+ * @author Shizuka Kamishima
  */
 public class Main {
 

@@ -1,9 +1,7 @@
 /*
  * hikaribot - GetActiveProfile
  * Shizuka Kamishima - 2014-11-08
- */
-
-/*
+ * 
  * Copyright (c) 2014, Shizuka Kamishima
  * All rights reserved.
  *
@@ -40,6 +38,8 @@ import sk.hikaribot.twitter.TwitBot;
 
 /**
  * Prints active Twitter profile.
+ *
+ * @author Shizuka Kamishima
  */
 public class GetActiveProfile extends Command {
 

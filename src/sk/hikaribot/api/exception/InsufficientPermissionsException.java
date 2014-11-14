@@ -2,9 +2,7 @@
  * hikaribot - InsufficientPermissionsException
  * Shizuka Kamishima - 2014-11-13
  * Exception
- */
-
-/*
+ * 
  * Copyright (c) 2014, Shizuka Kamishima
  * All rights reserved.
  *
@@ -37,13 +35,16 @@ package sk.hikaribot.api.exception;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+/**
+ * Indicates invoker has insufficient permissions to invoke this command.
+ *
+ * @author Shizuka Kamishima
+ */
 public class InsufficientPermissionsException extends Exception {
 
   private static final Logger log = LogManager.getLogger("Exception");
 
   /**
-   * Indicates invoker has insufficient permissions to invoke command.
-   *
    * @param command the command invoked
    * @param sender nick of the invoker
    * @param channel channel we were called from

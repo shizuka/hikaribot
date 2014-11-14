@@ -1,9 +1,7 @@
 /*
  * hikaribot - RawLine
  * Shizuka Kamishima - 2014-11-06
- */
-
-/*
+ * 
  * Copyright (c) 2014, Shizuka Kamishima
  * All rights reserved.
  *
@@ -36,6 +34,11 @@ package sk.hikaribot.cmd;
 import sk.hikaribot.api.Command;
 import sk.hikaribot.api.exception.ImproperArgsException;
 
+/**
+ * Sends raw line to the server.
+ *
+ * @author Shizuka Kamishima
+ */
 public class RawLine extends Command {
 
   public RawLine() {

@@ -1,9 +1,7 @@
 /*
  * hikaribot - CommandRegistry
  * Shizuka Kamishima - 2014-11-07
- */
-
-/*
+ * 
  * Copyright (c) 2014, Shizuka Kamishima
  * All rights reserved.
  *
@@ -44,6 +42,8 @@ import sk.hikaribot.api.exception.ImproperArgsException;
 
 /**
  * Maintains registry of commands, methods to get command handler.
+ *
+ * @author Shizuka Kamishima
  */
 public class CommandRegistry {
 
@@ -57,7 +57,7 @@ public class CommandRegistry {
   /**
    * Initializes registry. Caller should run series of add()s after
    *
-   * @param bot the bot that commands will act upon
+   * @param bot HikariBot
    * @param delimiter the character that denotes a command
    */
   public CommandRegistry(HikariBot bot, String delimiter) {
@@ -67,9 +67,10 @@ public class CommandRegistry {
   }
 
   /**
-   * Adds command to list of available commands.
+   * Adds command to list of available commands. Initializes command with
+   * reference to HikariBot.
    *
-   * @param command
+   * @param command Command to add to registry
    */
   public void add(Command command) {
     command.setup(bot);
@@ -78,18 +79,17 @@ public class CommandRegistry {
   }
 
   /**
-   * Attempts to run given message name.
+   * Attempts to run a command in a message.
    *
-   * @param channel
-   * @param senderPerm
-   * @param sender
-   * @param message
-   * @throws sk.hikaribot.api.exception.CommandNotFoundException if command was
-   * not found in the registry
-   * @throws sk.hikaribot.api.exception.InsufficientPermissionsException if
-   * sender has insufficient permission to invoke
-   * @throws sk.hikaribot.api.Command.ImproperArgsException if command was not
-   * called with appropriate args, calls HELP
+   * @param channel source of invocation
+   * @param senderPerm invoker's permissions level
+   * @param sender invoker's nick
+   * @param message contents of PRIVMSG including command and delimiter
+   * @throws CommandNotFoundException if command was not found in the registry
+   * @throws InsufficientPermissionsException if sender has insufficient
+   * permission to invoke
+   * @throws ImproperArgsException if command was not called with appropriate
+   * args, calls HELP
    */
   public void execute(String channel, String sender, int senderPerm, String message) throws CommandNotFoundException, InsufficientPermissionsException, ImproperArgsException {
     String[] args = message.split(" ", 2);
@@ -108,6 +108,13 @@ public class CommandRegistry {
     }
   }
 
+  /**
+   * Fetch a Command from the registry.
+   *
+   * @param command the name of the command
+   * @return the Command object
+   * @throws CommandNotFoundException if command doesn't exist
+   */
   public Command getCommand(String command) throws CommandNotFoundException {
     for (Command cmdObj : commands) {
       if (cmdObj.name.equalsIgnoreCase(command)) {
@@ -117,10 +124,16 @@ public class CommandRegistry {
     throw new CommandNotFoundException(command);
   }
 
+  /**
+   * @return the command registry, for HELP to iterate through
+   */
   public List<Command> getRegistry() {
     return commands;
   }
 
+  /**
+   * @return the command prefix delimiter
+   */
   public String getDelimiter() {
     return this.delimiter;
   }

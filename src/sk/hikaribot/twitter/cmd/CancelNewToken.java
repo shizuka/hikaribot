@@ -1,9 +1,7 @@
 /*
  * hikaribot - CancelNewToken
  * Shizuka Kamishima - 2014-11-08
- */
-
-/*
+ * 
  * Copyright (c) 2014, Shizuka Kamishima
  * All rights reserved.
  *
@@ -40,6 +38,8 @@ import sk.hikaribot.twitter.TwitBot;
 
 /**
  * Cancels pending RequestToken process.
+ *
+ * @author Shizuka Kamishima
  */
 public class CancelNewToken extends Command {
 
