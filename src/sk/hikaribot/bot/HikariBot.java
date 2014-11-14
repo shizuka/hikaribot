@@ -31,6 +31,7 @@
  */
 package sk.hikaribot.bot;
 
+import java.io.IOException;
 import java.util.Observer;
 import java.util.Properties;
 import org.jibble.pircbot.*;
@@ -44,15 +45,26 @@ import sk.hikaribot.twitter.TwitBot;
  * Our heroine, the Hikari IRC Bot.
  *
  * @author Shizuka Kamishima
+ * @version development
  */
 public class HikariBot extends PircBot {
 
   private static final Logger log = LogManager.getLogger("Bot");
-  private final Properties config;
-  protected final CommandRegistry cmdRegistry;
+
+  private final CommandRegistry cr;
+  private final ServerResponse sr;
   private final TwitBot twit;
   private final long startMillis;
-  private final ServerResponse sr;
+
+  private final String owner;
+  private final String delimiter;
+  private final String defaultChannel;
+  private final String defaultNick;
+  private final String nickservPassword;
+  private final String server;
+  private final String version;
+
+  private boolean _isConnected = false;
 
   /**
    * Start HikariBot with runtime properties.
@@ -63,36 +75,60 @@ public class HikariBot extends PircBot {
   public HikariBot(Properties config, Properties twitConfig) {
     this.startMillis = System.currentTimeMillis();
     log.debug("HikariBot started...");
-    this.config = config;
-    this.setName(config.getProperty("nick"));
-    this.setVersion(config.getProperty("version"));
-    this.cmdRegistry = new CommandRegistry(this, config.getProperty("delimiter"));
+
+    /* load config */
+    this.owner = config.getProperty("owner");
+    this.delimiter = config.getProperty("delimiter");
+    this.defaultChannel = config.getProperty("chan");
+    this.defaultNick = config.getProperty("nick");
+    this.nickservPassword = config.getProperty("pass");
+    this.server = config.getProperty("server");
+    this.version = config.getProperty("version");
+
+    /* initialize components */
+    this.cr = new CommandRegistry(this, delimiter);
     this.twit = new TwitBot(this, twitConfig);
     this.sr = new ServerResponse();
+
     /* register commands */
     log.info("Registering commands...");
-    cmdRegistry.add(new sk.hikaribot.cmd.Verbose());
-    cmdRegistry.add(new sk.hikaribot.cmd.NoVerbose());
-    cmdRegistry.add(new sk.hikaribot.cmd.RawLine());
-    cmdRegistry.add(new sk.hikaribot.cmd.Help());
-    cmdRegistry.add(new sk.hikaribot.cmd.Die());
-    cmdRegistry.add(new sk.hikaribot.cmd.Join());
-    cmdRegistry.add(new sk.hikaribot.cmd.Part());
-    cmdRegistry.add(new sk.hikaribot.cmd.Say());
-    cmdRegistry.add(new sk.hikaribot.cmd.Nick());
-    cmdRegistry.add(new sk.hikaribot.cmd.DoAction());
-    cmdRegistry.add(new sk.hikaribot.cmd.Version());
-    cmdRegistry.add(new sk.hikaribot.cmd.Uptime());
-    cmdRegistry.add(new sk.hikaribot.cmd.GetPermission());
-    cmdRegistry.add(new sk.hikaribot.cmd.GetWhois());
-    cmdRegistry.add(new sk.hikaribot.twitter.cmd.LoadProfile());
-    cmdRegistry.add(new sk.hikaribot.twitter.cmd.UnloadProfile());
-    cmdRegistry.add(new sk.hikaribot.twitter.cmd.GetActiveProfile());
-    cmdRegistry.add(new sk.hikaribot.twitter.cmd.RequestNewToken());
-    cmdRegistry.add(new sk.hikaribot.twitter.cmd.ConfirmNewToken());
-    cmdRegistry.add(new sk.hikaribot.twitter.cmd.CancelNewToken());
-    cmdRegistry.add(new sk.hikaribot.twitter.cmd.Tweet());
+    cr.add(new sk.hikaribot.cmd.Verbose());
+    cr.add(new sk.hikaribot.cmd.NoVerbose());
+    cr.add(new sk.hikaribot.cmd.RawLine());
+    cr.add(new sk.hikaribot.cmd.Help());
+    cr.add(new sk.hikaribot.cmd.Die());
+    cr.add(new sk.hikaribot.cmd.Join());
+    cr.add(new sk.hikaribot.cmd.Part());
+    cr.add(new sk.hikaribot.cmd.Say());
+    cr.add(new sk.hikaribot.cmd.Nick());
+    cr.add(new sk.hikaribot.cmd.DoAction());
+    cr.add(new sk.hikaribot.cmd.Version());
+    cr.add(new sk.hikaribot.cmd.Uptime());
+    cr.add(new sk.hikaribot.cmd.GetPermission());
+    cr.add(new sk.hikaribot.cmd.GetWhois());
+    cr.add(new sk.hikaribot.twitter.cmd.LoadProfile());
+    cr.add(new sk.hikaribot.twitter.cmd.UnloadProfile());
+    cr.add(new sk.hikaribot.twitter.cmd.GetActiveProfile());
+    cr.add(new sk.hikaribot.twitter.cmd.RequestNewToken());
+    cr.add(new sk.hikaribot.twitter.cmd.ConfirmNewToken());
+    cr.add(new sk.hikaribot.twitter.cmd.CancelNewToken());
+    cr.add(new sk.hikaribot.twitter.cmd.Tweet());
     log.info("Commands registered");
+
+    /* start bot */
+    this.setName(defaultNick);
+    this.setVersion(version);
+    this.setLogin("hikaribot");
+    try {
+      this.connect(server);
+      log.info("Connecting to " + server + "...");
+    } catch (IOException ex) {
+      log.fatal("Failed to connect to server!");
+      System.exit(1);
+    } catch (IrcException ex) {
+      log.fatal("Server would not let us join!");
+      System.exit(1);
+    }
   }
 
   /**
@@ -105,7 +141,7 @@ public class HikariBot extends PircBot {
   private void command(String channel, String sender, String message) {
     int permission = this.getUserPermission(channel, sender);
     try {
-      cmdRegistry.execute(channel, sender, permission, message);
+      cr.execute(channel, sender, permission, message);
     } catch (CommandNotFoundException ex) {
       /* suppressing 404 altogether
        if (permission > 0) { //only 404 if it was an op
@@ -132,7 +168,7 @@ public class HikariBot extends PircBot {
       return;
     }
     message = Colors.removeFormattingAndColors(message);
-    if (message.startsWith(config.getProperty("delimiter"))) { //then it's a command
+    if (message.startsWith(delimiter)) { //then it's a command
       this.command(channel, sender, message);
     }
   }
@@ -155,7 +191,10 @@ public class HikariBot extends PircBot {
    */
   @Override
   protected void onConnect() {
-    this.identify(this.config.getProperty("pass"));
+    this.identify(this.nickservPassword);
+    log.info("Sent Nickserv ident");
+    this.joinChannel(this.defaultChannel);
+    log.info("Joining " + this.defaultChannel);
   }
 
   /**
@@ -175,9 +214,49 @@ public class HikariBot extends PircBot {
     log.info("Joined " + channel);
   }
 
+  /**
+   * Called when we get FINGERed, ew
+   */
   @Override
   protected void onFinger(String sourceNick, String sourceLogin, String sourceHostname, String target) {
-    //we're ignoring finger
+    super.onFinger(sourceNick, sourceLogin, sourceHostname, target);
+    log.warn("FINGER from " + sourceNick + "!" + sourceLogin + "@" + sourceHostname);
+  }
+
+  /**
+   * Called when someone TIMEs us
+   */
+  @Override
+  protected void onTime(String sourceNick, String sourceLogin, String sourceHostname, String target) {
+    super.onTime(sourceNick, sourceLogin, sourceHostname, target);
+    log.warn("TIME from " + sourceNick + "!" + sourceLogin + "@" + sourceHostname);
+  }
+
+  /**
+   * Called when someone PINGs us
+   */
+  @Override
+  protected void onPing(String sourceNick, String sourceLogin, String sourceHostname, String target, String pingValue) {
+    super.onPing(sourceNick, sourceLogin, sourceHostname, target, pingValue);
+    log.warn("PING from " + sourceNick + "!" + sourceLogin + "@" + sourceHostname);
+  }
+
+  /**
+   * Called when someone VERSIONs us
+   */
+  @Override
+  protected void onVersion(String sourceNick, String sourceLogin, String sourceHostname, String target) {
+    super.onVersion(sourceNick, sourceLogin, sourceHostname, target);
+    log.warn("VERSION from " + sourceNick + "!" + sourceLogin + "@" + sourceHostname);
+  }
+
+  /**
+   * Called on NOTICEs
+   */
+  @Override
+  protected void onNotice(String sourceNick, String sourceLogin, String sourceHostname, String target, String notice) {
+    super.onNotice(sourceNick, sourceLogin, sourceHostname, target, notice);
+    log.warn("NOTICE from " + sourceNick + "!" + sourceLogin + "@" + sourceHostname + ": " + notice);
   }
 
   /**
@@ -219,12 +298,12 @@ public class HikariBot extends PircBot {
    * @return the CommandRegistry object
    */
   public CommandRegistry getCommandRegistry() {
-    return cmdRegistry;
+    return cr;
   }
 
   public int getUserPermission(String channel, String nick) {
     User user = this.getUser(channel, nick.trim());
-    if (user.equals(config.getProperty("owner"))) {
+    if (user.equals(owner)) {
       return 3; //owner
     } else if (user.isOp()) {
       return 2; //channel operator
