@@ -1,6 +1,6 @@
 /*
- * hikaribot - ImproperArgsException
- * Shizuka Kamishima - 2014-11-13
+ * hikaribot - RequestInProgressException
+ * Shizuka Kamishima - 2014-11-14
  * Exception
  * 
  * Copyright (c) 2014, Shizuka Kamishima
@@ -32,19 +32,21 @@
  */
 package sk.hikaribot.api.exception;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 /**
- * Indicates a command was called without enough arguments. Passes command to
- * HELP for information.
+ * Indicates a RequestToken is pending, and a new one shouldn't be generated.
  *
  * @author Shizuka Kamishima
  */
-public class ImproperArgsException extends Exception {
+public class RequestInProgressException extends Exception {
 
-  /**
-   * @param command the command that threw this Exception, to be passed to HELP
-   */
-  public ImproperArgsException(String command) {
-    super(command);
+  private static final Logger log = LogManager.getLogger("TwitterBotException");
+
+  public RequestInProgressException() {
+    super();
+    log.error("Token request already in progress");
   }
 
 }

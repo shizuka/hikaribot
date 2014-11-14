@@ -1,7 +1,6 @@
 /*
- * hikaribot - ImproperArgsException
- * Shizuka Kamishima - 2014-11-13
- * Exception
+ * hikaribot - AccountIdentify
+ * Shizuka Kamishima - 2014-11-14
  * 
  * Copyright (c) 2014, Shizuka Kamishima
  * All rights reserved.
@@ -30,21 +29,35 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package sk.hikaribot.api.exception;
+package sk.hikaribot.cmd;
+
+import sk.hikaribot.api.Command;
+import sk.hikaribot.api.exception.ImproperArgsException;
+import sk.hikaribot.bot.PermissionsManager;
 
 /**
- * Indicates a command was called without enough arguments. Passes command to
- * HELP for information.
+ * Identifies invoker with Permissions.
  *
  * @author Shizuka Kamishima
  */
-public class ImproperArgsException extends Exception {
+public class AccountIdentify extends Command {
 
-  /**
-   * @param command the command that threw this Exception, to be passed to HELP
-   */
-  public ImproperArgsException(String command) {
-    super(command);
+  public AccountIdentify() {
+    this.name = "identify";
+    this.numArgs = 0;
+    this.helpInfo = "identifies your account";
+    this.reqPerm = 0;
+  }
+
+  @Override
+  public void execute(String channel, String sender, String params) throws ImproperArgsException {
+    execute(channel, sender);
+  }
+
+  @Override
+  public void execute(String channel, String sender) throws ImproperArgsException {
+    PermissionsManager pm = bot.getPermissionsManager();
+    pm.identify(sender, channel);
   }
 
 }

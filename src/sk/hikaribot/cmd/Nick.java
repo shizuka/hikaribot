@@ -1,9 +1,7 @@
 /*
  * hikaribot - Nick
  * Shizuka Kamishima - 2014-11-08
- */
-
-/*
+ * 
  * Copyright (c) 2014, Shizuka Kamishima
  * All rights reserved.
  *
@@ -38,7 +36,9 @@ import org.jibble.pircbot.Colors;
 import sk.hikaribot.api.exception.ImproperArgsException;
 
 /**
- * Changes nick.
+ * Changes bot nick.
+ *
+ * @author Shizuka Kamishima
  */
 public class Nick extends Command {
 

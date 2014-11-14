@@ -1,7 +1,6 @@
 /*
- * hikaribot - ImproperArgsException
- * Shizuka Kamishima - 2014-11-13
- * Exception
+ * hikaribot - GetUserLevel
+ * Shizuka Kamishima - 2014-11-08
  * 
  * Copyright (c) 2014, Shizuka Kamishima
  * All rights reserved.
@@ -30,21 +29,40 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package sk.hikaribot.api.exception;
+package sk.hikaribot.cmd;
+
+import sk.hikaribot.api.Command;
+import org.jibble.pircbot.Colors;
+import sk.hikaribot.api.exception.ImproperArgsException;
 
 /**
- * Indicates a command was called without enough arguments. Passes command to
- * HELP for information.
+ * Prints invoker's permission level.
  *
  * @author Shizuka Kamishima
  */
-public class ImproperArgsException extends Exception {
+public class GetUserLevel extends Command {
 
-  /**
-   * @param command the command that threw this Exception, to be passed to HELP
-   */
-  public ImproperArgsException(String command) {
-    super(command);
+  public GetUserLevel() {
+    this.name = "level";
+    this.numArgs = 1;
+    this.helpArgs.add("nick");
+    this.helpInfo = "prints user permissions level";
+    this.reqPerm = 1;
+  }
+
+  @Override
+  public void execute(String channel, String sender, String params) throws ImproperArgsException {
+    if (params.split(" ").length != numArgs) {
+      throw new ImproperArgsException(this.name);
+    }
+    int permission = bot.getPermissionsManager().getUserLevel(params);
+    bot.sendMessage(channel, Colors.BLUE + "PERMISSION: " + Colors.NORMAL + params + " is level " + Colors.OLIVE + permission);
+    log.info("PERMISSION " + params + " from " + sender + " in " + channel + ": " + permission);
+  }
+
+  @Override
+  public void execute(String channel, String sender) throws ImproperArgsException {
+    execute(channel, sender, sender);
   }
 
 }

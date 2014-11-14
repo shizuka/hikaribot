@@ -1,9 +1,7 @@
 /*
  * hikaribot - Tweet
  * Shizuka Kamishima - 2014-11-08
- */
-
-/*
+ * 
  * Copyright (c) 2014, Shizuka Kamishima
  * All rights reserved.
  *
@@ -35,13 +33,15 @@ package sk.hikaribot.twitter.cmd;
 
 import org.jibble.pircbot.Colors;
 import sk.hikaribot.api.Command;
-import sk.hikaribot.api.exception.ImproperArgsException;
+import sk.hikaribot.api.exception.*;
 import sk.hikaribot.twitter.TwitBot;
 import twitter4j.Status;
 import twitter4j.TwitterException;
 
 /**
  * Posts a tweet as the active profile.
+ *
+ * @author Shizuka Kamishima
  */
 public class Tweet extends Command {
 
@@ -62,10 +62,10 @@ public class Tweet extends Command {
       bot.sendMessage(channel, Colors.BLUE + "TWEET @" + twit.getActiveTwitName() + ": "
               + Colors.NORMAL + "https://twitter.com/" + twit.getActiveTwitName() + "/status/" + tweet.getId());
       log.info("TWEET OK: " + "https://twitter.com/" + twit.getActiveTwitName() + "/status/" + tweet.getId());
-    } catch (TwitBot.NoProfileLoadedException ex) {
+    } catch (NoProfileLoadedException ex) {
       bot.sendMessage(channel, Colors.RED + "TWEET: " + Colors.NORMAL + "No profile loaded");
       log.error("TWEET No profile loaded");
-    } catch (TwitBot.TweetTooLongException ex) {
+    } catch (TweetTooLongException ex) {
       bot.sendMessage(channel, Colors.RED + "TWEET: " + Colors.NORMAL + "Message too long! "
               + Colors.RED + params.length() + Colors.OLIVE + "/140 >" + Colors.NORMAL + params.substring(140));
       log.error("TWEET Message too long");

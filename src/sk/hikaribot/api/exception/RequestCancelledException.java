@@ -1,6 +1,6 @@
 /*
- * hikaribot - ImproperArgsException
- * Shizuka Kamishima - 2014-11-13
+ * hikaribot - RequestCancelledException
+ * Shizuka Kamishima - 2014-11-14
  * Exception
  * 
  * Copyright (c) 2014, Shizuka Kamishima
@@ -32,19 +32,21 @@
  */
 package sk.hikaribot.api.exception;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 /**
- * Indicates a command was called without enough arguments. Passes command to
- * HELP for information.
+ * Indicates the pending RequestToken was discarded.
  *
  * @author Shizuka Kamishima
  */
-public class ImproperArgsException extends Exception {
+public class RequestCancelledException extends Exception {
 
-  /**
-   * @param command the command that threw this Exception, to be passed to HELP
-   */
-  public ImproperArgsException(String command) {
-    super(command);
+  private static final Logger log = LogManager.getLogger("TwitterBotException");
+
+  public RequestCancelledException() {
+    super();
+    log.error("Token request cancelled");
   }
 
 }

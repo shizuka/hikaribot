@@ -1,9 +1,7 @@
 /*
  * hikaribot - Say
  * Shizuka Kamishima - 2014-11-07
- */
-
-/*
+ * 
  * Copyright (c) 2014, Shizuka Kamishima
  * All rights reserved.
  *
@@ -36,6 +34,11 @@ package sk.hikaribot.cmd;
 import sk.hikaribot.api.Command;
 import sk.hikaribot.api.exception.ImproperArgsException;
 
+/**
+ * Say something to a channel.
+ *
+ * @author Shizuka Kamishima
+ */
 public class Say extends Command {
 
   public Say() {

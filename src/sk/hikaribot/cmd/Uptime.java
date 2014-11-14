@@ -1,9 +1,7 @@
 /*
  * hikaribot - Uptime
  * Shizuka Kamishima - 2014-11-08
- */
-
-/*
+ * 
  * Copyright (c) 2014, Shizuka Kamishima
  * All rights reserved.
  *
@@ -39,6 +37,8 @@ import sk.hikaribot.api.exception.ImproperArgsException;
 
 /**
  * Prints uptime of bot.
+ *
+ * @author Shizuka Kamishima
  */
 public class Uptime extends Command {
 

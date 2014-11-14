@@ -1,9 +1,7 @@
 /*
  * hikaribot - TwitBot
  * Shizuka Kamishima - 2014-11-08
- */
-
-/*
+ * 
  * Copyright (c) 2014, Shizuka Kamishima
  * All rights reserved.
  *
@@ -33,22 +31,21 @@
  */
 package sk.hikaribot.twitter;
 
-import sk.hikaribot.api.exception.TokenMismatchException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Properties;
-import java.util.logging.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jibble.pircbot.PircBot;
-import sk.hikaribot.Main;
-import sk.hikaribot.api.exception.MissingRequiredPropertyException;
+import sk.hikaribot.api.exception.*;
 import twitter4j.*;
 import twitter4j.auth.*;
 
 /**
  * Provides bot-level Twitter API object for bot commands to call on.
+ *
+ * @author Shizuka Kamishima
  */
 public class TwitBot {
 
@@ -121,7 +118,6 @@ public class TwitBot {
    * @throws IOException If token file could not be read
    * @throws TokenMismatchException If supplied name did not match stored name
    * @throws sk.hikaribot.api.exception.MissingRequiredPropertyException
-   * @throws Main.MissingRequiredPropertyException If token file was incomplete
    * @throws TwitterException If something went wrong with Twitter
    */
   public String loadAccessToken(String profile) throws IOException, TokenMismatchException, MissingRequiredPropertyException, TwitterException {
@@ -154,7 +150,6 @@ public class TwitBot {
     activeTwitId = -1;
     activeTwitName = null;
   }
-
 
   public String getActiveTwitName() {
     return activeTwitName;
@@ -220,37 +215,39 @@ public class TwitBot {
       cancelNewToken();
       throw new RequestCancelledException(); //to be caught by command
     } catch (IOException ex) {
-      java.util.logging.Logger.getLogger(TwitBot.class.getName()).log(Level.SEVERE, null, ex);
+      log.error("Could not write to properties file! Profile will need to revoke AccessToken. Also fix your filesystem, damn.");
+      cancelNewToken();
+      throw new RequestCancelledException(); //to be caught by command
+      //it masquerades as a failed authorization but oh well
     }
-    return null;
   }
 
+  /**
+   * Cancels pending RequestToken
+   */
   public void cancelNewToken() {
     tempRequestId = -1;
     tempRequestToken = null;
     log.debug("Token request cancelled");
   }
-  
+
+  /**
+   * @return is there a RequestToken pending confirmation?
+   */
   public boolean pendingRequest() {
     return (tempRequestToken != null);
   }
 
-  public static class RequestInProgressException extends Exception {
 
-    public RequestInProgressException() {
-      super();
-      log.error("Token request already in progress");
-    }
-  }
 
-  public static class RequestCancelledException extends Exception {
-
-    public RequestCancelledException() {
-      super();
-      log.error("Token request cancelled");
-    }
-  }
-
+  /**
+   * Posts a tweet.
+   * @param message the message to tweet
+   * @return Status object for tweet
+   * @throws NoProfileLoadedException if no AccessToken is loaded
+   * @throws TweetTooLongException if message was too long
+   * @throws TwitterException if something went wrong sending the tweet
+   */
   public Status tweet(String message) throws NoProfileLoadedException, TweetTooLongException, TwitterException {
     if (activeTwitId == -1) {
       throw new NoProfileLoadedException();
@@ -261,20 +258,6 @@ public class TwitBot {
     return twitter.updateStatus(message);
   }
 
-  public static class NoProfileLoadedException extends Exception {
 
-    public NoProfileLoadedException() {
-      super();
-      log.error("No profile loaded");
-    }
-  }
-
-  public static class TweetTooLongException extends Exception {
-
-    public TweetTooLongException() {
-      super();
-      log.error("Tweet is too long");
-    }
-  }
 
 }

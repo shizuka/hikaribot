@@ -2,9 +2,7 @@
  * Hikari IRC Bot - Executable
  * Shizuka Kamishima - 2014-11-06
  * Executable
- */
-
-/*
+ * 
  * Copyright (c) 2014, Shizuka Kamishima
  * All rights reserved.
  *
@@ -46,6 +44,8 @@ import sk.hikaribot.bot.HikariBot;
 
 /**
  * Executable.
+ * 
+ * @author Shizuka Kamishima
  */
 public class Main {
 
@@ -113,16 +113,6 @@ public class Main {
 
     /* Initialize and Connect bot */
     HikariBot bot = new HikariBot(config, twitConfig);
-    try {
-      bot.connect(config.getProperty("server"));
-    } catch (IOException | IrcException ex) {
-      log.fatal("Failed to connect! ", ex);
-      System.exit(1);
-    }
-    log.info("Connected!");
-    bot.setMode(bot.getNick(), "+B");
-    log.info("Set my bot flag!");
-    bot.joinChannel(config.getProperty("chan"));
   }
 
 }

@@ -1,6 +1,6 @@
 /*
- * hikaribot - CancelNewToken
- * Shizuka Kamishima - 2014-11-08
+ * hikaribot - GetWhois
+ * Shizuka Kamishima - 2014-11-13
  * 
  * Copyright (c) 2014, Shizuka Kamishima
  * All rights reserved.
@@ -29,45 +29,52 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package sk.hikaribot.twitter.cmd;
+package sk.hikaribot.cmd;
 
-import org.jibble.pircbot.Colors;
+import java.util.Observable;
+import java.util.Observer;
 import sk.hikaribot.api.Command;
+import sk.hikaribot.api.WhoisResponse;
 import sk.hikaribot.api.exception.ImproperArgsException;
-import sk.hikaribot.twitter.TwitBot;
 
 /**
- * Cancels pending RequestToken process.
+ * DEVELOPMENT - Performs WHOIS on target, prints information to console.
  *
  * @author Shizuka Kamishima
  */
-public class CancelNewToken extends Command {
+public class GetWhois extends Command implements Observer {
 
-  public CancelNewToken() {
-    this.name = "twitCancel";
-    this.numArgs = 0;
-    this.helpInfo = "cancels pending requestToken";
-    this.reqPerm = 2; //ops
+  public GetWhois() {
+    this.name = "whois";
+    this.helpInfo = "does a whois";
+    this.numArgs = 1;
+    this.helpArgs.add("target");
+    this.reqPerm = 3;
   }
 
   @Override
   public void execute(String channel, String sender, String params) throws ImproperArgsException {
-    execute(channel, sender);
+    WhoisResponse wir = new WhoisResponse(params, channel);
+    wir.addObserver(this);
+    bot.sendWhois(params, wir);
+    log.info("WHOIS " + params + " from  " + sender + " in " + channel + " sent");
   }
 
   @Override
   public void execute(String channel, String sender) throws ImproperArgsException {
-    TwitBot twit = bot.getTwitBot();
+    throw new ImproperArgsException(this.name);
+  }
 
-    if (!twit.pendingRequest()) {
-      bot.sendMessage(channel, Colors.OLIVE + "TWITCANCEL: " + Colors.NORMAL + "No pending request");
-      log.error("TWITCANCEL No pending request");
-      return;
+  @Override
+  public void update(Observable o, Object arg) {
+    //Called when WhoisResponse.onEndOfWhois() is called by HikariBot
+    //At this point WhoisResponse is considered complete, fetch bits
+    if (arg instanceof WhoisResponse) {
+      WhoisResponse wir = (WhoisResponse) arg;
+      log.debug("WHOIS COMMAND got whois response for " + wir.getTarget());
+      bot.getServerResponder().deleteObserver((Observer) o); //i hope this works
+      bot.sendMessage(wir.getChannel(), "Did a whois on " + wir.getTarget() + ", see console for results");
     }
-
-    twit.cancelNewToken();
-    bot.sendMessage(channel, Colors.DARK_GREEN + "TWITCANCEL: " + Colors.NORMAL + "Pending token request was cancelled");
-    log.warn("TWITCANCEL Pending request was cancelled");
   }
 
 }
