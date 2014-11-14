@@ -33,12 +33,14 @@
  */
 package sk.hikaribot.bot;
 
+import java.util.Observer;
 import sk.hikaribot.api.exception.CommandNotFoundException;
 import sk.hikaribot.api.exception.InsufficientPermissionsException;
 import java.util.Properties;
 import org.jibble.pircbot.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import sk.hikaribot.api.ServerResponse;
 import sk.hikaribot.api.exception.ImproperArgsException;
 import sk.hikaribot.twitter.TwitBot;
 
@@ -52,6 +54,7 @@ public class HikariBot extends PircBot {
   protected final CommandRegistry cmdRegistry;
   public final TwitBot twit;
   private final long startMillis;
+  private final ServerResponse sr;
 
   /**
    * Start HikariBot with runtime properties.
@@ -67,6 +70,7 @@ public class HikariBot extends PircBot {
     this.setVersion(config.getProperty("version"));
     this.cmdRegistry = new CommandRegistry(this, config.getProperty("delimiter"));
     this.twit = new TwitBot(this, twitConfig);
+    this.sr = new ServerResponse();
     /* register commands */
     log.info("Registering commands...");
     cmdRegistry.add(new sk.hikaribot.cmd.Verbose());
@@ -106,9 +110,9 @@ public class HikariBot extends PircBot {
       cmdRegistry.execute(channel, sender, permission, message);
     } catch (CommandNotFoundException ex) {
       /* suppressing 404 altogether
-      if (permission > 0) { //only 404 if it was an op
-        this.sendMessage(channel, Colors.RED + "NO: " + Colors.NORMAL + "Command not found '" + ex.getMessage() + "'");
-      } */
+       if (permission > 0) { //only 404 if it was an op
+       this.sendMessage(channel, Colors.RED + "NO: " + Colors.NORMAL + "Command not found '" + ex.getMessage() + "'");
+       } */
     } catch (InsufficientPermissionsException ex) {
       if (permission > 0) {
         this.sendMessage(channel, Colors.RED + "NO: " + Colors.NORMAL + "Insufficient permissions - "
@@ -126,7 +130,7 @@ public class HikariBot extends PircBot {
    */
   protected void onMessage(String channel, String sender, String login, String hostname, String message) {
     //ignoring opchat until permissions overhaul
-    if(channel.startsWith("@")) {
+    if (channel.startsWith("@")) {
       return;
     }
     message = Colors.removeFormattingAndColors(message);
@@ -184,71 +188,14 @@ public class HikariBot extends PircBot {
     //we're ignoring DCC
   }
 
+  public void sendWhois(String target, Observer wiResponse) {
+    sr.addObserver(wiResponse);
+    this.sendRawLine("WHOIS " + target);
+  }
+
   @Override
   public synchronized void onServerResponse(int code, String response) {
-    if (code == RPL_WHOISUSER) {
-      //botname target username hostname * :realname
-      String[] parts = response.split(":");
-      String[] whois = parts[0].split(" ");
-      //[0] bot nick
-      //[1] target nick
-      //[2] target's username
-      //[3] target's hostname
-      //[4] *
-      String realname = parts[1];
-      log.debug("311 WHOISUSER " + whois[1] + " is " + whois[2] + "@" + whois[3] + " - Realname: " + realname);
-    } else if (code == RPL_WHOISCHANNELS) {
-      //botname target :#channel #channel @#channelwithop
-      String[] parts = response.split(":");
-      String[] nicks = parts[0].split(" ");
-      //[0] bot nick
-      //[1] target nick
-      String[] channels = parts[1].split(" ");
-      //[i] @#channel or %#channel or +#channel or #channel
-      log.debug("319 WHOISCHANNELS " + nicks[1] + " is in channels: " + channels.toString());
-    } else if (code == RPL_WHOISSERVER) {
-      //botname target server.domain.name :serverfriendlyname?
-      String[] parts = response.split(":");
-      String[] info = parts[0].split(" ");
-      //[0] bot nick
-      //[1] target nick
-      //[2] server.domain.name
-      String servername = parts[1];
-      log.debug("312 WHOISSERVER " + info[1] + " is on server " + info[2] + " - friendlyname: " + servername);
-    } else if (code == RPL_WHOISIDLE) {
-      //botname target secondsidle logontimestamp :"seconds idle, signon time"
-      String[] info = response.split(":")[0].split(" ");
-      //[0] bot nick
-      //[1] target nick
-      //[2] seconds idle
-      //[3] signon timestamp
-      log.debug("317 WHOISIDLE " + info[1] + " has been idle for " + info[2] + " seconds - Signed on at timestamp: " + info[3]);
-    } else if (code == 330) {
-      //botname target canonicalNick :is logged in as
-      String[] info = response.split(":")[0].split(" ");
-      //[0] bot nick
-      //[1] target nick
-      //[2] nick target is logged in as
-      log.debug("330 Nickserv " + info[1] + " is logged in as " + info[2]);
-    } else if (code == RPL_ENDOFWHOIS) {
-      //botname target :End of /WHOIS list.
-      String[] info = response.split(":")[0].split(" ");
-      //[0] bot nick
-      //[1] target nick
-      log.debug("318 END OF WHOIS for " + info[1]);
-    }
-  }
-  
-  public void onEndOfWhois(String target) {
-    
-  }
-  
-  public void onWhoisNickservLogin(String target, String canonicalNick) {
-    
-  }
-  
-  public void sendWhois(String target) {
-    this.sendRawLine("WHOIS " + target);
+    sr.onServerResponse(code, response);
   }
 
   public User getUser(String channel, String nick) {
@@ -284,6 +231,10 @@ public class HikariBot extends PircBot {
 
   public long getTimeStarted() {
     return startMillis;
+  }
+
+  public ServerResponse getServerResponder() {
+    return sr;
   }
 
 }

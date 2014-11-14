@@ -1,9 +1,8 @@
 /*
- * hikaribot - GetWhois
+ * hikaribot - WhoisTargetMismatchException
  * Shizuka Kamishima - 2014-11-13
- */
-
-/*
+ * Exception
+ * 
  * Copyright (c) 2014, Shizuka Kamishima
  * All rights reserved.
  *
@@ -31,51 +30,22 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package sk.hikaribot.cmd;
+package sk.hikaribot.api.exception;
 
-import java.util.Observable;
-import java.util.Observer;
-import sk.hikaribot.api.Command;
-import sk.hikaribot.api.WhoisResponse;
-import sk.hikaribot.api.exception.ImproperArgsException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
- * DEVELOPMENT - Performs WHOIS on target, prints information to console.
+ * Thrown when a WhoisResponse is fed a line not describing its target.
  *
  * @author Shizuka Kamishima
+ * @see sk.hikaribot.api.WhoisResponse
  */
-public class GetWhois extends Command implements Observer {
+public class WhoisTargetMismatchException extends Exception {
 
-  public GetWhois() {
-    this.name = "whois";
-    this.helpInfo = "does a whois";
-    this.numArgs = 1;
-    this.helpArgs.add("target");
-    this.reqPerm = 3;
+  private static final Logger log = LogManager.getLogger("Exception");
+
+  public WhoisTargetMismatchException(String expected, String got) {
+    log.error("WHOIS MISMATCH - expected " + expected + " - got " + got);
   }
-
-  @Override
-  public void execute(String channel, String sender, String params) throws ImproperArgsException {
-    WhoisResponse wir = new WhoisResponse(params);
-    wir.addObserver(this);
-    bot.sendWhois(params, wir);
-    log.info("WHOIS " + params + " from  " + sender + " in " + channel + " sent, see VERBOSE for responses");
-  }
-
-  @Override
-  public void execute(String channel, String sender) throws ImproperArgsException {
-    throw new ImproperArgsException(this.name);
-  }
-
-  @Override
-  public void update(Observable o, Object arg) {
-    //Called when WhoisResponse.onEndOfWhois() is called by HikariBot
-    //At this point WhoisResponse is considered complete, fetch bits
-    if (arg instanceof WhoisResponse) {
-      WhoisResponse wir = (WhoisResponse) arg;
-      log.debug("WHOIS COMMAND got whois response for " + wir.getTarget());
-      bot.getServerResponder().deleteObserver((Observer) wir); //i hope this works
-    }
-  }
-
 }
