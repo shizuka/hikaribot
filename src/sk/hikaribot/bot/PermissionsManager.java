@@ -1,6 +1,6 @@
 /*
- * hikaribot - GetPermission
- * Shizuka Kamishima - 2014-11-08
+ * hikaribot - PermissionsManager
+ * Shizuka Kamishima - 2014-11-14
  * 
  * Copyright (c) 2014, Shizuka Kamishima
  * All rights reserved.
@@ -29,40 +29,41 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package sk.hikaribot.cmd;
+package sk.hikaribot.bot;
 
-import sk.hikaribot.api.Command;
-import org.jibble.pircbot.Colors;
-import sk.hikaribot.api.exception.ImproperArgsException;
+import java.util.HashMap;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
- * Prints invoker's permission level.
+ * Maintains list of user accounts and their permissions levels.
  *
  * @author Shizuka Kamishima
  */
-public class GetPermission extends Command {
+public class PermissionsManager {
 
-  public GetPermission() {
-    this.name = "permLevel";
-    this.numArgs = 1;
-    this.helpArgs.add("nick");
-    this.helpInfo = "prints user permissions level, defaults to invoker";
-    this.reqPerm = 1;
+  private static final Logger log = LogManager.getLogger("Permissions");
+
+  private final HikariBot bot;
+  private final CommandRegistry cr;
+  private final HashMap<String, Integer> accounts;
+
+  public PermissionsManager(HikariBot bot) {
+    log.debug("PermissionsManager started...");
+    this.bot = bot;
+    this.cr = bot.getCommandRegistry();
+    this.accounts = new HashMap();
+    this.accounts.put(bot.getOwner(), 99);
+    //TODO - load permissions.properties and populate accounts list with them
+    //TODO - dedicated registerAccount(canonicalNick) to save accounts to properties
   }
 
-  @Override
-  public void execute(String channel, String sender, String params) throws ImproperArgsException {
-    if (params.split(" ").length != numArgs) {
-      throw new ImproperArgsException(this.name);
+  public int getUserLevel(String nick) {
+    if (this.accounts.containsKey(nick)) {
+      return accounts.get(nick);
+    } else {
+      return 0;
     }
-    int permission = bot.getPermissionsManager().getUserLevel(params);
-    bot.sendMessage(channel, Colors.BLUE + "PERMISSION: " + Colors.NORMAL + params + " has permission level " + Colors.OLIVE + permission);
-    log.info("PERMISSION " + params + " from " + sender + " in " + channel + ": " + permission);
-  }
-
-  @Override
-  public void execute(String channel, String sender) throws ImproperArgsException {
-    execute(channel, sender, sender);
   }
 
 }

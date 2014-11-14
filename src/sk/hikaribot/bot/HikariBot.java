@@ -51,10 +51,13 @@ public class HikariBot extends PircBot {
 
   private static final Logger log = LogManager.getLogger("Bot");
 
+  private final long startMillis;
+
   private final CommandRegistry cr;
   private final ServerResponse sr;
+  private final PermissionsManager pm;
+
   private final TwitBot twit;
-  private final long startMillis;
 
   private final String owner;
   private final String delimiter;
@@ -86,9 +89,10 @@ public class HikariBot extends PircBot {
     this.version = config.getProperty("version");
 
     /* initialize components */
-    this.cr = new CommandRegistry(this, delimiter);
-    this.twit = new TwitBot(this, twitConfig);
+    this.cr = new CommandRegistry(this);
     this.sr = new ServerResponse();
+    this.pm = new PermissionsManager(this);
+    this.twit = new TwitBot(this, twitConfig);
 
     /* register commands */
     log.info("Registering commands...");
@@ -139,7 +143,7 @@ public class HikariBot extends PircBot {
    * @param message contents of line including command and delimiter
    */
   private void command(String channel, String sender, String message) {
-    int permission = this.getUserPermission(channel, sender);
+    int permission = pm.getUserLevel(sender);
     try {
       cr.execute(channel, sender, permission, message);
     } catch (CommandNotFoundException ex) {
@@ -163,10 +167,6 @@ public class HikariBot extends PircBot {
    * Called when we get a message from a channel
    */
   protected void onMessage(String channel, String sender, String login, String hostname, String message) {
-    //ignoring opchat until permissions overhaul
-    if (channel.startsWith("@")) {
-      return;
-    }
     message = Colors.removeFormattingAndColors(message);
     if (message.startsWith(delimiter)) { //then it's a command
       this.command(channel, sender, message);
@@ -178,12 +178,10 @@ public class HikariBot extends PircBot {
    */
   @Override
   protected void onPrivateMessage(String sender, String login, String hostname, String message) {
-    /* //disabled until i have better access control in place
-     message = Colors.removeFormattingAndColors(message);
-     if (message.startsWith(config.getProperty("delimiter"))) { //then it's a command
-     this.command(sender, sender, message);
-     }
-     */
+    message = Colors.removeFormattingAndColors(message);
+    if (message.startsWith(delimiter)) { //then it's a command
+      this.command(sender, sender, message);
+    }
   }
 
   /**
@@ -301,19 +299,6 @@ public class HikariBot extends PircBot {
     return cr;
   }
 
-  public int getUserPermission(String channel, String nick) {
-    User user = this.getUser(channel, nick.trim());
-    if (user.equals(owner)) {
-      return 3; //owner
-    } else if (user.isOp()) {
-      return 2; //channel operator
-    } else if (user.hasVoice()) {
-      return 1; //is voiced
-    } else {
-      return 0; //normal user
-    }
-  }
-
   /**
    * @return the TwitBot object
    */
@@ -333,6 +318,30 @@ public class HikariBot extends PircBot {
    */
   public ServerResponse getServerResponder() {
     return sr;
+  }
+
+  /**
+   * Get the Nickserv canonical nick of our owner. Typically equal to owner's
+   * nick, but not always.
+   *
+   * @return owner's nickserv account
+   */
+  public String getOwner() {
+    return owner;
+  }
+
+  /**
+   * @return the character denoting a command
+   */
+  public String getDelimiter() {
+    return delimiter;
+  }
+
+  /**
+   * @return the Permissions manager
+   */
+  public PermissionsManager getPermissionsManager() {
+    return pm;
   }
 
 }
