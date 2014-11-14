@@ -111,6 +111,7 @@ public class HikariBot extends PircBot {
     cr.add(new sk.hikaribot.cmd.GetUserLevel());
     cr.add(new sk.hikaribot.cmd.GetWhois());
     cr.add(new sk.hikaribot.cmd.AccountIdentify());
+    cr.add(new sk.hikaribot.cmd.SetUserLevel());
     cr.add(new sk.hikaribot.twitter.cmd.LoadProfile());
     cr.add(new sk.hikaribot.twitter.cmd.UnloadProfile());
     cr.add(new sk.hikaribot.twitter.cmd.GetActiveProfile());
