@@ -1,6 +1,7 @@
 /*
- * hikaribot - SetUserLevel
+ * hikaribot - AccountAlreadyExistsException
  * Shizuka Kamishima - 2014-11-14
+ * Exception
  * 
  * Copyright (c) 2014, Shizuka Kamishima
  * All rights reserved.
@@ -29,48 +30,25 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package sk.hikaribot.cmd;
+package sk.hikaribot.api.exception;
 
-import org.jibble.pircbot.Colors;
-import sk.hikaribot.api.Command;
-import sk.hikaribot.api.exception.ImproperArgsException;
-import sk.hikaribot.api.exception.NoSuchAccountException;
-import sk.hikaribot.bot.PermissionsManager;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
- * Sets user permissions level.
+ * Indicates an account already exists.
  *
  * @author Shizuka Kamishima
  */
-public class SetUserLevel extends Command {
+public class AccountAlreadyExistsException extends Exception {
 
-  public SetUserLevel() {
-    this.name = "setLevel";
-    this.numArgs = 2;
-    this.helpArgs.add("nick");
-    this.helpArgs.add("level");
-    this.helpInfo = "sets user permissions level";
-    this.reqPerm = 3; //owner only
+  private static final Logger log = LogManager.getLogger("PermissionsException");
+
+  /**
+   * @param canonNick the account that already exists
+   */
+  public AccountAlreadyExistsException(String canonNick) {
+    super(canonNick);
+    log.error("ACCOUNT ALREADY EXISTS " + canonNick);
   }
-
-  @Override
-  public void execute(String channel, String sender, String params) throws ImproperArgsException {
-    if (params.split(" ").length != numArgs) {
-      throw new ImproperArgsException(this.name);
-    }
-    PermissionsManager pm = bot.getPermissionsManager();
-    String[] args = params.split(" ");
-    try {
-      pm.setUserLevel(args[0], Integer.parseInt(args[1]));
-      bot.sendMessage(channel, Colors.DARK_GREEN + "PERMISSIONS: " + Colors.NORMAL + "Set account " + Colors.OLIVE + args[0] + Colors.NORMAL + " to level " + Colors.OLIVE + args[1]);
-    } catch (NoSuchAccountException ex) {
-      bot.sendMessage(channel, Colors.BROWN + "PERMISSIONS: " + Colors.NORMAL + "No such account " + ex.getMessage());
-    }
-  }
-
-  @Override
-  public void execute(String channel, String sender) throws ImproperArgsException {
-    throw new ImproperArgsException(this.name);
-  }
-
 }

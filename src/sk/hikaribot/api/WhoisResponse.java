@@ -56,16 +56,40 @@ public class WhoisResponse extends Observable implements Observer {
   private String realname;
   private String canonicalNick;
   private boolean isIdented = false;
+  private String flag;
 
   /**
    * Prepares WhoisResponse to collect WHOIS information.
    *
    * @param target the nick we're WHOISing
-   * @param channel channel to call back to
+   */
+  public WhoisResponse(String target) {
+    this(target, null, null);
+  }
+  
+  /**
+   * Prepares WhoisResponse with a channel to send reply to.
+   * 
+   * @param target the nick we're WHOISing
+   * @param channel channel to send response to
    */
   public WhoisResponse(String target, String channel) {
+    this(target, channel, null);
+    
+  }
+  
+  /**
+   * Prepares WhoisResponse with a generic string to pass back.
+   * 
+   * @param target the nick we're WHOISing
+   * @param channel channel to send response to
+   * @param flag generic String for use by PermissionsManager
+   */
+  public WhoisResponse(String target, String channel, String flag) {
     this.target = target;
     this.channel = channel;
+    this.flag = flag;
+    
   }
 
   /**
@@ -198,6 +222,13 @@ public class WhoisResponse extends Observable implements Observer {
    */
   public boolean isIdented() {
     return isIdented;
+  }
+
+  /**
+   * @return some String set by whoever called for a WHOIS
+   */
+  public String getFlag() {
+    return flag;
   }
 
   @Override

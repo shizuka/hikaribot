@@ -1,5 +1,5 @@
 /*
- * hikaribot - SetUserLevel
+ * hikaribot - AccountRegister
  * Shizuka Kamishima - 2014-11-14
  * 
  * Copyright (c) 2014, Shizuka Kamishima
@@ -31,25 +31,26 @@
  */
 package sk.hikaribot.cmd;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.jibble.pircbot.Colors;
 import sk.hikaribot.api.Command;
+import sk.hikaribot.api.exception.AccountAlreadyExistsException;
 import sk.hikaribot.api.exception.ImproperArgsException;
-import sk.hikaribot.api.exception.NoSuchAccountException;
 import sk.hikaribot.bot.PermissionsManager;
 
 /**
- * Sets user permissions level.
+ * Registers an account.
  *
  * @author Shizuka Kamishima
  */
-public class SetUserLevel extends Command {
+public class AccountRegister extends Command {
 
-  public SetUserLevel() {
-    this.name = "setLevel";
-    this.numArgs = 2;
+  public AccountRegister() {
+    this.name = "register";
+    this.numArgs = 1;
     this.helpArgs.add("nick");
-    this.helpArgs.add("level");
-    this.helpInfo = "sets user permissions level";
+    this.helpInfo = "registers user";
     this.reqPerm = 3; //owner only
   }
 
@@ -59,12 +60,10 @@ public class SetUserLevel extends Command {
       throw new ImproperArgsException(this.name);
     }
     PermissionsManager pm = bot.getPermissionsManager();
-    String[] args = params.split(" ");
     try {
-      pm.setUserLevel(args[0], Integer.parseInt(args[1]));
-      bot.sendMessage(channel, Colors.DARK_GREEN + "PERMISSIONS: " + Colors.NORMAL + "Set account " + Colors.OLIVE + args[0] + Colors.NORMAL + " to level " + Colors.OLIVE + args[1]);
-    } catch (NoSuchAccountException ex) {
-      bot.sendMessage(channel, Colors.BROWN + "PERMISSIONS: " + Colors.NORMAL + "No such account " + ex.getMessage());
+      pm.registerAccount(params, channel);
+    } catch (AccountAlreadyExistsException ex) {
+      bot.sendMessage(channel, Colors.BROWN + "PERMISSIONS: " + Colors.NORMAL + "Account " + Colors.OLIVE + params + Colors.NORMAL + " already exists!");
     }
   }
 
