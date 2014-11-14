@@ -1,6 +1,6 @@
 /*
- * hikaribot - ImproperArgsException
- * Shizuka Kamishima - 2014-11-13
+ * hikaribot - AccountAlreadyExistsException
+ * Shizuka Kamishima - 2014-11-14
  * Exception
  * 
  * Copyright (c) 2014, Shizuka Kamishima
@@ -32,19 +32,23 @@
  */
 package sk.hikaribot.api.exception;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 /**
- * Indicates a command was called without enough arguments. Passes command to
- * HELP for information.
+ * Indicates an account already exists.
  *
  * @author Shizuka Kamishima
  */
-public class ImproperArgsException extends Exception {
+public class AccountAlreadyExistsException extends Exception {
+
+  private static final Logger log = LogManager.getLogger("PermissionsException");
 
   /**
-   * @param command the command that threw this Exception, to be passed to HELP
+   * @param canonNick the account that already exists
    */
-  public ImproperArgsException(String command) {
-    super(command);
+  public AccountAlreadyExistsException(String canonNick) {
+    super(canonNick);
+    log.error("ACCOUNT ALREADY EXISTS " + canonNick);
   }
-
 }

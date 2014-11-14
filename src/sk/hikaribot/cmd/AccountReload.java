@@ -1,7 +1,6 @@
 /*
- * hikaribot - ImproperArgsException
- * Shizuka Kamishima - 2014-11-13
- * Exception
+ * hikaribot - AccountReload
+ * Shizuka Kamishima - 2014-11-14
  * 
  * Copyright (c) 2014, Shizuka Kamishima
  * All rights reserved.
@@ -30,21 +29,43 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package sk.hikaribot.api.exception;
+package sk.hikaribot.cmd;
+
+import java.io.IOException;
+import org.jibble.pircbot.Colors;
+import sk.hikaribot.api.Command;
+import sk.hikaribot.api.exception.ImproperArgsException;
+import sk.hikaribot.bot.PermissionsManager;
 
 /**
- * Indicates a command was called without enough arguments. Passes command to
- * HELP for information.
- *
+ * Reloads permissions.properties into Permissions accounts.
+ * 
  * @author Shizuka Kamishima
  */
-public class ImproperArgsException extends Exception {
+public class AccountReload extends Command {
 
-  /**
-   * @param command the command that threw this Exception, to be passed to HELP
-   */
-  public ImproperArgsException(String command) {
-    super(command);
+  public AccountReload() {
+    this.name = "reloadAccounts";
+    this.numArgs = 0;
+    this.helpInfo = "reloads accounts from file";
+    this.reqPerm = 3; //owner only
+  }
+
+  @Override
+  public void execute(String channel, String sender, String params) throws ImproperArgsException {
+    execute(channel, sender);
+  }
+
+  @Override
+  public void execute(String channel, String sender) throws ImproperArgsException {
+    PermissionsManager pm = bot.getPermissionsManager();
+    try {
+      pm.loadAccounts();
+      bot.sendMessage(channel, Colors.DARK_GREEN + "PERMISSIONS: " + Colors.NORMAL + "Successfully reloaded accounts");
+    } catch (IOException ex) {
+      log.fatal("RELOADACCOUNTS Was unable to read permissions.properties!");
+      bot.quitServer("Fatal exception");
+    }
   }
 
 }

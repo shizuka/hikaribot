@@ -1,7 +1,6 @@
 /*
- * hikaribot - ImproperArgsException
- * Shizuka Kamishima - 2014-11-13
- * Exception
+ * hikaribot - AccountRegister
+ * Shizuka Kamishima - 2014-11-14
  * 
  * Copyright (c) 2014, Shizuka Kamishima
  * All rights reserved.
@@ -30,21 +29,47 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package sk.hikaribot.api.exception;
+package sk.hikaribot.cmd;
+
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.jibble.pircbot.Colors;
+import sk.hikaribot.api.Command;
+import sk.hikaribot.api.exception.AccountAlreadyExistsException;
+import sk.hikaribot.api.exception.ImproperArgsException;
+import sk.hikaribot.bot.PermissionsManager;
 
 /**
- * Indicates a command was called without enough arguments. Passes command to
- * HELP for information.
+ * Registers an account.
  *
  * @author Shizuka Kamishima
  */
-public class ImproperArgsException extends Exception {
+public class AccountRegister extends Command {
 
-  /**
-   * @param command the command that threw this Exception, to be passed to HELP
-   */
-  public ImproperArgsException(String command) {
-    super(command);
+  public AccountRegister() {
+    this.name = "register";
+    this.numArgs = 1;
+    this.helpArgs.add("nick");
+    this.helpInfo = "registers user";
+    this.reqPerm = 3; //owner only
+  }
+
+  @Override
+  public void execute(String channel, String sender, String params) throws ImproperArgsException {
+    if (params.split(" ").length != numArgs) {
+      throw new ImproperArgsException(this.name);
+    }
+    PermissionsManager pm = bot.getPermissionsManager();
+    try {
+      pm.registerAccount(params, channel);
+    } catch (AccountAlreadyExistsException ex) {
+      bot.sendMessage(channel, Colors.BROWN + "PERMISSIONS: " + Colors.NORMAL + "Account " + Colors.OLIVE + params + Colors.NORMAL + " already exists!");
+    }
+  }
+
+  @Override
+  public void execute(String channel, String sender) throws ImproperArgsException {
+    throw new ImproperArgsException(this.name);
   }
 
 }

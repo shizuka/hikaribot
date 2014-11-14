@@ -1,9 +1,7 @@
 /*
  * hikaribot - Die
  * Shizuka Kamishima - 2014-11-07
- */
-
-/*
+ * 
  * Copyright (c) 2014, Shizuka Kamishima
  * All rights reserved.
  *
@@ -37,6 +35,8 @@ import sk.hikaribot.api.Command;
 
 /**
  * Kills the bot.
+ *
+ * @author Shizuka Kamishima
  */
 public class Die extends Command {
 

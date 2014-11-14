@@ -1,7 +1,6 @@
 /*
- * hikaribot - ImproperArgsException
- * Shizuka Kamishima - 2014-11-13
- * Exception
+ * hikaribot - TweetTooLongException
+ * Shizuka Kamishima - 2014-11-14
  * 
  * Copyright (c) 2014, Shizuka Kamishima
  * All rights reserved.
@@ -32,19 +31,21 @@
  */
 package sk.hikaribot.api.exception;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 /**
- * Indicates a command was called without enough arguments. Passes command to
- * HELP for information.
- *
+ * Indicates given tweet was longer than 140 characters.
+ * 
  * @author Shizuka Kamishima
  */
-public class ImproperArgsException extends Exception {
+public class TweetTooLongException extends Exception {
+  
+  private static final Logger log = LogManager.getLogger("TwitterBotException");
 
-  /**
-   * @param command the command that threw this Exception, to be passed to HELP
-   */
-  public ImproperArgsException(String command) {
-    super(command);
+  public TweetTooLongException() {
+    super();
+    log.error("Tweet is too long");
   }
 
 }

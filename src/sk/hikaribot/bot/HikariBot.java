@@ -1,9 +1,7 @@
 /*
  * Hikari IRC Bot - HikariBot
  * Shizuka Kamishima - 2014-11-06
- */
-
-/*
+ * 
  * Copyright (c) 2014, Shizuka Kamishima
  * All rights reserved.
  *
@@ -33,25 +31,43 @@
  */
 package sk.hikaribot.bot;
 
-import sk.hikaribot.api.exception.CommandNotFoundException;
-import sk.hikaribot.api.exception.InsufficientPermissionsException;
+import java.io.IOException;
+import java.util.Observer;
 import java.util.Properties;
 import org.jibble.pircbot.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import sk.hikaribot.api.exception.ImproperArgsException;
+import sk.hikaribot.api.ServerResponse;
+import sk.hikaribot.api.exception.*;
 import sk.hikaribot.twitter.TwitBot;
 
 /**
  * Our heroine, the Hikari IRC Bot.
+ *
+ * @author Shizuka Kamishima
+ * @version development
  */
 public class HikariBot extends PircBot {
 
   private static final Logger log = LogManager.getLogger("Bot");
-  private final Properties config;
-  protected final CommandRegistry cmdRegistry;
-  public final TwitBot twit;
+
   private final long startMillis;
+
+  private final CommandRegistry cr;
+  private final ServerResponse sr;
+  private final PermissionsManager pm;
+
+  private final TwitBot twit;
+
+  private final String owner;
+  private final String delimiter;
+  private final String defaultChannel;
+  private final String defaultNick;
+  private final String nickservPassword;
+  private final String server;
+  private final String version;
+
+  private boolean _isConnected = false;
 
   /**
    * Start HikariBot with runtime properties.
@@ -62,34 +78,66 @@ public class HikariBot extends PircBot {
   public HikariBot(Properties config, Properties twitConfig) {
     this.startMillis = System.currentTimeMillis();
     log.debug("HikariBot started...");
-    this.config = config;
-    this.setName(config.getProperty("nick"));
-    this.setVersion(config.getProperty("version"));
-    this.cmdRegistry = new CommandRegistry(this, config.getProperty("delimiter"));
+
+    /* load config */
+    this.owner = config.getProperty("owner");
+    this.delimiter = config.getProperty("delimiter");
+    this.defaultChannel = config.getProperty("chan");
+    this.defaultNick = config.getProperty("nick");
+    this.nickservPassword = config.getProperty("pass");
+    this.server = config.getProperty("server");
+    this.version = config.getProperty("version");
+
+    /* initialize components */
+    this.cr = new CommandRegistry(this);
+    this.sr = new ServerResponse();
+    this.pm = new PermissionsManager(this);
     this.twit = new TwitBot(this, twitConfig);
+
     /* register commands */
     log.info("Registering commands...");
-    cmdRegistry.add(new sk.hikaribot.cmd.Verbose());
-    cmdRegistry.add(new sk.hikaribot.cmd.NoVerbose());
-    cmdRegistry.add(new sk.hikaribot.cmd.RawLine());
-    cmdRegistry.add(new sk.hikaribot.cmd.Help());
-    cmdRegistry.add(new sk.hikaribot.cmd.Die());
-    cmdRegistry.add(new sk.hikaribot.cmd.Join());
-    cmdRegistry.add(new sk.hikaribot.cmd.Part());
-    cmdRegistry.add(new sk.hikaribot.cmd.Say());
-    cmdRegistry.add(new sk.hikaribot.cmd.Nick());
-    cmdRegistry.add(new sk.hikaribot.cmd.DoAction());
-    cmdRegistry.add(new sk.hikaribot.cmd.Version());
-    cmdRegistry.add(new sk.hikaribot.cmd.Uptime());
-    cmdRegistry.add(new sk.hikaribot.cmd.GetPermission());
-    cmdRegistry.add(new sk.hikaribot.twitter.cmd.LoadProfile());
-    cmdRegistry.add(new sk.hikaribot.twitter.cmd.UnloadProfile());
-    cmdRegistry.add(new sk.hikaribot.twitter.cmd.GetActiveProfile());
-    cmdRegistry.add(new sk.hikaribot.twitter.cmd.RequestNewToken());
-    cmdRegistry.add(new sk.hikaribot.twitter.cmd.ConfirmNewToken());
-    cmdRegistry.add(new sk.hikaribot.twitter.cmd.CancelNewToken());
-    cmdRegistry.add(new sk.hikaribot.twitter.cmd.Tweet());
+    cr.add(new sk.hikaribot.cmd.Verbose());
+    cr.add(new sk.hikaribot.cmd.NoVerbose());
+    cr.add(new sk.hikaribot.cmd.RawLine());
+    cr.add(new sk.hikaribot.cmd.Help());
+    cr.add(new sk.hikaribot.cmd.Die());
+    cr.add(new sk.hikaribot.cmd.Join());
+    cr.add(new sk.hikaribot.cmd.Part());
+    cr.add(new sk.hikaribot.cmd.Say());
+    cr.add(new sk.hikaribot.cmd.Nick());
+    cr.add(new sk.hikaribot.cmd.DoAction());
+    cr.add(new sk.hikaribot.cmd.Version());
+    cr.add(new sk.hikaribot.cmd.Uptime());
+    cr.add(new sk.hikaribot.cmd.GetUserLevel());
+    cr.add(new sk.hikaribot.cmd.GetWhois());
+    cr.add(new sk.hikaribot.cmd.AccountIdentify());
+    cr.add(new sk.hikaribot.cmd.SetUserLevel());
+    cr.add(new sk.hikaribot.cmd.AccountRegister());
+    cr.add(new sk.hikaribot.cmd.AccountSave());
+    cr.add(new sk.hikaribot.cmd.AccountReload());
+    cr.add(new sk.hikaribot.twitter.cmd.LoadProfile());
+    cr.add(new sk.hikaribot.twitter.cmd.UnloadProfile());
+    cr.add(new sk.hikaribot.twitter.cmd.GetActiveProfile());
+    cr.add(new sk.hikaribot.twitter.cmd.RequestNewToken());
+    cr.add(new sk.hikaribot.twitter.cmd.ConfirmNewToken());
+    cr.add(new sk.hikaribot.twitter.cmd.CancelNewToken());
+    cr.add(new sk.hikaribot.twitter.cmd.Tweet());
     log.info("Commands registered");
+
+    /* start bot */
+    this.setName(defaultNick);
+    this.setVersion(version);
+    this.setLogin("hikaribot");
+    try {
+      this.connect(server);
+      log.info("Connecting to " + server + "...");
+    } catch (IOException ex) {
+      log.fatal("Failed to connect to server!");
+      System.exit(1);
+    } catch (IrcException ex) {
+      log.fatal("Server would not let us join!");
+      System.exit(1);
+    }
   }
 
   /**
@@ -100,18 +148,18 @@ public class HikariBot extends PircBot {
    * @param message contents of line including command and delimiter
    */
   private void command(String channel, String sender, String message) {
-    int permission = this.getUserPermission(channel, sender);
+    int permission = pm.getUserLevel(sender);
     try {
-      cmdRegistry.execute(channel, sender, permission, message);
+      cr.execute(channel, sender, permission, message);
     } catch (CommandNotFoundException ex) {
       /* suppressing 404 altogether
-      if (permission > 0) { //only 404 if it was an op
-        this.sendMessage(channel, Colors.RED + "NO: " + Colors.NORMAL + "Command not found '" + ex.getMessage() + "'");
-      } */
+       if (permission > 0) { //only 404 if it was an op
+       this.sendMessage(channel, Colors.RED + "NO: " + Colors.NORMAL + "Command not found '" + ex.getMessage() + "'");
+       } */
     } catch (InsufficientPermissionsException ex) {
       if (permission > 0) {
         this.sendMessage(channel, Colors.RED + "NO: " + Colors.NORMAL + "Insufficient permissions - "
-                + Colors.BLUE + "you: " + Colors.BROWN + permission + Colors.BLUE + ", needed: " + Colors.RED + ex.getMessage());
+                + Colors.BLUE + "you: " + Colors.OLIVE + permission + Colors.BLUE + ", needed: " + Colors.BROWN + ex.getMessage());
       }
     } catch (ImproperArgsException ex) {
       log.fatal("This should have been caught by HELP!");
@@ -124,12 +172,8 @@ public class HikariBot extends PircBot {
    * Called when we get a message from a channel
    */
   protected void onMessage(String channel, String sender, String login, String hostname, String message) {
-    //ignoring opchat until permissions overhaul
-    if(channel.startsWith("@")) {
-      return;
-    }
     message = Colors.removeFormattingAndColors(message);
-    if (message.startsWith(config.getProperty("delimiter"))) { //then it's a command
+    if (message.startsWith(delimiter)) { //then it's a command
       this.command(channel, sender, message);
     }
   }
@@ -139,50 +183,140 @@ public class HikariBot extends PircBot {
    */
   @Override
   protected void onPrivateMessage(String sender, String login, String hostname, String message) {
-    /* //disabled until i have better access control in place
-     message = Colors.removeFormattingAndColors(message);
-     if (message.startsWith(config.getProperty("delimiter"))) { //then it's a command
-     this.command(sender, sender, message);
-     }
-     */
+    message = Colors.removeFormattingAndColors(message);
+    if (message.startsWith(delimiter)) { //then it's a command
+      this.command(sender, sender, message);
+    }
   }
 
+  /**
+   * Called when we finish connecting to the server
+   */
   @Override
   protected void onConnect() {
-    this.identify(this.config.getProperty("pass"));
+    this.identify(this.nickservPassword);
+    log.info("Sent Nickserv ident");
+    this.joinChannel(this.defaultChannel);
+    log.info("Joining " + this.defaultChannel);
   }
 
+  /**
+   * Called when we disconnect from the server
+   */
   @Override
   protected void onDisconnect() {
     log.info("Disconnected, exiting...");
+    try {
+      pm.storeAccounts();
+    } catch (IOException ex) {
+      log.fatal("Could not write permissions.properties!");
+      System.exit(1);
+    }
     System.exit(0);
   }
 
+  /**
+   * Called when we get a list of users from a channel
+   */
   @Override
   protected void onUserList(String channel, User[] users) {
     log.info("Joined " + channel);
   }
 
+  /**
+   * Called when we get FINGERed, ew
+   */
   @Override
   protected void onFinger(String sourceNick, String sourceLogin, String sourceHostname, String target) {
-    //we're ignoring finger
+    super.onFinger(sourceNick, sourceLogin, sourceHostname, target);
+    log.warn("FINGER from " + sourceNick + "!" + sourceLogin + "@" + sourceHostname);
   }
 
+  /**
+   * Called when someone TIMEs us
+   */
   @Override
-  protected void onIncomingChatRequest(DccChat chat) {
-    //we're ignoring DCC
+  protected void onTime(String sourceNick, String sourceLogin, String sourceHostname, String target) {
+    super.onTime(sourceNick, sourceLogin, sourceHostname, target);
+    log.warn("TIME from " + sourceNick + "!" + sourceLogin + "@" + sourceHostname);
   }
 
+  /**
+   * Called when someone PINGs us
+   */
   @Override
-  protected void onFileTransferFinished(DccFileTransfer transfer, Exception e) {
-    //we're ignoring DCC
+  protected void onPing(String sourceNick, String sourceLogin, String sourceHostname, String target, String pingValue) {
+    super.onPing(sourceNick, sourceLogin, sourceHostname, target, pingValue);
+    log.warn("PING from " + sourceNick + "!" + sourceLogin + "@" + sourceHostname);
   }
 
+  /**
+   * Called when someone VERSIONs us
+   */
   @Override
-  protected void onIncomingFileTransfer(DccFileTransfer transfer) {
-    //we're ignoring DCC
+  protected void onVersion(String sourceNick, String sourceLogin, String sourceHostname, String target) {
+    super.onVersion(sourceNick, sourceLogin, sourceHostname, target);
+    log.warn("VERSION from " + sourceNick + "!" + sourceLogin + "@" + sourceHostname);
   }
 
+  /**
+   * Called on NOTICEs
+   */
+  @Override
+  protected void onNotice(String sourceNick, String sourceLogin, String sourceHostname, String target, String notice) {
+    super.onNotice(sourceNick, sourceLogin, sourceHostname, target, notice);
+    log.warn("NOTICE from " + sourceNick + "!" + sourceLogin + "@" + sourceHostname + ": " + notice);
+  }
+
+  /**
+   * Called when anyone quits in view, even us
+   */
+  @Override
+  protected void onQuit(String sourceNick, String sourceLogin, String sourceHostname, String reason) {
+    pm.onPartOrQuit(sourceNick);
+  }
+
+  /**
+   * Called when anyone changes nick in view, even us
+   */
+  @Override
+  protected void onNickChange(String oldNick, String login, String hostname, String newNick) {
+    pm.onNickChange(oldNick, newNick);
+  }
+
+  /**
+   * Called when anyone parts channel, even us
+   */
+  @Override
+  protected void onPart(String channel, String sender, String login, String hostname) {
+    pm.onPartOrQuit(sender);
+  }
+
+  /**
+   * Requests a WHOIS for a nick.
+   *
+   * @param target nick to WHOIS
+   * @param wiResponse WhoisResponse to subscribe to ServerResponse, for
+   * collecting WHOIS responses
+   */
+  public void sendWhois(String target, Observer wiResponse) {
+    sr.addObserver(wiResponse);
+    this.sendRawLine("WHOIS " + target);
+  }
+
+  /**
+   * Catch known server responses and send them to our Observable intermediary
+   */
+  @Override
+  public synchronized void onServerResponse(int code, String response) {
+    sr.onServerResponse(code, response);
+  }
+
+  /**
+   * @param channel the channel to fetch from
+   * @param nick the nick to fetch
+   * @return User object for the nick
+   */
   public User getUser(String channel, String nick) {
     User[] users = this.getUsers(channel);
     for (User user : users) {
@@ -193,29 +327,56 @@ public class HikariBot extends PircBot {
     return null;
   }
 
+  /**
+   * @return the CommandRegistry object
+   */
   public CommandRegistry getCommandRegistry() {
-    return cmdRegistry;
+    return cr;
   }
 
-  public int getUserPermission(String channel, String nick) {
-    User user = this.getUser(channel, nick.trim());
-    if (user.equals(config.getProperty("owner"))) {
-      return 3; //owner
-    } else if (user.isOp()) {
-      return 2; //channel operator
-    } else if (user.hasVoice()) {
-      return 1; //is voiced
-    } else {
-      return 0; //normal user
-    }
-  }
-
+  /**
+   * @return the TwitBot object
+   */
   public TwitBot getTwitBot() {
     return twit;
   }
 
+  /**
+   * @return System.getCurrentMillis() from when the bot started up
+   */
   public long getTimeStarted() {
     return startMillis;
+  }
+
+  /**
+   * @return the ServerResponse intermediary
+   */
+  public ServerResponse getServerResponder() {
+    return sr;
+  }
+
+  /**
+   * Get the Nickserv canonical nick of our owner. Typically equal to owner's
+   * nick, but not always.
+   *
+   * @return owner's nickserv account
+   */
+  public String getOwner() {
+    return owner;
+  }
+
+  /**
+   * @return the character denoting a command
+   */
+  public String getDelimiter() {
+    return delimiter;
+  }
+
+  /**
+   * @return the Permissions manager
+   */
+  public PermissionsManager getPermissionsManager() {
+    return pm;
   }
 
 }

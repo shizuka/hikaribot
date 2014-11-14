@@ -1,7 +1,7 @@
 /*
- * hikaribot - ImproperArgsException
+ * hikaribot - ServerResponse
  * Shizuka Kamishima - 2014-11-13
- * Exception
+ * Observable
  * 
  * Copyright (c) 2014, Shizuka Kamishima
  * All rights reserved.
@@ -30,21 +30,48 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package sk.hikaribot.api.exception;
+package sk.hikaribot.api;
+
+import java.util.Observable;
+import java.util.Observer;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
- * Indicates a command was called without enough arguments. Passes command to
- * HELP for information.
+ * Middleman between HikariBot.onServerResponse and commands that need to hear
+ * them.
  *
  * @author Shizuka Kamishima
  */
-public class ImproperArgsException extends Exception {
+public class ServerResponse extends Observable {
+
+  private static final Logger log = LogManager.getLogger("ServerResponse");
+
+  private String line;
 
   /**
-   * @param command the command that threw this Exception, to be passed to HELP
+   * Notify all Observers of a new server response in form "code|response line".
+   * Effectively a mirror of HikariBot.onServerResponse, but usable by everyone.
+   *
+   * @param code response code, bot has enum of them all
+   * @param response incoming line after stripping everything up to the code
    */
-  public ImproperArgsException(String command) {
-    super(command);
+  public void onServerResponse(int code, String response) {
+    this.line = code + ":" + response;
+    this.setChanged();
+    this.notifyObservers(line);
+  }
+
+  @Override
+  public synchronized void addObserver(Observer o) {
+    super.addObserver(o);
+    log.trace("server response observer added");
+  }
+
+  @Override
+  public synchronized void deleteObserver(Observer o) {
+    super.deleteObserver(o);
+    log.trace("server response observer removed");
   }
 
 }

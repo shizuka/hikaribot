@@ -1,9 +1,7 @@
 /*
  * hikaribot - Version
  * Shizuka Kamishima - 2014-11-07
- */
-
-/*
+ * 
  * Copyright (c) 2014, Shizuka Kamishima
  * All rights reserved.
  *
@@ -37,6 +35,11 @@ import sk.hikaribot.api.Command;
 import org.jibble.pircbot.Colors;
 import sk.hikaribot.api.exception.ImproperArgsException;
 
+/**
+ * Prints bot version information.
+ *
+ * @author Shizuka Kamishima
+ */
 public class Version extends Command {
 
   public Version() {

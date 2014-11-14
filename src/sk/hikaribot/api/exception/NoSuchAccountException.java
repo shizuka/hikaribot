@@ -1,6 +1,6 @@
 /*
- * hikaribot - ImproperArgsException
- * Shizuka Kamishima - 2014-11-13
+ * hikaribot - NoSuchAccountException
+ * Shizuka Kamishima - 2014-11-14
  * Exception
  * 
  * Copyright (c) 2014, Shizuka Kamishima
@@ -32,19 +32,23 @@
  */
 package sk.hikaribot.api.exception;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 /**
- * Indicates a command was called without enough arguments. Passes command to
- * HELP for information.
+ * Indicates account does not exist.
  *
  * @author Shizuka Kamishima
  */
-public class ImproperArgsException extends Exception {
+public class NoSuchAccountException extends Exception {
+
+  private static final Logger log = LogManager.getLogger("PermissionsException");
 
   /**
-   * @param command the command that threw this Exception, to be passed to HELP
+   * @param canonNick the account that doesn't exist
    */
-  public ImproperArgsException(String command) {
-    super(command);
+  public NoSuchAccountException(String canonNick) {
+    super(canonNick);
+    log.error("NO SUCH ACCOUNT " + canonNick);
   }
-
 }

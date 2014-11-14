@@ -1,9 +1,8 @@
 /*
- * hikaribot - GetPermission
- * Shizuka Kamishima - 2014-11-08
- */
-
-/*
+ * hikaribot - NoProfileLoadedException
+ * Shizuka Kamishima - 2014-11-14
+ * Exception
+ * 
  * Copyright (c) 2014, Shizuka Kamishima
  * All rights reserved.
  *
@@ -31,38 +30,23 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package sk.hikaribot.cmd;
+package sk.hikaribot.api.exception;
 
-import sk.hikaribot.api.Command;
-import org.jibble.pircbot.Colors;
-import sk.hikaribot.api.exception.ImproperArgsException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
- * Prints invoker's permission level.
+ * Indicates no AccessToken is currently loaded.
+ *
+ * @author Shizuka Kamishima
  */
-public class GetPermission extends Command {
+public class NoProfileLoadedException extends Exception {
 
-  public GetPermission() {
-    this.name = "permLevel";
-    this.numArgs = 1;
-    this.helpArgs.add("nick");
-    this.helpInfo = "prints user permissions level, defaults to invoker";
-    this.reqPerm = 1;
-  }
+  private static final Logger log = LogManager.getLogger("TwitterBotException");
 
-  @Override
-  public void execute(String channel, String sender, String params) throws ImproperArgsException {
-    if (params.split(" ").length != numArgs) {
-      throw new ImproperArgsException(this.name);
-    }
-    int permission = bot.getUserPermission(channel, params);
-    bot.sendMessage(channel, Colors.BLUE + "PERMISSION: " + Colors.NORMAL + params + " has permission level " + Colors.OLIVE + permission);
-    log.info("PERMISSION " + params + " from " + sender + " in " + channel + ": " + permission);
-  }
-
-  @Override
-  public void execute(String channel, String sender) throws ImproperArgsException {
-    execute(channel, sender, sender);
+  public NoProfileLoadedException() {
+    super();
+    log.error("No profile loaded");
   }
 
 }
