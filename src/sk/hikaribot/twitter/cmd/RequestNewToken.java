@@ -33,8 +33,8 @@ package sk.hikaribot.twitter.cmd;
 
 import org.jibble.pircbot.Colors;
 import sk.hikaribot.api.Command;
-import sk.hikaribot.api.exception.ImproperArgsException;
 import sk.hikaribot.bot.CommandRegistry;
+import sk.hikaribot.api.exception.*;
 import sk.hikaribot.twitter.TwitBot;
 
 /**
@@ -71,12 +71,12 @@ public class RequestNewToken extends Command {
               + channel + " to complete the process, where <PIN> is the seven digit code given on that page");
       bot.sendMessage(channel, Colors.DARK_GREEN + "TWITREQUEST: " + Colors.NORMAL + "Please check PM for further instructions");
       log.info("TWITREQUEST Passed to PM");
-    } catch (TwitBot.RequestInProgressException ex) {
+    } catch (RequestInProgressException ex) {
       bot.sendMessage(channel, Colors.OLIVE + "TWITREQUEST: " + Colors.NORMAL + ": A token request is already in progress. Please complete that request with '"
               + cmdRegistry.getDelimiter() + "twitConfirm <PIN>' or '" + cmdRegistry.getDelimiter() + "twitCancel' to cancel");
       log.warn("TWITREQUEST Request already in progress");
       return;
-    } catch (TwitBot.RequestCancelledException ex) {
+    } catch (RequestCancelledException ex) {
       bot.sendMessage(channel, Colors.RED + "TWITREQUEST: " + Colors.NORMAL + "Token request was cancelled due to a Twitter error");
       log.error("TWITREQUEST Cancelled due to TwitterException");
       return;

@@ -33,7 +33,7 @@ package sk.hikaribot.twitter.cmd;
 
 import org.jibble.pircbot.Colors;
 import sk.hikaribot.api.Command;
-import sk.hikaribot.api.exception.ImproperArgsException;
+import sk.hikaribot.api.exception.*;
 import sk.hikaribot.twitter.TwitBot;
 
 /**
@@ -69,7 +69,7 @@ public class ConfirmNewToken extends Command {
       String name = twit.confirmNewToken(params);
       bot.sendMessage(channel, Colors.DARK_GREEN + "TWITCONFIRM: " + Colors.NORMAL + "Confirmed! I am now tweeting as @" + name);
       log.info("TWITCONFIRM OK: " + name);
-    } catch (TwitBot.RequestCancelledException ex) {
+    } catch (RequestCancelledException ex) {
       bot.sendMessage(channel, Colors.RED + "TWITCONFIRM: " + Colors.NORMAL + "Confirmation failed. Token request is cancelled");
       log.error("TWITCONFIRM Authorization failed, request cancelled");
     }
