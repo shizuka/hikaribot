@@ -38,8 +38,7 @@ import java.util.Properties;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jibble.pircbot.PircBot;
-import sk.hikaribot.api.exception.MissingRequiredPropertyException;
-import sk.hikaribot.api.exception.TokenMismatchException;
+import sk.hikaribot.api.exception.*;
 import twitter4j.*;
 import twitter4j.auth.*;
 
@@ -239,21 +238,7 @@ public class TwitBot {
     return (tempRequestToken != null);
   }
 
-  public static class RequestInProgressException extends Exception {
 
-    public RequestInProgressException() {
-      super();
-      log.error("Token request already in progress");
-    }
-  }
-
-  public static class RequestCancelledException extends Exception {
-
-    public RequestCancelledException() {
-      super();
-      log.error("Token request cancelled");
-    }
-  }
 
   /**
    * Posts a tweet.
@@ -273,20 +258,6 @@ public class TwitBot {
     return twitter.updateStatus(message);
   }
 
-  public static class NoProfileLoadedException extends Exception {
 
-    public NoProfileLoadedException() {
-      super();
-      log.error("No profile loaded");
-    }
-  }
-
-  public static class TweetTooLongException extends Exception {
-
-    public TweetTooLongException() {
-      super();
-      log.error("Tweet is too long");
-    }
-  }
 
 }
