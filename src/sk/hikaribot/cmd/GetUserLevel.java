@@ -46,7 +46,7 @@ public class GetUserLevel extends Command {
     this.name = "level";
     this.numArgs = 1;
     this.helpArgs.add("nick");
-    this.helpInfo = "prints user permissions level, defaults to invoker";
+    this.helpInfo = "prints user permissions level";
     this.reqPerm = 1;
   }
 
