@@ -31,9 +31,15 @@
  */
 package sk.hikaribot.bot;
 
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Observable;
 import java.util.Observer;
+import java.util.Properties;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jibble.pircbot.Colors;
@@ -66,8 +72,15 @@ public class PermissionsManager implements Observer {
     this.cr = bot.getCommandRegistry();
     this.accounts = new HashMap();
     this.cache = new HashMap();
-    this.accounts.put(bot.getOwner(), 99);
-    //TODO - load permissions.properties and populate accounts list with them
+    try {
+      this.loadAccounts();
+    } catch (FileNotFoundException ex) {
+      log.fatal("Could not find file permissions.properties!");
+      bot.quitServer("Fatal exception");
+    } catch (IOException ex) {
+      log.fatal("Could not read permissions.properties!");
+      bot.quitServer("Fatal exception");
+    }
   }
 
   /**
@@ -244,6 +257,45 @@ public class PermissionsManager implements Observer {
     log.info("REGISTERED " + canonNick);
     bot.sendMessage(channel, Colors.DARK_GREEN + "PERMISSIONS: " + Colors.NORMAL + "Successfully registered account " + Colors.OLIVE + canonNick + Colors.NORMAL + " and set to level " + Colors.OLIVE + "1");
     bot.sendMessage(channel, canonNick + ": Call " + bot.getDelimiter() + "identify to identify");
+  }
+
+  /**
+   * Loads accounts from permissions.properties.
+   *
+   * @throws FileNotFoundException if file not found, kills bot
+   * @throws IOException if file couldn't be read, kills bot
+   */
+  public void loadAccounts() throws FileNotFoundException, IOException {
+    accounts.clear();
+    FileReader permFile = new FileReader("permissions.properties");
+    Properties props = new Properties();
+    props.load(permFile);
+    for (Map.Entry<Object, Object> prop : props.entrySet()) {
+      String nick = (String) prop.getKey();
+      String strLevel = (String) prop.getValue();
+      int level = Integer.parseInt(strLevel);
+      accounts.put(nick, level);
+      log.debug(nick + " : " + level);
+    }
+    accounts.put(bot.getOwner(), 99);
+    log.info("Loaded all accounts");
+  }
+
+  /**
+   * Writes accounts to permissions.properties.
+   *
+   * @throws IOException if file couldn't be written, kills bot
+   */
+  public void storeAccounts() throws FileNotFoundException, IOException {
+    FileWriter permFile = new FileWriter("permissions.properties");
+    Properties accountProps = new Properties();
+    for (Map.Entry<String, Integer> account : accounts.entrySet()) {
+      String nick = account.getKey();
+      String strLevel = account.getValue().toString();
+      accountProps.setProperty(nick, strLevel);
+    }
+    accountProps.store(permFile, null);
+    log.info("Accounts saved to permissions.properties");
   }
 
 }

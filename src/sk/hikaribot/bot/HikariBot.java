@@ -113,6 +113,8 @@ public class HikariBot extends PircBot {
     cr.add(new sk.hikaribot.cmd.AccountIdentify());
     cr.add(new sk.hikaribot.cmd.SetUserLevel());
     cr.add(new sk.hikaribot.cmd.AccountRegister());
+    cr.add(new sk.hikaribot.cmd.AccountSave());
+    cr.add(new sk.hikaribot.cmd.AccountReload());
     cr.add(new sk.hikaribot.twitter.cmd.LoadProfile());
     cr.add(new sk.hikaribot.twitter.cmd.UnloadProfile());
     cr.add(new sk.hikaribot.twitter.cmd.GetActiveProfile());
@@ -204,6 +206,12 @@ public class HikariBot extends PircBot {
   @Override
   protected void onDisconnect() {
     log.info("Disconnected, exiting...");
+    try {
+      pm.storeAccounts();
+    } catch (IOException ex) {
+      log.fatal("Could not write permissions.properties!");
+      System.exit(1);
+    }
     System.exit(0);
   }
 
