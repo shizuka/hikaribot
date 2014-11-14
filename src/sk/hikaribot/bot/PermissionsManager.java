@@ -85,6 +85,18 @@ public class PermissionsManager implements Observer {
     }
   }
 
+  public void setUserLevel(String nick, int level) throws NoSuchAccountException {
+    String account;
+    if (isIdentified(nick)) {
+      account = cache.get(nick);
+    } else if (isRegistered(nick)) {
+      account = nick;
+    } else {
+      throw new NoSuchAccountException(nick);
+    }
+    accounts.put(account, level);
+  }
+
   /**
    * @param nick
    * @return is this a canonical nick in our accounts list?
@@ -199,5 +211,5 @@ public class PermissionsManager implements Observer {
       }
     }
   }
-
+  
 }
