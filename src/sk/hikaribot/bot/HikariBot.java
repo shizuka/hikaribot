@@ -112,6 +112,7 @@ public class HikariBot extends PircBot {
     cr.add(new sk.hikaribot.cmd.GetWhois());
     cr.add(new sk.hikaribot.cmd.AccountIdentify());
     cr.add(new sk.hikaribot.cmd.SetUserLevel());
+    cr.add(new sk.hikaribot.cmd.AccountRegister());
     cr.add(new sk.hikaribot.twitter.cmd.LoadProfile());
     cr.add(new sk.hikaribot.twitter.cmd.UnloadProfile());
     cr.add(new sk.hikaribot.twitter.cmd.GetActiveProfile());
@@ -156,7 +157,7 @@ public class HikariBot extends PircBot {
     } catch (InsufficientPermissionsException ex) {
       if (permission > 0) {
         this.sendMessage(channel, Colors.RED + "NO: " + Colors.NORMAL + "Insufficient permissions - "
-                + Colors.BLUE + "you: " + Colors.BROWN + permission + Colors.BLUE + ", needed: " + Colors.RED + ex.getMessage());
+                + Colors.BLUE + "you: " + Colors.OLIVE + permission + Colors.BLUE + ", needed: " + Colors.BROWN + ex.getMessage());
       }
     } catch (ImproperArgsException ex) {
       log.fatal("This should have been caught by HELP!");

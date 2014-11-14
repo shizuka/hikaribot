@@ -118,9 +118,10 @@ public class PermissionsManager implements Observer {
    *
    * @param nick the user to check
    * @param channel channel to print response to
+   * @param flag who is requesting the whois? IDENTIFY or REGISTER
    */
-  public void getCanonNick(String nick, String channel) {
-    WhoisResponse wir = new WhoisResponse(nick, channel);
+  public void getCanonNick(String nick, String channel, String flag) {
+    WhoisResponse wir = new WhoisResponse(nick, channel, flag);
     wir.addObserver(this);
     bot.sendWhois(nick, wir);
   }
@@ -169,7 +170,7 @@ public class PermissionsManager implements Observer {
       bot.sendMessage(channel, Colors.OLIVE + "PERMISSIONS: " + Colors.NORMAL + "You are already identified for " + cache.get(invoker));
       return;
     }
-    getCanonNick(invoker, channel);
+    getCanonNick(invoker, channel, "IDENTIFY");
     //control is passed to update() and identCanonNick() to complete the identify
   }
 
@@ -202,14 +203,47 @@ public class PermissionsManager implements Observer {
       WhoisResponse wir = (WhoisResponse) arg;
       bot.getServerResponder().deleteObserver((Observer) o); //i hope this works
       if (wir.isIdented()) {
-        //wir.isIdented() refers to being identified with Nickserv
-        //wir.getTarget() is the nick of the invoker
-        //wir.getChannel() is the callback channel an IDENTIFY was sent from
-        this.identCanonNick(wir.getTarget(), wir.getCanonicalNick(), wir.getChannel());
+        if (null != wir.getFlag()) {
+          switch (wir.getFlag()) {
+            case "IDENTIFY":
+              this.identCanonNick(wir.getTarget(), wir.getCanonicalNick(), wir.getChannel());
+              break;
+            case "REGISTER":
+              this.completeRegistration(wir.getCanonicalNick(), wir.getChannel());
+              break;
+          }
+        }
       } else {
-        bot.sendMessage(wir.getChannel(), Colors.BROWN + "PERMISSIONS: You are not registered with Nickserv");
+        bot.sendMessage(wir.getChannel(), Colors.BROWN + "PERMISSIONS: " + Colors.OLIVE + wir.getTarget() + Colors.NORMAL + " is not registered with Nickserv");
       }
     }
   }
-  
+
+  /**
+   * Start registering an account. Does WHOIS to get canonical nick.
+   *
+   * @param nick the nick to register
+   * @param channel channel to send response to
+   * @throws AccountAlreadyExistsException if account already exists
+   */
+  public void registerAccount(String nick, String channel) throws AccountAlreadyExistsException {
+    if (isRegistered(nick)) {
+      throw new AccountAlreadyExistsException(nick);
+    }
+    getCanonNick(nick, channel, "REGISTER");
+  }
+
+  /**
+   * Completes account registration.
+   *
+   * @param canonNick who we just got from WHOIS
+   * @param channel channel to send response to
+   */
+  public void completeRegistration(String canonNick, String channel) {
+    accounts.put(canonNick, 1);
+    log.info("REGISTERED " + canonNick);
+    bot.sendMessage(channel, Colors.DARK_GREEN + "PERMISSIONS: " + Colors.NORMAL + "Successfully registered account " + Colors.OLIVE + canonNick + Colors.NORMAL + " and set to level " + Colors.OLIVE + "1");
+    bot.sendMessage(channel, canonNick + ": Call " + bot.getDelimiter() + "identify to identify");
+  }
+
 }
