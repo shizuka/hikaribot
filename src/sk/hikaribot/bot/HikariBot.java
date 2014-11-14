@@ -82,6 +82,7 @@ public class HikariBot extends PircBot {
     cmdRegistry.add(new sk.hikaribot.cmd.Version());
     cmdRegistry.add(new sk.hikaribot.cmd.Uptime());
     cmdRegistry.add(new sk.hikaribot.cmd.GetPermission());
+    cmdRegistry.add(new sk.hikaribot.cmd.GetWhois());
     cmdRegistry.add(new sk.hikaribot.twitter.cmd.LoadProfile());
     cmdRegistry.add(new sk.hikaribot.twitter.cmd.UnloadProfile());
     cmdRegistry.add(new sk.hikaribot.twitter.cmd.GetActiveProfile());
@@ -181,6 +182,73 @@ public class HikariBot extends PircBot {
   @Override
   protected void onIncomingFileTransfer(DccFileTransfer transfer) {
     //we're ignoring DCC
+  }
+
+  @Override
+  public synchronized void onServerResponse(int code, String response) {
+    if (code == RPL_WHOISUSER) {
+      //botname target username hostname * :realname
+      String[] parts = response.split(":");
+      String[] whois = parts[0].split(" ");
+      //[0] bot nick
+      //[1] target nick
+      //[2] target's username
+      //[3] target's hostname
+      //[4] *
+      String realname = parts[1];
+      log.debug("311 WHOISUSER " + whois[1] + " is " + whois[2] + "@" + whois[3] + " - Realname: " + realname);
+    } else if (code == RPL_WHOISCHANNELS) {
+      //botname target :#channel #channel @#channelwithop
+      String[] parts = response.split(":");
+      String[] nicks = parts[0].split(" ");
+      //[0] bot nick
+      //[1] target nick
+      String[] channels = parts[1].split(" ");
+      //[i] @#channel or %#channel or +#channel or #channel
+      log.debug("319 WHOISCHANNELS " + nicks[1] + " is in channels: " + channels.toString());
+    } else if (code == RPL_WHOISSERVER) {
+      //botname target server.domain.name :serverfriendlyname?
+      String[] parts = response.split(":");
+      String[] info = parts[0].split(" ");
+      //[0] bot nick
+      //[1] target nick
+      //[2] server.domain.name
+      String servername = parts[1];
+      log.debug("312 WHOISSERVER " + info[1] + " is on server " + info[2] + " - friendlyname: " + servername);
+    } else if (code == RPL_WHOISIDLE) {
+      //botname target secondsidle logontimestamp :"seconds idle, signon time"
+      String[] info = response.split(":")[0].split(" ");
+      //[0] bot nick
+      //[1] target nick
+      //[2] seconds idle
+      //[3] signon timestamp
+      log.debug("317 WHOISIDLE " + info[1] + " has been idle for " + info[2] + " seconds - Signed on at timestamp: " + info[3]);
+    } else if (code == 330) {
+      //botname target canonicalNick :is logged in as
+      String[] info = response.split(":")[0].split(" ");
+      //[0] bot nick
+      //[1] target nick
+      //[2] nick target is logged in as
+      log.debug("330 Nickserv " + info[1] + " is logged in as " + info[2]);
+    } else if (code == RPL_ENDOFWHOIS) {
+      //botname target :End of /WHOIS list.
+      String[] info = response.split(":")[0].split(" ");
+      //[0] bot nick
+      //[1] target nick
+      log.debug("318 END OF WHOIS for " + info[1]);
+    }
+  }
+  
+  public void onEndOfWhois(String target) {
+    
+  }
+  
+  public void onWhoisNickservLogin(String target, String canonicalNick) {
+    
+  }
+  
+  public void sendWhois(String target) {
+    this.sendRawLine("WHOIS " + target);
   }
 
   public User getUser(String channel, String nick) {
