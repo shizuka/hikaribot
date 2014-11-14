@@ -108,8 +108,9 @@ public class HikariBot extends PircBot {
     cr.add(new sk.hikaribot.cmd.DoAction());
     cr.add(new sk.hikaribot.cmd.Version());
     cr.add(new sk.hikaribot.cmd.Uptime());
-    cr.add(new sk.hikaribot.cmd.GetPermission());
+    cr.add(new sk.hikaribot.cmd.GetUserLevel());
     cr.add(new sk.hikaribot.cmd.GetWhois());
+    cr.add(new sk.hikaribot.cmd.AccountIdentify());
     cr.add(new sk.hikaribot.twitter.cmd.LoadProfile());
     cr.add(new sk.hikaribot.twitter.cmd.UnloadProfile());
     cr.add(new sk.hikaribot.twitter.cmd.GetActiveProfile());
@@ -255,6 +256,30 @@ public class HikariBot extends PircBot {
   protected void onNotice(String sourceNick, String sourceLogin, String sourceHostname, String target, String notice) {
     super.onNotice(sourceNick, sourceLogin, sourceHostname, target, notice);
     log.warn("NOTICE from " + sourceNick + "!" + sourceLogin + "@" + sourceHostname + ": " + notice);
+  }
+
+  /**
+   * Called when anyone quits in view, even us
+   */
+  @Override
+  protected void onQuit(String sourceNick, String sourceLogin, String sourceHostname, String reason) {
+    pm.onPartOrQuit(sourceNick);
+  }
+
+  /**
+   * Called when anyone changes nick in view, even us
+   */
+  @Override
+  protected void onNickChange(String oldNick, String login, String hostname, String newNick) {
+    pm.onNickChange(oldNick, newNick);
+  }
+
+  /**
+   * Called when anyone parts channel, even us
+   */
+  @Override
+  protected void onPart(String channel, String sender, String login, String hostname) {
+    pm.onPartOrQuit(sender);
   }
 
   /**

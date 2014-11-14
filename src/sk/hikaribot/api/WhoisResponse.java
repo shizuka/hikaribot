@@ -50,6 +50,7 @@ public class WhoisResponse extends Observable implements Observer {
   private static final Logger log = LogManager.getLogger("WHOISRESPONSE");
 
   private final String target;
+  private final String channel;
   private boolean exists = true;
   private String usermask;
   private String realname;
@@ -60,9 +61,11 @@ public class WhoisResponse extends Observable implements Observer {
    * Prepares WhoisResponse to collect WHOIS information.
    *
    * @param target the nick we're WHOISing
+   * @param channel channel to call back to
    */
-  public WhoisResponse(String target) {
+  public WhoisResponse(String target, String channel) {
     this.target = target;
+    this.channel = channel;
   }
 
   /**
@@ -153,6 +156,20 @@ public class WhoisResponse extends Observable implements Observer {
    */
   public String getTarget() {
     return target;
+  }
+
+  /**
+   * @return the channel to print response to
+   */
+  public String getChannel() {
+    return channel;
+  }
+
+  /**
+   * @return did the nick exist?
+   */
+  public boolean exists() {
+    return exists;
   }
 
   /**
