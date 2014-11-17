@@ -40,9 +40,11 @@ import java.util.Map;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Properties;
+import java.util.Set;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jibble.pircbot.Colors;
+import sk.hikaribot.api.WhoResponse;
 import sk.hikaribot.api.WhoisResponse;
 import sk.hikaribot.api.exception.*;
 
@@ -51,7 +53,7 @@ import sk.hikaribot.api.exception.*;
  *
  * @author Shizuka Kamishima
  */
-public class PermissionsManager implements Observer {
+public final class PermissionsManager implements Observer {
 
   private static final Logger log = LogManager.getLogger("Permissions");
 
@@ -111,15 +113,15 @@ public class PermissionsManager implements Observer {
   }
 
   /**
-   * @param nick
+   * @param canonNick canonical nick to check 
    * @return is this a canonical nick in our accounts list?
    */
-  public boolean isRegistered(String nick) {
-    return accounts.containsKey(nick);
+  public boolean isRegistered(String canonNick) {
+    return accounts.containsKey(canonNick);
   }
 
   /**
-   * @param nick
+   * @param nick user current nick
    * @return is this nick identified for a canonical account in our cache?
    */
   public boolean isIdentified(String nick) {
@@ -197,22 +199,27 @@ public class PermissionsManager implements Observer {
   public void identCanonNick(String invoker, String canonNick, String channel) {
     if (isIdentified(invoker)) {
       log.warn("ALREADY IDENTIFIED " + invoker + " FOR " + cache.get(invoker));
-      bot.sendMessage(channel, Colors.OLIVE + "PERMISSIONS: " + Colors.NORMAL + invoker + " is already identified for " + canonNick);
+      bot.sendMessage(channel, Colors.OLIVE + "PERMISSIONS: " + Colors.NORMAL + invoker + " is already identified for " + Colors.OLIVE + canonNick);
       return;
     } else if (!isRegistered(canonNick)) {
       log.error("NO SUCH ACCOUNT " + canonNick);
-      bot.sendMessage(channel, Colors.BROWN + "PERMISSIONS: " + Colors.NORMAL + canonNick + " is not registered");
+      bot.sendMessage(channel, Colors.BROWN + "PERMISSIONS: " + Colors.OLIVE + canonNick + Colors.NORMAL + " is not registered with Permissions");
       return;
     }
     cache.put(invoker, canonNick);
     log.info("IDENTIFIED " + invoker + " FOR " + canonNick);
-    bot.sendMessage(channel, Colors.DARK_GREEN + "PERMISSIONS: " + Colors.NORMAL + invoker + ": You are now identified for " + canonNick);
+    bot.sendMessage(channel, Colors.DARK_GREEN + "PERMISSIONS: " + Colors.NORMAL + invoker + ": You are now identified for " + Colors.OLIVE + canonNick);
   }
-
+  
+  private void identWhoxNick(String nick, String account) {
+    cache.put(nick, account);
+  }
+    
   @Override
   public void update(Observable o, Object arg) {
     //Called when WhoisResponse has completed collecting WHOIS data
     if (arg instanceof WhoisResponse) {
+      log.debug("Got WhoisResponse");
       WhoisResponse wir = (WhoisResponse) arg;
       bot.getServerResponder().deleteObserver((Observer) o); //i hope this works
       if (wir.isIdented()) {
@@ -229,6 +236,11 @@ public class PermissionsManager implements Observer {
       } else {
         bot.sendMessage(wir.getChannel(), Colors.BROWN + "PERMISSIONS: " + Colors.OLIVE + wir.getTarget() + Colors.NORMAL + " is not registered with Nickserv");
       }
+    } else if (arg instanceof WhoResponse) {
+      log.debug("Got WhoResponse");
+      WhoResponse wr = (WhoResponse) arg;
+      bot.getServerResponder().deleteObserver((Observer) o); //still hope this works
+      this.handleWhox(wr.getResponses());
     }
   }
 
@@ -284,6 +296,8 @@ public class PermissionsManager implements Observer {
   /**
    * Writes accounts to permissions.properties.
    *
+   * @throws FileNotFoundException if permissions.properties vanished since bot
+   * was started (bot dies if it's missing at runtime)
    * @throws IOException if file couldn't be written, kills bot
    */
   public void storeAccounts() throws FileNotFoundException, IOException {
@@ -298,4 +312,27 @@ public class PermissionsManager implements Observer {
     log.info("Accounts saved to permissions.properties");
   }
 
+  public void onJoinChannel(String channel) {
+    log.debug("Requesting WHOX for " + channel);
+    WhoResponse wr = new WhoResponse(channel);
+    wr.addObserver(this);
+    bot.sendWhox(channel, wr);
+  }
+  
+  private void handleWhox(HashMap<String, String> users) {
+    Set<String> nicks = users.keySet();
+    for (String nick : nicks) {
+      if (isRegistered(users.get(nick))) {
+        //is the nickserv account identified by this nick part of our list?
+        //WHOX gives 0 if a nick isn't registered/idented, and 0 isn't a valid
+        //  nick so it's never going to be in our account list, so ignored
+        if (!isIdentified(nick)) {
+          //if this nick is not identified for a Permissions account
+         cache.put(nick, users.get(nick));
+         log.debug("WHOX IDENTIFIED " + nick + " FOR " + users.get(nick));
+        }
+      }
+    }
+  }
+    
 }
