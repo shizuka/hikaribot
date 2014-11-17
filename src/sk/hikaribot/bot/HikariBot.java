@@ -134,9 +134,6 @@ public class HikariBot extends PircBot {
     } catch (IOException ex) {
       log.fatal("Failed to connect to server!");
       System.exit(1);
-    } catch (IrcException ex) {
-      log.fatal("Server would not let us join!");
-      System.exit(1);
     }
   }
 
