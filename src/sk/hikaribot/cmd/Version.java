@@ -46,7 +46,7 @@ public class Version extends Command {
     this.name = "version";
     this.numArgs = 0;
     this.helpInfo = "prints version";
-    this.reqPerm = 1; //voice and up
+    this.reqPerm = 0;
   }
 
   @Override
@@ -56,7 +56,22 @@ public class Version extends Command {
 
   @Override
   public void execute(String channel, String sender) throws ImproperArgsException {
-    bot.sendMessage(channel, Colors.BLUE + "VERSION: " + Colors.NORMAL + bot.getVersion());
+    long started = bot.getTimeStarted();
+    long now = System.currentTimeMillis();
+    long ms = now - started;
+
+    long x = ms / 1000;
+    long secsElapsed = x % 60;
+    x /= 60;
+    long minsElapsed = x % 60;
+    x /= 60;
+    long hrsElapsed = x % 24;
+    x /= 24;
+    long daysElapsed = x;
+
+    String timeElapsed = String.format("%02d", hrsElapsed) + ":" + String.format("%02d", minsElapsed) + ":" + String.format("%02d", secsElapsed);
+        
+    bot.sendMessage(channel, Colors.BLUE + "VERSION: " + Colors.NORMAL + bot.getVersion() + ", up " + daysElapsed + " days, " + timeElapsed);
     log.info("VERSION from " + sender + " in " + channel);
   }
 
