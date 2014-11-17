@@ -47,7 +47,7 @@ import static org.jibble.pircbot.ReplyConstants.*;
  */
 public class WhoisResponse extends Observable implements Observer {
 
-  private static final Logger log = LogManager.getLogger("WHOISRESPONSE");
+  private static final Logger log = LogManager.getLogger("WHOIS");
 
   private final String target;
   private final String channel;
@@ -110,7 +110,7 @@ public class WhoisResponse extends Observable implements Observer {
     //bot nick <username hostname * :realname>
     this.realname = realname;
     this.usermask = this.target + "!" + username + "@" + hostname;
-    log.debug("WHOIS RESPONSE FOR " + this.target + ": " + this.usermask + " " + this.realname);
+    log.trace("WHOIS RESPONSE FOR " + this.target + ": " + this.usermask + " " + this.realname);
   }
 
   /**
@@ -121,7 +121,7 @@ public class WhoisResponse extends Observable implements Observer {
    */
   public void onWhoisChannels(String[] channels) {
     //bot nick <:#channel #channel @#channelwithop #channel>
-    log.debug("WHOIS RESPONSE FOR " + this.target + ": Is in channels: " + Arrays.toString(channels));
+    log.trace("WHOIS RESPONSE FOR " + this.target + ": Is in channels: " + Arrays.toString(channels));
   }
 
   /**
@@ -134,7 +134,7 @@ public class WhoisResponse extends Observable implements Observer {
   public void onWhoisServer(String domainName, String friendlyName) {
     //bot nick <server.domain.name :friendly name>
     //don't care yet
-    log.debug("WHOIS RESPONSE FOR " + this.target + ": Is connected to server " + domainName + ": " + friendlyName);
+    log.trace("WHOIS RESPONSE FOR " + this.target + ": Is connected to server " + domainName + ": " + friendlyName);
   }
 
   /**
@@ -147,7 +147,7 @@ public class WhoisResponse extends Observable implements Observer {
   public void onWhoisIdle(String secsIdle, String signonTimestamp) {
     //bot nick <secsIdle signonTimestamp> :seconds idle, signon time
     //don't care yet
-    log.debug("WHOIS RESPONSE FOR " + this.target + ": Has been idle for " + secsIdle + " seconds and signed on at timestamp " + signonTimestamp);
+    log.trace("WHOIS RESPONSE FOR " + this.target + ": Has been idle for " + secsIdle + " seconds and signed on at timestamp " + signonTimestamp);
   }
 
   /**
@@ -160,7 +160,7 @@ public class WhoisResponse extends Observable implements Observer {
     //bot nick <canonical> :is logged in as
     this.canonicalNick = canonicalNick;
     this.isIdented = true;
-    log.debug("WHOIS RESPONSE FOR " + this.target + ": Is logged in as: " + this.canonicalNick);
+    log.trace("WHOIS RESPONSE FOR " + this.target + ": Is logged in as: " + this.canonicalNick);
   }
 
   /**
@@ -170,7 +170,7 @@ public class WhoisResponse extends Observable implements Observer {
    */
   public void onEndOfWhois() {
     //bot nick :End of /WHOIS list.
-    log.debug("WHOIS RESPONSE FOR " + this.target + " ENDS");
+    log.trace("WHOIS RESPONSE FOR " + this.target + " ENDS");
     this.setChanged();
     this.notifyObservers(this);
   }
