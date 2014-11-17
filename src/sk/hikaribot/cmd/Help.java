@@ -50,7 +50,7 @@ public class Help extends Command {
     this.numArgs = 1;
     this.helpArgs.add("command");
     this.helpInfo = "prints command help, omit command for list of all commands";
-    this.reqPerm = 1; //voice and up
+    this.reqPerm = 0;
   }
 
   @Override
@@ -83,7 +83,9 @@ public class Help extends Command {
     List<Command> registry = cr.getRegistry();
     /* get all command names and sort */
     for (Command command : registry) {
-      commands.add(command.name);
+      if (command.reqPerm <= bot.getPermissionsManager().getUserLevel(sender)) {
+        commands.add(command.name);
+      }
     }
     Collections.sort(commands);
     /* build output string */
