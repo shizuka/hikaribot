@@ -45,7 +45,7 @@ import sk.hikaribot.twitter.TwitBot;
  * Our heroine, the Hikari IRC Bot.
  *
  * @author Shizuka Kamishima
- * @version cooldown
+ * @version default
  */
 public class HikariBot extends PircBot {
 
@@ -68,6 +68,7 @@ public class HikariBot extends PircBot {
   private final String version;
 
   private boolean _isConnected = false;
+  private boolean _isVerbose = false;
 
   /**
    * Start HikariBot with runtime properties.
@@ -87,6 +88,7 @@ public class HikariBot extends PircBot {
     this.nickservPassword = config.getProperty("pass");
     this.server = config.getProperty("server");
     this.version = config.getProperty("version");
+    _isVerbose = false; //TODO load this from config
 
     /* initialize components */
     this.cr = new CommandRegistry(this);
@@ -97,7 +99,6 @@ public class HikariBot extends PircBot {
     /* register commands */
     log.info("Registering commands...");
     cr.add(new sk.hikaribot.cmd.Verbose());
-    cr.add(new sk.hikaribot.cmd.NoVerbose());
     cr.add(new sk.hikaribot.cmd.RawLine());
     cr.add(new sk.hikaribot.cmd.Help());
     cr.add(new sk.hikaribot.cmd.Die());
@@ -376,6 +377,15 @@ public class HikariBot extends PircBot {
    */
   public PermissionsManager getPermissionsManager() {
     return pm;
+  }
+
+  public boolean getVerbose() {
+    return this._isVerbose;
+  }
+
+  public void toggleVerbose(boolean set) {
+    this.setVerbose(set);
+    this._isVerbose = set;
   }
 
 }
