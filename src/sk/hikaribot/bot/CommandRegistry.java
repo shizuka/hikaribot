@@ -52,6 +52,10 @@ public class CommandRegistry {
   private final HikariBot bot;
   private final PermissionsManager pm;
   private final List<Command> commands;
+  
+  private long cooldownTimer = System.currentTimeMillis(); //timestamp of last command
+  private final int cooldownLength = 5000; //in millis, how long before command is acknowledged again
+  private final int cooldownPerm = 0; //commands at or below this level have cooldown
 
   /**
    * Initializes registry. Caller should run series of add()s after
@@ -90,11 +94,27 @@ public class CommandRegistry {
    * args, calls HELP
    */
   public void execute(String channel, String sender, int senderPerm, String message) throws CommandNotFoundException, InsufficientPermissionsException, ImproperArgsException {
+    /* pull command from line */    
     String[] args = message.split(" ", 2);
     Command cmd = this.getCommand(args[0].substring(1));
+    
+    /* check sender permission */
     if (senderPerm < cmd.reqPerm) {
       throw new InsufficientPermissionsException(cmd.name, sender, channel, senderPerm, cmd.reqPerm);
     }
+    
+    /* command rate limiting */
+    if ((cmd.reqPerm <= cooldownPerm) && (senderPerm == cmd.reqPerm)) {
+      long now = System.currentTimeMillis();
+      long timePassed = now - cooldownTimer;
+      if (timePassed < cooldownLength) {
+        return;
+      } else {
+        cooldownTimer = now;
+      }
+    }
+    
+    /* execute command */
     try {
       if (args.length > 1) {
         cmd.execute(channel, sender, args[1].trim());
