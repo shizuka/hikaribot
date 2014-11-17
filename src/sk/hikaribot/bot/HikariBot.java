@@ -45,7 +45,7 @@ import sk.hikaribot.twitter.TwitBot;
  * Our heroine, the Hikari IRC Bot.
  *
  * @author Shizuka Kamishima
- * @version release
+ * @version default
  */
 public class HikariBot extends PircBot {
 
@@ -218,6 +218,7 @@ public class HikariBot extends PircBot {
   @Override
   protected void onUserList(String channel, User[] users) {
     log.info("Joined " + channel);
+    pm.onJoinChannel(channel);
   }
 
   /**
@@ -299,6 +300,17 @@ public class HikariBot extends PircBot {
   public void sendWhois(String target, Observer wiResponse) {
     sr.addObserver(wiResponse);
     this.sendRawLine("WHOIS " + target);
+  }
+
+  /**
+   * Requests extended WHO for a channel, returns nicks and accounts.
+   *
+   * @param channel channel to WHO against
+   * @param whoResponse WhoResponse to collect responses
+   */
+  public void sendWhox(String channel, Observer whoResponse) {
+    sr.addObserver(whoResponse);
+    this.sendRawLine("WHO " + channel + " %na");
   }
 
   /**

@@ -1,6 +1,6 @@
 /*
- * hikaribot - ServerResponse
- * Shizuka Kamishima - 2014-11-13
+ * hikaribot - WhoResponse
+ * Shizuka Kamishima - 2014-11-17
  * Observable
  * 
  * Copyright (c) 2014, Shizuka Kamishima
@@ -32,44 +32,70 @@
  */
 package sk.hikaribot.api;
 
+import java.util.HashMap;
 import java.util.Observable;
 import java.util.Observer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import static org.jibble.pircbot.ReplyConstants.*;
 
 /**
- * Middleman between HikariBot.onServerResponse and commands that need to hear
- * them.
- *
+ * Collects responses to a WHO command, notifies calling Observer when ENDOFWHO
+ * is reached.
+ * 
  * @author Shizuka Kamishima
  */
-public class ServerResponse extends Observable {
+public class WhoResponse extends Observable implements Observer {
+  
+  private static final Logger log = LogManager.getLogger("WHO");
+  
+  private final HashMap<String, String> users;
+  private final String targetChannel;
 
-  private static final Logger log = LogManager.getLogger("ServerResponse");
-
-  private String line;
-
-  /**
-   * Notify all Observers of a new server response in form "code|response line".
-   * Effectively a mirror of HikariBot.onServerResponse, but usable by everyone.
-   *
-   * @param code response code, bot has enum of them all
-   * @param response incoming line after stripping everything up to the code
-   */
-  public void onServerResponse(int code, String response) {
-    this.line = code + ":" + response;
+  public WhoResponse(String channel) {
+    users = new HashMap();
+    this.targetChannel = channel;
+  }
+  
+  public void onWho(String nick, String account) {
+    users.put(nick, account);
+  }
+  
+  public void onEndOfWho() {
     this.setChanged();
-    this.notifyObservers(line);
+    this.notifyObservers(this);
   }
 
   @Override
-  public synchronized void addObserver(Observer o) {
-    super.addObserver(o);
+  public void update(Observable o, Object arg) {
+    String line = arg.toString();
+    String[] serverResponse = line.split(":", 2);
+    int code = Integer.parseInt(serverResponse[0]);
+    String response = serverResponse[1];
+    this.onServerResponse(code, response);
   }
-
-  @Override
-  public synchronized void deleteObserver(Observer o) {
-    super.deleteObserver(o);
+  
+  private void onServerResponse(int code, String response) {
+    String[] info = response.split(" ");
+    /**
+     * [0] bot nick
+     * [1] user nick
+     * [2] user nickserv account, 0 if not idented
+     * target channel is not echoed with response
+     * WHO is a network-wide query so each response is one user
+     * WHOIS queries one user and has multiple responses specific to them
+     */
+    if (code == 354) {
+      //botname usernick useraccount
+      this.onWho(info[1], info[2]);
+    } else if (code == RPL_ENDOFWHO) {
+      //botname channel :End of /WHO list.
+      this.onEndOfWho();
+    }
   }
-
+  
+  public HashMap<String, String> getResponses() {
+    return users;
+  }
+        
 }
