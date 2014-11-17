@@ -44,22 +44,45 @@ public class Verbose extends Command {
 
   public Verbose() {
     this.name = "verbose";
-    this.numArgs = 0;
-    this.helpInfo = "set bot to verbose logging";
+    this.numArgs = 1;
+    this.helpArgs.add("on|off");
+    this.helpInfo = "toggle verbose logging";
     this.reqPerm = 3; //owner only
   }
 
   @Override
   public void execute(String channel, String sender, String params) throws ImproperArgsException {
-    this.execute(channel, sender);
+    if (params.split(" ").length != numArgs) {
+      throw new ImproperArgsException(this.name);
+    }
+    
+    switch (params) {
+      case "on":
+        if (bot.getVerbose()) {
+          break;
+        }
+        bot.toggleVerbose(true);
+        log.info("VERBOSE ON from " + sender + " in " + channel);
+        log.warn("All rawlines will now be logged");
+        bot.sendMessage(channel, Colors.OLIVE + "VERBOSE: " + Colors.NORMAL + "Enabled");
+        break;
+      case "off":
+        if (!bot.getVerbose()) {
+          break;
+        }
+        bot.toggleVerbose(false);
+        log.info("VERBOSE OFF from " + sender + " in " + channel);
+        log.warn("Only bot commands will now be logged");
+        bot.sendMessage(channel, Colors.OLIVE + "VERBOSE: " + Colors.NORMAL + "Disabled");
+        break;
+      default:
+        throw new ImproperArgsException(this.name);
+    }
   }
 
   @Override
   public void execute(String channel, String sender) throws ImproperArgsException {
-    log.info("VERBOSE from " + sender + " in " + channel);
-    log.warn("All rawlines will now be logged");
-    bot.setVerbose(true);
-    bot.sendMessage(channel, Colors.OLIVE + "VERBOSE: " + Colors.NORMAL + "Enabled");
+    throw new ImproperArgsException(this.name);
   }
 
 }
