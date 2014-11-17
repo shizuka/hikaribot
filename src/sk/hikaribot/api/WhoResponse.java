@@ -42,25 +42,40 @@ import static org.jibble.pircbot.ReplyConstants.*;
 /**
  * Collects responses to a WHO command, notifies calling Observer when ENDOFWHO
  * is reached.
- * 
+ *
  * @author Shizuka Kamishima
  */
 public class WhoResponse extends Observable implements Observer {
-  
+
   private static final Logger log = LogManager.getLogger("WHO");
-  
+
   private final HashMap<String, String> users;
   private final String targetChannel;
 
+  /**
+   * Requests WHO #channel %na
+   *
+   * @param channel the channel to WHOX
+   */
   public WhoResponse(String channel) {
     users = new HashMap();
     this.targetChannel = channel;
   }
-  
+
+  /**
+   * 354 RPL_WHOSPCRPL, user in channel
+   *
+   * @param nick user nick
+   * @param account nickserv account user is idented for, 0 if not idented or
+   * registered
+   */
   public void onWho(String nick, String account) {
     users.put(nick, account);
   }
-  
+
+  /**
+   * 315 RPL_ENDOFWHO, all WHOX information has been sent by this point.
+   */
   public void onEndOfWho() {
     this.setChanged();
     this.notifyObservers(this);
@@ -74,16 +89,14 @@ public class WhoResponse extends Observable implements Observer {
     String response = serverResponse[1];
     this.onServerResponse(code, response);
   }
-  
+
   private void onServerResponse(int code, String response) {
     String[] info = response.split(" ");
     /**
-     * [0] bot nick
-     * [1] user nick
-     * [2] user nickserv account, 0 if not idented
-     * target channel is not echoed with response
-     * WHO is a network-wide query so each response is one user
-     * WHOIS queries one user and has multiple responses specific to them
+     * [0] bot nick [1] user nick [2] user nickserv account, 0 if not idented
+     * target channel is not echoed with response WHO is a network-wide query so
+     * each response is one user WHOIS queries one user and has multiple
+     * responses specific to them
      */
     if (code == 354) {
       //botname usernick useraccount
@@ -93,9 +106,12 @@ public class WhoResponse extends Observable implements Observer {
       this.onEndOfWho();
     }
   }
-  
+
+  /**
+   * @return hashmap of nick->nickservaccount
+   */
   public HashMap<String, String> getResponses() {
     return users;
   }
-        
+
 }
