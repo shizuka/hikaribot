@@ -31,7 +31,7 @@ POSSIBILITY OF SUCH DAMAGE.
 <Configuration status="WARN">
   <Appenders>
     <Console name="Console" target="SYSTEM_OUT">
-      <PatternLayout pattern="%r %highlight{%-5level [%logger{36}.%M():%L]} - %msg%n"/>
+      <PatternLayout pattern="%d %highlight{%-5level [%logger{36}.%M():%L]} - %msg%n"/>
     </Console>
   </Appenders>
   <Loggers>
