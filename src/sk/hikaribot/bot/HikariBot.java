@@ -45,7 +45,7 @@ import sk.hikaribot.twitter.TwitBot;
  * Our heroine, the Hikari IRC Bot.
  *
  * @author Shizuka Kamishima
- * @version default
+ * @version twitbot
  */
 public class HikariBot extends PircBot {
 
