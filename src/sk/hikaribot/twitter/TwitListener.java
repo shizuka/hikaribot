@@ -42,7 +42,6 @@ import twitter4j.StallWarning;
 import twitter4j.Status;
 import twitter4j.StatusDeletionNotice;
 import twitter4j.StatusListener;
-import twitter4j.TwitterException;
 
 /**
  * Listens to tweets and passes them back to TwitBot for processing.

@@ -31,6 +31,8 @@
  */
 package sk.hikaribot.twitter.cmd;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.jibble.pircbot.Colors;
 import sk.hikaribot.api.Command;
 import sk.hikaribot.api.exception.*;
@@ -62,11 +64,14 @@ public class ListenerToggleEcho extends Command {
         if (twl.isEchoing()) {
           break;
         }
-        bot.getTwitBot().startListener();
-        twl.setEchoing(true);
+        try {
+          bot.getTwitBot().startListener();
+          twl.setEchoing(true);
         log.info("TWITLISTEN ON FROM " + sender + " in " + channel);
         bot.sendMessage(channel, Colors.OLIVE + "TWEET ECHOING: " + Colors.NORMAL + "Enabled");
-        
+        } catch (NoProfileLoadedException ex) {
+         bot.sendMessage(channel, Colors.RED + "TWEET ECHOING: " + Colors.NORMAL + "Listener not initialized, call " + Colors.OLIVE + bot.getDelimiter() + "twitAssign"); 
+        }
         break;
       case "off":
         if (!twl.isEchoing()) {

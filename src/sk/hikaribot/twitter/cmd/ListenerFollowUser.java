@@ -31,7 +31,6 @@
  */
 package sk.hikaribot.twitter.cmd;
 
-import java.util.List;
 import org.jibble.pircbot.Colors;
 import sk.hikaribot.api.Command;
 import sk.hikaribot.api.exception.*;
@@ -68,7 +67,10 @@ public class ListenerFollowUser extends Command {
     } else if (args.length != numArgs) {
       throw new ImproperArgsException(this.name);
     } else {
-      log.trace(args[0] + " " + args[1]);
+      if (!bot.getTwitBot().isListenerInitialized()) {
+        bot.sendMessage(channel, Colors.RED + "TWITFOLLOW: " + Colors.NORMAL + "Listener not initialized, call " + Colors.OLIVE + bot.getDelimiter() + "twitAssign"); 
+        return;
+      }
       TwitListener twl = bot.getTwitBot().getListener();
       switch (args[0]) {
         case "add":

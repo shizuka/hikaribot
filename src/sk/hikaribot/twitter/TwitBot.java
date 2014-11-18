@@ -70,6 +70,7 @@ public class TwitBot {
 
   private TwitListener listener;
   private boolean listenerStarted = false;
+  private boolean listenerInitialized = false;
   private FilterQuery fq = new FilterQuery();
 
   /**
@@ -139,6 +140,7 @@ public class TwitBot {
     log.debug("Token for " + profile + " is sane");
     String token = props.getProperty("accessToken.token");
     String tokenSecret = props.getProperty("accessToken.secret");
+    this.clearAccessToken();
     this.setAccessToken(new AccessToken(token, tokenSecret));
     return twit.verifyCredentials().getScreenName();
   }
@@ -157,6 +159,8 @@ public class TwitBot {
    */
   public void clearAccessToken() {
     twit.setOAuthAccessToken(null);
+    this.stopListener();
+    this.listenerInitialized = false;
     twitStream.setOAuthAccessToken(null);
     activeTwitId = -1;
     activeTwitName = null;
@@ -282,23 +286,31 @@ public class TwitBot {
    * start the Listener.
    *
    * @param channel channel we should send tweets to if we get them
+   * @throws NoProfileLoadedException if no AccessToken is loaded
    */
-  public void assignListener(String channel) {
+  public void assignListener(String channel) throws NoProfileLoadedException {
+    if (activeTwitId == -1) {
+      throw new NoProfileLoadedException();
+    }
     if (listenerStarted) {
       stopListener();
     }
     this.listener = new TwitListener(this.bot, channel);
+    listenerInitialized = true;
     log.info("Listener initialized for " + channel);
   }
 
   /**
    * Adds our listener to TwitterStream and starts filter(). Populate the
    * FilterQuery first!
+   *
+   * @throws NoProfileLoadedException if the Listener hasn't been initialized
    */
-  public void startListener() {
-    log.entry();
+  public void startListener() throws NoProfileLoadedException {
+    if (!listenerInitialized) {
+      throw new NoProfileLoadedException();
+    }
     this.twitStream.addListener(this.listener);
-    log.debug("added");
     this.twitStream.filter(new FilterQuery(0, this.listener.getUserIdsFollowing(), this.listener.getKeywordsTracking()));
     log.info("Listener started");
     this.listenerStarted = true;
@@ -351,9 +363,19 @@ public class TwitBot {
   public TwitListener getListener() {
     return this.listener;
   }
-  
+
+  /**
+   * @return Listener is actively monitoring tweets
+   */
   public boolean isListenerStarted() {
     return listenerStarted;
   }
-  
+
+  /**
+   * @return Listener has been created and assigned to a channel
+   */
+  public boolean isListenerInitialized() {
+    return listenerInitialized;
+  }
+
 }
