@@ -59,8 +59,7 @@ public class Tweet extends Command {
     log.info("TWEET from " + sender + " in " + channel + ": " + params);
     try {
       Status tweet = twit.tweet(params);
-      bot.sendMessage(channel, Colors.BLUE + "TWEET @" + twit.getActiveTwitName() + ": "
-              + Colors.NORMAL + "https://twitter.com/" + twit.getActiveTwitName() + "/status/" + tweet.getId());
+      //tweet echo now handled by TwitListener
       log.info("TWEET OK: " + "https://twitter.com/" + twit.getActiveTwitName() + "/status/" + tweet.getId());
     } catch (NoProfileLoadedException ex) {
       bot.sendMessage(channel, Colors.RED + "TWEET: " + Colors.NORMAL + "No profile loaded");

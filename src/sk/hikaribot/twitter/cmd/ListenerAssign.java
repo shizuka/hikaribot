@@ -1,6 +1,6 @@
 /*
- * hikaribot - ConfirmNewToken
- * Shizuka Kamishima - 2014-11-08
+ * hikaribot - ListenerAssign
+ * Shizuka Kamishima - 2014-11-18
  * 
  * Copyright (c) 2014, Shizuka Kamishima
  * All rights reserved.
@@ -37,18 +37,18 @@ import sk.hikaribot.api.exception.*;
 import sk.hikaribot.twitter.TwitBot;
 
 /**
- * Exchanges pending RequestToken for an AccessToken and stores.
+ * Assigns TwitBot's Listener to this channel.
  *
  * @author Shizuka Kamishima
  */
-public class ConfirmNewToken extends Command {
+public class ListenerAssign extends Command {
 
-  public ConfirmNewToken() {
-    this.name = "twitConfirm";
+  public ListenerAssign() {
+    this.name = "twitAssign";
     this.numArgs = 1;
-    this.helpArgs.add("PIN");
-    this.helpInfo = "confirms authorization using pin";
-    this.reqPerm = 2; //ops
+    this.helpArgs.add("channel");
+    this.helpInfo = "assign the tweet listener to channel, defaults to here";
+    this.reqPerm = 3;
   }
 
   @Override
@@ -57,27 +57,18 @@ public class ConfirmNewToken extends Command {
       throw new ImproperArgsException(this.name);
     }
     TwitBot twit = bot.getTwitBot();
-    log.info("TWITCONFIRM " + params + " from " + sender + " in " + channel);
-
-    if (!twit.pendingRequest()) {
-      bot.sendMessage(channel, Colors.OLIVE + "TWITCONFIRM: " + Colors.NORMAL + "No pending request");
-      log.error("TWITCONFIRM No pending request");
-      return;
-    }
-
     try {
-      String name = twit.confirmNewToken(params);
-      bot.sendMessage(channel, Colors.DARK_GREEN + "TWITCONFIRM: " + Colors.NORMAL + "Confirmed! Successfully authenticated for + " + Colors.OLIVE + "@" + name);
-      log.info("TWITCONFIRM OK: " + name);
-    } catch (RequestCancelledException ex) {
-      bot.sendMessage(channel, Colors.RED + "TWITCONFIRM: " + Colors.NORMAL + "Confirmation failed. Token request is cancelled");
-      log.error("TWITCONFIRM Authorization failed, request cancelled");
+      twit.assignListener(params);
+      bot.sendMessage(channel, Colors.DARK_GREEN + "TWITASSIGN: " + Colors.NORMAL + "Assigned tweet listener to "
+              + params + ", add follows/tracks then call " + Colors.OLIVE + bot.getDelimiter() + "twitListen on" + Colors.NORMAL + " to start echoing");
+    } catch (NoProfileLoadedException ex) {
+      bot.sendMessage(channel, Colors.BROWN + "TWITASSIGN: " + Colors.NORMAL + "No profile loaded, call " + Colors.OLIVE + bot.getDelimiter() + "twitload <profile>");
     }
   }
 
   @Override
   public void execute(String channel, String sender) throws ImproperArgsException {
-    throw new ImproperArgsException(this.name);
+    execute(channel, sender, channel);
   }
 
 }

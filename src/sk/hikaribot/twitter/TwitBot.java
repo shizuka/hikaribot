@@ -37,8 +37,8 @@ import java.io.IOException;
 import java.util.Properties;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jibble.pircbot.PircBot;
 import sk.hikaribot.api.exception.*;
+import sk.hikaribot.bot.HikariBot;
 import twitter4j.*;
 import twitter4j.auth.*;
 
@@ -58,8 +58,9 @@ public class TwitBot {
     "accessToken.secret"
   };
 
-  public final Twitter twitter;
-  private final PircBot bot;
+  private final Twitter twit;
+  private final TwitterStream twitStream;
+  private final HikariBot bot;
   private final Properties twitConfig;
 
   private String activeTwitName;
@@ -67,23 +68,29 @@ public class TwitBot {
   private RequestToken tempRequestToken;
   private long tempRequestId;
 
+  private TwitListener listener;
+  private boolean listenerStarted = false;
+  private boolean listenerInitialized = false;
+  private FilterQuery fq = new FilterQuery();
+
   /**
    * Feed TwitBot its parent Bot and runtime properties.
    *
    * @param bot
    * @param twitConfig
    */
-  public TwitBot(PircBot bot, Properties twitConfig) {
+  public TwitBot(HikariBot bot, Properties twitConfig) {
     log.debug("TwitBot started...");
-    AccessToken token;
     this.bot = bot;
     this.twitConfig = twitConfig;
     this.activeTwitId = -1;
     this.activeTwitName = null;
     this.tempRequestId = -1;
     this.tempRequestToken = null;
-    twitter = TwitterFactory.getSingleton();
-    twitter.setOAuthConsumer(twitConfig.getProperty("consumer.key"), twitConfig.getProperty("consumer.secret"));
+    this.twit = TwitterFactory.getSingleton();
+    this.twitStream = new TwitterStreamFactory().getInstance();
+    this.twit.setOAuthConsumer(twitConfig.getProperty("consumer.key"), twitConfig.getProperty("consumer.secret"));
+    this.twitStream.setOAuthConsumer(twitConfig.getProperty("consumer.key"), twitConfig.getProperty("consumer.secret"));
   }
 
   /* Bot dies if sanity check fails */
@@ -133,32 +140,49 @@ public class TwitBot {
     log.debug("Token for " + profile + " is sane");
     String token = props.getProperty("accessToken.token");
     String tokenSecret = props.getProperty("accessToken.secret");
+    this.clearAccessToken();
     this.setAccessToken(new AccessToken(token, tokenSecret));
-    return twitter.verifyCredentials().getScreenName();
+    return twit.verifyCredentials().getScreenName();
   }
 
   private void setAccessToken(AccessToken accessToken) throws TwitterException {
-    twitter.setOAuthAccessToken(accessToken);
-    User user = twitter.verifyCredentials();
+    twit.setOAuthAccessToken(accessToken);
+    twitStream.setOAuthAccessToken(accessToken);
+    User user = twit.verifyCredentials();
     activeTwitId = user.getId();
     activeTwitName = user.getScreenName();
     log.debug("Active Twitter profile set to " + activeTwitName + " id:" + activeTwitId);
   }
 
+  /**
+   * Clears the currently loaded AccessToken.
+   */
   public void clearAccessToken() {
-    twitter.setOAuthAccessToken(null);
+    twit.setOAuthAccessToken(null);
+    this.stopListener();
+    this.listenerInitialized = false;
+    twitStream.setOAuthAccessToken(null);
     activeTwitId = -1;
     activeTwitName = null;
   }
 
+  /**
+   * @return screen name of the profile we're currently authenticated for
+   */
   public String getActiveTwitName() {
     return activeTwitName;
   }
 
+  /**
+   * @return ID of the profile we're currently authenticated for
+   */
   public long getActiveTwitId() {
     return activeTwitId;
   }
 
+  /**
+   * @return pending RequestToken's ID
+   */
   public long getRequestId() {
     return tempRequestId;
   }
@@ -176,7 +200,7 @@ public class TwitBot {
       throw new RequestInProgressException();
     }
     try {
-      RequestToken requestToken = twitter.getOAuthRequestToken();
+      RequestToken requestToken = twit.getOAuthRequestToken();
       String authUrl = requestToken.getAuthorizationURL();
       tempRequestToken = requestToken;
       tempRequestId = requestToken.hashCode();
@@ -197,7 +221,7 @@ public class TwitBot {
    */
   public String confirmNewToken(String pin) throws RequestCancelledException {
     try {
-      AccessToken accessToken = twitter.getOAuthAccessToken(tempRequestToken, pin);
+      AccessToken accessToken = twit.getOAuthAccessToken(tempRequestToken, pin);
       //at this point we either threw TwitterException or have authorized
       //and are now acting as this token
       long userId = accessToken.getUserId();
@@ -205,7 +229,7 @@ public class TwitBot {
       log.debug("Successfully got accessToken for " + name + " id:" + userId);
       this.storeAccessToken(userId, accessToken);
       this.setAccessToken(accessToken);
-      return twitter.verifyCredentials().getScreenName();
+      return twit.verifyCredentials().getScreenName();
     } catch (TwitterException ex) {
       if (ex.getStatusCode() == 401) { //UNAUTHORIZED
         log.error("PIN was not authorized");
@@ -238,10 +262,9 @@ public class TwitBot {
     return (tempRequestToken != null);
   }
 
-
-
   /**
    * Posts a tweet.
+   *
    * @param message the message to tweet
    * @return Status object for tweet
    * @throws NoProfileLoadedException if no AccessToken is loaded
@@ -255,9 +278,102 @@ public class TwitBot {
     if (message.length() >= 140) {
       throw new TweetTooLongException();
     }
-    return twitter.updateStatus(message);
+    return twit.updateStatus(message);
   }
 
+  /**
+   * Assigns TwitBot's Listener to a channel. Populate the FilterQuery then
+   * start the Listener.
+   *
+   * @param channel channel we should send tweets to if we get them
+   * @throws NoProfileLoadedException if no AccessToken is loaded
+   */
+  public void assignListener(String channel) throws NoProfileLoadedException {
+    if (activeTwitId == -1) {
+      throw new NoProfileLoadedException();
+    }
+    if (listenerStarted) {
+      stopListener();
+    }
+    this.listener = new TwitListener(this.bot, channel);
+    listenerInitialized = true;
+    log.info("Listener initialized for " + channel);
+  }
 
+  /**
+   * Adds our listener to TwitterStream and starts filter(). Populate the
+   * FilterQuery first!
+   *
+   * @throws NoProfileLoadedException if the Listener hasn't been initialized
+   */
+  public void startListener() throws NoProfileLoadedException {
+    if (!listenerInitialized) {
+      throw new NoProfileLoadedException();
+    }
+    this.twitStream.addListener(this.listener);
+    this.twitStream.filter(new FilterQuery(0, this.listener.getUserIdsFollowing()));
+    log.info("Listener started");
+    this.listenerStarted = true;
+  }
+
+  private void restartListener() {
+    twitStream.filter(new FilterQuery(0, this.listener.getUserIdsFollowing()));
+    log.info("Listener restarted");
+  }
+
+  /**
+   * Shuts down TwitterStream and removes our listener.
+   */
+  public void stopListener() {
+    twitStream.shutdown();
+    twitStream.removeListener(this.listener);
+    log.info("Listener stopped");
+    listenerStarted = false;
+  }
+
+  /**
+   * Called by TwitListeners when their follow/track lists change. Restarts
+   * twitStream
+   *
+   * @param userIdsToFollow long[] of user ids to follow
+   */
+  public void onFilterChange(long[] userIdsToFollow) {
+    this.fq = new FilterQuery();
+    this.fq.follow(userIdsToFollow);
+    if (listenerStarted) {
+      log.debug("Filter changed, restarting listener...");
+      restartListener();
+    } else {
+      log.debug("Filter changed, ready to start listener");
+    }
+  }
+
+  /**
+   * @return the Twitter object
+   */
+  public Twitter getTwitObject() {
+    return twit;
+  }
+
+  /**
+   * @return our Listener
+   */
+  public TwitListener getListener() {
+    return this.listener;
+  }
+
+  /**
+   * @return Listener is actively monitoring tweets
+   */
+  public boolean isListenerStarted() {
+    return listenerStarted;
+  }
+
+  /**
+   * @return Listener has been created and assigned to a channel
+   */
+  public boolean isListenerInitialized() {
+    return listenerInitialized;
+  }
 
 }

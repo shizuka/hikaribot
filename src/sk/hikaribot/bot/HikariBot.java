@@ -122,6 +122,9 @@ public class HikariBot extends PircBot {
     cr.add(new sk.hikaribot.twitter.cmd.ConfirmNewToken());
     cr.add(new sk.hikaribot.twitter.cmd.CancelNewToken());
     cr.add(new sk.hikaribot.twitter.cmd.Tweet());
+    cr.add(new sk.hikaribot.twitter.cmd.ListenerAssign());
+    cr.add(new sk.hikaribot.twitter.cmd.ListenerToggleEcho());
+    cr.add(new sk.hikaribot.twitter.cmd.ListenerFollowUser());
     log.info("Commands registered");
 
     /* start bot */
@@ -209,6 +212,7 @@ public class HikariBot extends PircBot {
       log.fatal("Could not write permissions.properties!");
       System.exit(1);
     }
+    twit.stopListener();
     System.exit(0);
   }
 
