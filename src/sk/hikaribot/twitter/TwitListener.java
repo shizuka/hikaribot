@@ -32,6 +32,7 @@
 package sk.hikaribot.twitter;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -42,6 +43,7 @@ import twitter4j.StallWarning;
 import twitter4j.Status;
 import twitter4j.StatusDeletionNotice;
 import twitter4j.StatusListener;
+import twitter4j.TwitterException;
 
 /**
  * Listens to tweets and passes them back to TwitBot for processing.
@@ -58,7 +60,7 @@ public class TwitListener implements StatusListener {
 
   private boolean echoing = false;
   private final List<Long> userIdsToFollow = new ArrayList();
-  private final List<String> usersToFollow = new ArrayList();
+  private final HashMap<String, Long> usersToFollow = new HashMap();
   private final List<String> keywordsToTrack = new ArrayList();
 
   public TwitListener(HikariBot bot, String channel) {
@@ -85,7 +87,7 @@ public class TwitListener implements StatusListener {
 
   @Override
   public void onTrackLimitationNotice(int numberOfLimitedStatuses) {
-    //not sure what to do with this
+    log.warn(numberOfLimitedStatuses);
   }
 
   @Override
@@ -115,21 +117,24 @@ public class TwitListener implements StatusListener {
    */
   public void setEchoing(boolean echoing) {
     this.echoing = echoing;
+    log.debug("Set echoing " + echoing);
   }
 
   /**
-   * Follows a user ID, firing onStatus for their tweets.
+   * Follows a user ID, firing onStatus for their tweets. Automatically converts
+   * to long userId, pass screen-names not ids.
    *
    * @param user id to follow
    * @throws InvalidFollowException if we're already following that user
+   * @throws TwitterException if user doesn't exist
    */
-  public void followUser(String user) throws InvalidFollowException {
-    long userId = Long.parseLong(user);
-    if (this.userIdsToFollow.contains(userId)) {
-      log.error("Already following " + userId);
-      throw new InvalidFollowException(userId);
+  public void followUser(String user) throws InvalidFollowException, TwitterException {
+    if (this.usersToFollow.containsKey(user)) {
+      log.error("Already following " + user);
+      throw new InvalidFollowException(user);
     }
-    this.userIdsToFollow.add(userId);
+    long userId = bot.getTwitBot().getTwitObject().users().showUser(user).getId();
+    this.usersToFollow.put(user, userId);
     log.debug("Following '" + userId + "' in " + channel);
     updateFilter();
   }
@@ -142,12 +147,11 @@ public class TwitListener implements StatusListener {
    * @throws InvalidFollowException if we aren't following that user
    */
   public void unfollowUser(String user) throws InvalidFollowException {
-    long userId = Long.parseLong(user);
-    if (!this.userIdsToFollow.contains(userId)) {
-      throw new InvalidFollowException(userId);
+    if (!this.usersToFollow.containsKey(user)) {
+      throw new InvalidFollowException(user);
     }
-    this.userIdsToFollow.remove(userId);
-    log.debug("Unfollowed '" + userId + "' in " + channel);
+    this.usersToFollow.remove(user);
+    log.debug("Unfollowed '" + user + "' in " + channel);
     updateFilter();
   }
 
@@ -155,7 +159,6 @@ public class TwitListener implements StatusListener {
    * Removes all users from following.
    */
   public void unfollowAll() {
-    this.userIdsToFollow.clear();
     this.usersToFollow.clear();
     log.debug("Unfollowed all from " + channel);
     updateFilter();
@@ -215,10 +218,25 @@ public class TwitListener implements StatusListener {
     return ret;
   }
 
+  /**
+   * @return long[] of user ids to build FilterQuery
+   */
   public long[] getUserIdsFollowing() {
-    return toLongArray(this.userIdsToFollow);
+    List<Long> list = new ArrayList<>(this.usersToFollow.values());
+    return toLongArray(list);
+  }
+  
+  /**
+   * @return List of usernames we're following
+   */
+  public List<String> getUsersFollowing() {
+    List<String> list = new ArrayList<>(this.usersToFollow.keySet());
+    return list;
   }
 
+  /**
+   * @return String[] of keywords we're tracking
+   */
   public String[] getKeywordsTracking() {
     return this.keywordsToTrack.toArray(new String[this.keywordsToTrack.size()]);
   }
