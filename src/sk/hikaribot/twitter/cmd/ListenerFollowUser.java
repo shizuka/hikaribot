@@ -39,7 +39,8 @@ import sk.hikaribot.twitter.TwitListener;
 import twitter4j.TwitterException;
 
 /**
- * Class description
+ * Handles adding and removing users to follow tweets from. TwitListener will
+ * fire onStatus() whenever these users post a tweet.
  *
  * @author Shizuka Kamishima
  */

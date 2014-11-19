@@ -66,19 +66,19 @@ public class LoadProfile extends Command {
     TwitBot twit = this.bot.getTwitBot();
     try {
       twit.loadAccessToken(params);
-      bot.sendMessage(channel, Colors.DARK_GREEN + "TWITLOAD: " + Colors.NORMAL + "Success, I will now be tweeting as @" + params);
+      bot.sendMessage(channel, Colors.DARK_GREEN + "TWITLOAD: " + Colors.NORMAL + "Successfully loaded AccessToken for " + Colors.OLIVE + "@" + params);
       log.info("TWITLOAD successful");
     } catch (IOException ex) {
-      bot.sendMessage(channel, Colors.RED + "TWITLOAD: " + Colors.NORMAL + "Unable to read token file for " + params);
+      bot.sendMessage(channel, Colors.RED + "TWITLOAD: " + Colors.NORMAL + "Unable to read token file for " + Colors.OLIVE + params);
       log.error("TWITLOAD Unable to read token file for " + params);
     } catch (TokenMismatchException ex) {
-      bot.sendMessage(channel, Colors.RED + "TWITLOAD: " + Colors.NORMAL + "Token file and contents did not match for " + params);
+      bot.sendMessage(channel, Colors.RED + "TWITLOAD: " + Colors.NORMAL + "Token file and contents did not match for " + Colors.OLIVE + params);
       log.error("TWITLOAD Token file and contents did not match for " + params);
     } catch (MissingRequiredPropertyException ex) {
-      bot.sendMessage(channel, Colors.RED + "TWITLOAD: " + Colors.NORMAL + "Token file for " + params + " was not sane");
+      bot.sendMessage(channel, Colors.RED + "TWITLOAD: " + Colors.NORMAL + "Token file for " + Colors.OLIVE + params + Colors.NORMAL + " was not sane");
       log.error("TWITLOAD Token file for " + params + " was not sane");
     } catch (TwitterException ex) {
-      bot.sendMessage(channel, Colors.RED + "TWITLOAD: " + Colors.NORMAL + "Unable to authenticate with token file for " + params);
+      bot.sendMessage(channel, Colors.RED + "TWITLOAD: " + Colors.NORMAL + "Unable to authenticate with token file for " + Colors.OLIVE + params);
       log.error("TWITLOAD Unable to authenticate with token file for " + params);
     }
 

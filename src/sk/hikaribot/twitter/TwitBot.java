@@ -311,13 +311,13 @@ public class TwitBot {
       throw new NoProfileLoadedException();
     }
     this.twitStream.addListener(this.listener);
-    this.twitStream.filter(new FilterQuery(0, this.listener.getUserIdsFollowing(), this.listener.getKeywordsTracking()));
+    this.twitStream.filter(new FilterQuery(0, this.listener.getUserIdsFollowing()));
     log.info("Listener started");
     this.listenerStarted = true;
   }
 
   private void restartListener() {
-    twitStream.filter(new FilterQuery(0, this.listener.getUserIdsFollowing(), this.listener.getKeywordsTracking()));
+    twitStream.filter(new FilterQuery(0, this.listener.getUserIdsFollowing()));
     log.info("Listener restarted");
   }
 
@@ -335,13 +335,11 @@ public class TwitBot {
    * Called by TwitListeners when their follow/track lists change. Restarts
    * twitStream
    *
-   * @param userIdsToFollow
-   * @param keywordsToTrack
+   * @param userIdsToFollow long[] of user ids to follow
    */
-  public void onFilterChange(long[] userIdsToFollow, String[] keywordsToTrack) {
+  public void onFilterChange(long[] userIdsToFollow) {
     this.fq = new FilterQuery();
     this.fq.follow(userIdsToFollow);
-    this.fq.track(keywordsToTrack);
     if (listenerStarted) {
       log.debug("Filter changed, restarting listener...");
       restartListener();
