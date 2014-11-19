@@ -1,6 +1,7 @@
 /*
- * hikaribot - GetActiveProfile
- * Shizuka Kamishima - 2014-11-08
+ * hikaribot - InvalidFollowException
+ * Shizuka Kamishima - 2014-11-18
+ * Exception
  * 
  * Copyright (c) 2014, Shizuka Kamishima
  * All rights reserved.
@@ -29,45 +30,27 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package sk.hikaribot.twitter.cmd;
-
-import org.jibble.pircbot.Colors;
-import sk.hikaribot.api.Command;
-import sk.hikaribot.api.exception.ImproperArgsException;
-import sk.hikaribot.twitter.TwitBot;
+package sk.hikaribot.api.exception;
 
 /**
- * Prints active Twitter profile.
+ * Indicates the Listener already has or doesn't have the user or keyword being
+ * added or removed.
  *
  * @author Shizuka Kamishima
  */
-public class GetActiveProfile extends Command {
-
-  public GetActiveProfile() {
-    this.name = "twitWhoAmI";
-    this.numArgs = 0;
-    this.helpInfo = "who am I authenticated for";
-    this.reqPerm = 2; //ops
+public class InvalidFollowException extends Exception {
+  
+  /**
+   * @param keyword the errant keyword
+   */
+  public InvalidFollowException(String keyword) {
+    super(keyword);
   }
-
-  @Override
-  public void execute(String channel, String sender, String params) throws ImproperArgsException {
-    execute(channel, sender);
+  
+  /**
+   * @param userId the errant user id
+   */
+  public InvalidFollowException(long userId) {
+    super("" + userId);
   }
-
-  @Override
-  public void execute(String channel, String sender) throws ImproperArgsException {
-    TwitBot twit = bot.getTwitBot();
-    String activename = twit.getActiveTwitName();
-    long id = twit.getActiveTwitId();
-    String friendlyname;
-    if (activename != null) {
-      friendlyname = "@" + activename;
-    } else {
-      friendlyname = "no one";
-    }
-    bot.sendMessage(channel, Colors.BLUE + "TWITWHOAMI: " + Colors.NORMAL + "Currently authenticated for " + Colors.OLIVE + friendlyname);
-    log.info("TWITWHOAMI from " + sender + " in " + channel);
-  }
-
 }

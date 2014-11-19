@@ -1,6 +1,6 @@
 /*
- * hikaribot - ConfirmNewToken
- * Shizuka Kamishima - 2014-11-08
+ * hikaribot - ListenerToggleEcho
+ * Shizuka Kamishima - 2014-11-18
  * 
  * Copyright (c) 2014, Shizuka Kamishima
  * All rights reserved.
@@ -34,21 +34,21 @@ package sk.hikaribot.twitter.cmd;
 import org.jibble.pircbot.Colors;
 import sk.hikaribot.api.Command;
 import sk.hikaribot.api.exception.*;
-import sk.hikaribot.twitter.TwitBot;
+import sk.hikaribot.twitter.TwitListener;
 
 /**
- * Exchanges pending RequestToken for an AccessToken and stores.
+ * Toggles whether TwitListener will echo tweets to this channel.
  *
  * @author Shizuka Kamishima
  */
-public class ConfirmNewToken extends Command {
+public class ListenerToggleEcho extends Command {
 
-  public ConfirmNewToken() {
-    this.name = "twitConfirm";
+  public ListenerToggleEcho() {
+    this.name = "twitListen";
     this.numArgs = 1;
-    this.helpArgs.add("PIN");
-    this.helpInfo = "confirms authorization using pin";
-    this.reqPerm = 2; //ops
+    this.helpArgs.add("on|off");
+    this.helpInfo = "turn on or off echoing tweets to this channel";
+    this.reqPerm = 2;
   }
 
   @Override
@@ -56,22 +56,32 @@ public class ConfirmNewToken extends Command {
     if (params.split(" ").length != numArgs) {
       throw new ImproperArgsException(this.name);
     }
-    TwitBot twit = bot.getTwitBot();
-    log.info("TWITCONFIRM " + params + " from " + sender + " in " + channel);
-
-    if (!twit.pendingRequest()) {
-      bot.sendMessage(channel, Colors.OLIVE + "TWITCONFIRM: " + Colors.NORMAL + "No pending request");
-      log.error("TWITCONFIRM No pending request");
-      return;
-    }
-
-    try {
-      String name = twit.confirmNewToken(params);
-      bot.sendMessage(channel, Colors.DARK_GREEN + "TWITCONFIRM: " + Colors.NORMAL + "Confirmed! Successfully authenticated for + " + Colors.OLIVE + "@" + name);
-      log.info("TWITCONFIRM OK: " + name);
-    } catch (RequestCancelledException ex) {
-      bot.sendMessage(channel, Colors.RED + "TWITCONFIRM: " + Colors.NORMAL + "Confirmation failed. Token request is cancelled");
-      log.error("TWITCONFIRM Authorization failed, request cancelled");
+    TwitListener twl = bot.getTwitBot().getListener();
+    switch (params) {
+      case "on":
+        if (twl.isEchoing()) {
+          break;
+        }
+        try {
+          bot.getTwitBot().startListener();
+          twl.setEchoing(true);
+          log.info("TWITLISTEN ON FROM " + sender + " in " + channel);
+          bot.sendMessage(channel, Colors.OLIVE + "TWEET ECHOING: " + Colors.NORMAL + "Enabled");
+        } catch (NoProfileLoadedException ex) {
+          bot.sendMessage(channel, Colors.RED + "TWEET ECHOING: " + Colors.NORMAL + "Listener not initialized, call " + Colors.OLIVE + bot.getDelimiter() + "twitAssign");
+        }
+        break;
+      case "off":
+        if (!twl.isEchoing()) {
+          break;
+        }
+        bot.getTwitBot().stopListener();
+        twl.setEchoing(false);
+        log.info("TWITLISTEN OFF FROM " + sender + " in " + channel);
+        bot.sendMessage(channel, Colors.OLIVE + "TWEET ECHOING: " + Colors.NORMAL + "Disabled");
+        break;
+      default:
+        throw new ImproperArgsException(this.name);
     }
   }
 
