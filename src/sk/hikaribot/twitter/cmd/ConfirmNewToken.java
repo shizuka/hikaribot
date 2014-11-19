@@ -67,7 +67,7 @@ public class ConfirmNewToken extends Command {
 
     try {
       String name = twit.confirmNewToken(params);
-      bot.sendMessage(channel, Colors.DARK_GREEN + "TWITCONFIRM: " + Colors.NORMAL + "Confirmed! I am now tweeting as @" + name);
+      bot.sendMessage(channel, Colors.DARK_GREEN + "TWITCONFIRM: " + Colors.NORMAL + "Confirmed! Successfully authenticated for + " + Colors.OLIVE + "@" + name);
       log.info("TWITCONFIRM OK: " + name);
     } catch (RequestCancelledException ex) {
       bot.sendMessage(channel, Colors.RED + "TWITCONFIRM: " + Colors.NORMAL + "Confirmation failed. Token request is cancelled");

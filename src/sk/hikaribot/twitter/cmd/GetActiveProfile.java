@@ -46,7 +46,7 @@ public class GetActiveProfile extends Command {
   public GetActiveProfile() {
     this.name = "twitWhoAmI";
     this.numArgs = 0;
-    this.helpInfo = "who am I currently tweeting as";
+    this.helpInfo = "who am I authenticated for";
     this.reqPerm = 2; //ops
   }
 
@@ -58,15 +58,15 @@ public class GetActiveProfile extends Command {
   @Override
   public void execute(String channel, String sender) throws ImproperArgsException {
     TwitBot twit = bot.getTwitBot();
-    String name = twit.getActiveTwitName();
+    String activename = twit.getActiveTwitName();
     long id = twit.getActiveTwitId();
     String friendlyname;
-    if (name != null) {
-      friendlyname = "@" + name;
+    if (activename != null) {
+      friendlyname = "@" + activename;
     } else {
       friendlyname = "no one";
     }
-    bot.sendMessage(channel, Colors.BLUE + "TWITWHOAMI: " + Colors.NORMAL + "Currently tweeting as " + friendlyname);
+    bot.sendMessage(channel, Colors.BLUE + "TWITWHOAMI: " + Colors.NORMAL + "Currently authenticated for " + Colors.OLIVE + friendlyname);
     log.info("TWITWHOAMI from " + sender + " in " + channel);
   }
 

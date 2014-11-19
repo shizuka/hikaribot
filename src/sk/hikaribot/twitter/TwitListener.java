@@ -61,7 +61,6 @@ public class TwitListener implements StatusListener {
   private boolean echoing = false;
   private final List<Long> userIdsToFollow = new ArrayList();
   private final HashMap<String, Long> usersToFollow = new HashMap();
-  private final List<String> keywordsToTrack = new ArrayList();
 
   public TwitListener(HikariBot bot, String channel) {
     log.debug("TwitListener started...");
@@ -164,49 +163,9 @@ public class TwitListener implements StatusListener {
     updateFilter();
   }
 
-  /**
-   * Tracks a new keyword, such as a #hashtag.
-   *
-   * @param keyword keyword to track
-   * @throws InvalidFollowException if we're already tracking that keyword
-   */
-  public void trackKeyword(String keyword) throws InvalidFollowException {
-    if (this.keywordsToTrack.contains(keyword)) {
-      throw new InvalidFollowException(keyword);
-    }
-    this.keywordsToTrack.add(keyword);
-    log.debug("Tracking '" + keyword + "' in " + channel);
-    updateFilter();
-  }
-
-  /**
-   * Untrack a specific keyword.
-   *
-   * @param keyword keyword to untrack
-   * @throws InvalidFollowException if we aren't tracking that keyword
-   */
-  public void untrackKeyword(String keyword) throws InvalidFollowException {
-    if (!this.keywordsToTrack.contains(keyword)) {
-      throw new InvalidFollowException(keyword);
-    }
-    this.keywordsToTrack.remove(keyword);
-    log.debug("Untracking '" + keyword + "' in " + channel);
-    updateFilter();
-  }
-
-  /**
-   * Remove all keywords from tracking.
-   */
-  public void untrackAll() {
-    this.keywordsToTrack.clear();
-    log.debug("Untracked all from " + channel);
-    updateFilter();
-  }
-
   private void updateFilter() {
     long[] users = toLongArray(this.userIdsToFollow);
-    String[] keywords = this.keywordsToTrack.toArray(new String[this.keywordsToTrack.size()]);
-    twitBot.onFilterChange(users, keywords);
+    twitBot.onFilterChange(users);
   }
 
   private long[] toLongArray(List<Long> list) {
@@ -225,20 +184,13 @@ public class TwitListener implements StatusListener {
     List<Long> list = new ArrayList<>(this.usersToFollow.values());
     return toLongArray(list);
   }
-  
+
   /**
    * @return List of usernames we're following
    */
   public List<String> getUsersFollowing() {
     List<String> list = new ArrayList<>(this.usersToFollow.keySet());
     return list;
-  }
-
-  /**
-   * @return String[] of keywords we're tracking
-   */
-  public String[] getKeywordsTracking() {
-    return this.keywordsToTrack.toArray(new String[this.keywordsToTrack.size()]);
   }
 
 }
