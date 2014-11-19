@@ -31,10 +31,12 @@
  */
 package sk.hikaribot.twitter.cmd;
 
+import java.util.List;
 import org.jibble.pircbot.Colors;
 import sk.hikaribot.api.Command;
 import sk.hikaribot.api.exception.*;
 import sk.hikaribot.twitter.TwitListener;
+import twitter4j.TwitterException;
 
 /**
  * Class description
@@ -57,18 +59,19 @@ public class ListenerFollowUser extends Command {
     String[] args = params.split(" ");
     if ("list".equals(args[0])) {
       //print list of users we're following, ignore further args
-      /*TwitListener twl = bot.getTwitBot().getListener();
+      TwitListener twl = bot.getTwitBot().getListener();
       List<String> users = twl.getUsersFollowing();
       String userlist = "";
       for (String user : users) {
-      userlist += user + ", ";
+        userlist += user + ", ";
       }
-      bot.sendMessage(channel, Colors.BLUE + "TWITFOLLOW " + Colors.OLIVE + "Following: " + Colors.NORMAL + userlist);*/
+      bot.sendMessage(channel, Colors.BLUE + "TWITFOLLOW " + Colors.OLIVE + "Following: " + Colors.NORMAL + userlist);
     } else if (args.length != numArgs) {
       throw new ImproperArgsException(this.name);
     } else {
       if (!bot.getTwitBot().isListenerInitialized()) {
-        bot.sendMessage(channel, Colors.RED + "TWITFOLLOW: " + Colors.NORMAL + "Listener not initialized, call " + Colors.OLIVE + bot.getDelimiter() + "twitAssign"); 
+        bot.sendMessage(channel, Colors.RED + "TWITFOLLOW: " + Colors.NORMAL + "Listener not initialized, call " + Colors.OLIVE + bot.getDelimiter() + "twitAssign");
+        log.error("TWITFOLLOW FROM " + sender + " IN " + channel + " FAILED, Listener not initialized");
         return;
       }
       TwitListener twl = bot.getTwitBot().getListener();
@@ -79,25 +82,34 @@ public class ListenerFollowUser extends Command {
           }
           try {
             twl.followUser(args[1]);
+            bot.sendMessage(channel, Colors.DARK_GREEN + "TWITFOLLOW: " + Colors.NORMAL + "Now following " + Colors.OLIVE + "@" + args[1]);
           } catch (InvalidFollowException ex) {
-            //already following, do nothing
+            log.warn("TWITFOLLOW ADD " + args[1] + " FROM " + sender + " IN " + channel + " FAILED, already following user");
             break;
+          } catch (TwitterException ex) {
+            if (ex.getStatusCode() == 404) {
+              bot.sendMessage(channel, Colors.BROWN + "TWITFOLLOW: " + Colors.NORMAL + "User " + Colors.OLIVE + "@" + args[1] + Colors.NORMAL + " does not exist");
+              log.error("TWITFOLLOW ADD " + args[1] + " FROM " + sender + " IN " + channel + " FAILED, user doesn't exist");
+            } else {
+              log.error(ex.getMessage());
+            }
           }
-          log.info("TWITFOLLOW ADD " + args[1] + " FROM " + sender + " in " + channel);
+          log.info("TWITFOLLOW ADD " + args[1] + " FROM " + sender + " IN " + channel);
           break;
         case "rem":
           if ("all".equals(args[1])) {
             twl.unfollowAll();
             bot.sendMessage(channel, Colors.BLUE + "TWITFOLLOW: " + Colors.NORMAL + "Unfollowed all users");
+            log.info("TWITFOLLOW REM ALL FROM " + sender + " IN " + channel);
             break;
           }
           try {
             twl.unfollowUser(args[1]);
           } catch (InvalidFollowException ex) {
-            //not following yet, don't worry about it
+            log.warn("TWITFOLLOW REM " + args[1] + " FROM " + sender + " IN " + channel + " FAILED, not following user");
             break;
           }
-          log.info("TWITFOLLOW REM " + args[1] + " FROM " + sender + " in " + channel);
+          log.info("TWITFOLLOW REM " + args[1] + " FROM " + sender + " IN " + channel);
           break;
         default:
           throw new ImproperArgsException(this.name);
