@@ -72,9 +72,11 @@ public class TwitListener implements StatusListener {
   @Override
   public void onStatus(Status status) {
     if (echoing) {
-      String link = "https://twitter.com/" + status.getUser().getId() + "/status/" + status.getId();
-      String text = Colors.BLUE + "TWEET @" + status.getUser().getScreenName() + ": " + Colors.NORMAL + status.getText();
-      bot.sendMessage(channel, text);
+      if (usersToFollow.containsValue(status.getUser().getId())) {
+        String link = "https://twitter.com/" + status.getUser().getId() + "/status/" + status.getId();
+        String text = Colors.BLUE + "TWEET @" + status.getUser().getScreenName() + ": " + Colors.NORMAL + status.getText();
+        bot.sendMessage(channel, text);
+      }
     }
     log.debug("TWEET @" + status.getUser().getScreenName() + ": " + status.getText());
   }
