@@ -49,7 +49,7 @@ public class CommandNotFoundException extends Exception {
    */
   public CommandNotFoundException(String command) {
     super(command);
-    log.error("Command " + command + " not found");
+    //log.error("Command " + command + " not found");
   }
 
 }
