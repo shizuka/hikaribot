@@ -295,6 +295,14 @@ public class HikariBot extends PircBot {
   }
 
   /**
+   * Called when someone logs in or out of nickserv
+   */
+  @Override
+  protected void onAccount(String nick, String account) {
+    pm.onAccount(nick, account);
+  }
+
+  /**
    * Requests a WHOIS for a nick.
    *
    * @param target nick to WHOIS

@@ -211,8 +211,9 @@ public final class PermissionsManager implements Observer {
     bot.sendMessage(channel, Colors.DARK_GREEN + "PERMISSIONS: " + Colors.NORMAL + invoker + ": You are now identified for " + Colors.OLIVE + canonNick);
   }
 
-  private void identWhoxNick(String nick, String account) {
-    cache.put(nick, account);
+  public void onAccount(String nick, String canonNick) {
+    log.debug("Account message for " + nick + " with account " + canonNick);
+    cache.put(nick, canonNick);
   }
 
   @Override
