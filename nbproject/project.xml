@@ -5,7 +5,6 @@
         <buildExtensions xmlns="http://www.netbeans.org/ns/ant-build-extender/1"/>
         <data xmlns="http://www.netbeans.org/ns/j2se-project/3">
             <name>hikaribot</name>
-            <explicit-platform explicit-source-supported="true"/>
             <source-roots>
                 <root id="src.log.dir"/>
                 <root id="src.dir"/>
