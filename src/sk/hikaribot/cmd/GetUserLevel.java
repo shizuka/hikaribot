@@ -57,7 +57,7 @@ public class GetUserLevel extends Command {
     }
     int permission = bot.getPermissionsManager().getUserLevel(params);
     bot.sendMessage(channel, Colors.BLUE + "PERMISSION: " + Colors.NORMAL + params + " is level " + Colors.OLIVE + permission);
-    log.info("PERMISSION " + params + " from " + sender + " in " + channel + ": " + permission);
+    log.info("GETLEVEL " + params + " FROM " + sender + " IN " + channel + ": " + permission);
   }
 
   @Override

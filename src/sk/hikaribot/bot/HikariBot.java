@@ -271,15 +271,15 @@ public class HikariBot extends PircBot {
   }
 
   /**
-   * Called when anyone quits in view, even us
+   * Called when someone quits
    */
   @Override
   protected void onQuit(String sourceNick, String sourceLogin, String sourceHostname, String reason) {
-    pm.onPartOrQuit(sourceNick);
+    pm.onQuit(sourceNick);
   }
 
   /**
-   * Called when anyone changes nick in view, even us
+   * Called when someone changes nick
    */
   @Override
   protected void onNickChange(String oldNick, String login, String hostname, String newNick) {
@@ -287,11 +287,11 @@ public class HikariBot extends PircBot {
   }
 
   /**
-   * Called when anyone parts channel, even us
+   * Called when someone parts a channel
    */
   @Override
   protected void onPart(String channel, String sender, String login, String hostname) {
-    pm.onPartOrQuit(sender);
+    pm.onPart(sender);
   }
 
   /**

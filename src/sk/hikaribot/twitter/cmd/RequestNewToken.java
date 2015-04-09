@@ -58,7 +58,7 @@ public class RequestNewToken extends Command {
 
   @Override
   public void execute(String channel, String sender) throws ImproperArgsException {
-    log.info("TWITREQUEST from " + sender + " in " + channel);
+    log.info("TWITREQUEST FROM " + sender + " IN " + channel);
     String delimiter = bot.getDelimiter();
     TwitBot twit = bot.getTwitBot();
     String authUrl;

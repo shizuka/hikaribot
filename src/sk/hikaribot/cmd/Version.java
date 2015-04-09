@@ -72,7 +72,7 @@ public class Version extends Command {
     String timeElapsed = String.format("%02d", hrsElapsed) + ":" + String.format("%02d", minsElapsed) + ":" + String.format("%02d", secsElapsed);
         
     bot.sendMessage(channel, Colors.BLUE + "VERSION: " + Colors.NORMAL + bot.getVersion() + ", up " + daysElapsed + " days, " + timeElapsed);
-    log.info("VERSION from " + sender + " in " + channel);
+    log.info("VERSION FROM " + sender + " IN " + channel);
   }
 
 }

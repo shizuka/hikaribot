@@ -57,7 +57,7 @@ public class GetWhois extends Command implements Observer {
     WhoisResponse wir = new WhoisResponse(params, channel);
     wir.addObserver(this);
     bot.sendWhois(params, wir);
-    log.info("WHOIS " + params + " from  " + sender + " in " + channel + " sent");
+    log.info("WHOIS " + params + " FROM " + sender + " IN " + channel + " SENT");
   }
 
   @Override

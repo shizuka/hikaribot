@@ -59,10 +59,11 @@ public class Part extends Command {
       params = "#" + params;
     }
     bot.partChannel(params, "THE HORROR!");
+    bot.getPermissionsManager().onBotPart(params);
     if (!params.equals(channel)) {
-      bot.sendMessage(channel, Colors.DARK_GREEN + "PART: " + Colors.NORMAL + "Parted channel " + params);
+      bot.sendMessage(channel, Colors.DARK_GREEN + "PART: " + Colors.NORMAL + "Parted channel " + Colors.OLIVE + params);
     }
-    log.info("PART " + params + " from " + sender + " in " + channel);
+    log.info("PART " + params + " FROM " + sender + " IN " + channel);
   }
 
   @Override

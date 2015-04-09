@@ -68,10 +68,10 @@ public class Help extends Command {
       }
       help += Colors.NORMAL + "- " + command.helpInfo + " - " + Colors.BLUE + "P: " + Colors.OLIVE + command.reqPerm;
       bot.sendMessage(channel, help);
-      log.info("HELP " + cmdName + " from " + sender + " in " + channel);
+      log.info("HELP " + cmdName + " FROM " + sender + " IN " + channel);
     } catch (sk.hikaribot.api.exception.CommandNotFoundException ex) {
       bot.sendMessage(channel, Colors.RED + "HELP: " + Colors.NORMAL + "Command '" + cmdName + "' was not found");
-      log.error("HELP " + cmdName + " from " + sender + " in " + channel + " FAILED command not found");
+      log.error("HELP " + cmdName + " FROM " + sender + " IN " + channel + " FAILED command not found");
     }
   }
 
@@ -95,7 +95,7 @@ public class Help extends Command {
     }
     /* print */
     bot.sendMessage(channel, out);
-    log.info("HELP-LIST from " + sender + " in " + channel);
+    log.info("HELP FROM " + sender + " IN " + channel);
   }
 
 }

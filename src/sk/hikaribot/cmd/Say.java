@@ -60,7 +60,7 @@ public class Say extends Command {
       args[0] = "#" + args[0];
     }
     bot.sendMessage(args[0], args[1]);
-    log.info("SAY " + args[0] + " from " + sender + " in " + channel + ": " + args[1]);
+    log.info("SAY AT " + args[0] + " FROM " + sender + " IN " + channel + ": " + args[1]);
   }
 
   @Override

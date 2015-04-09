@@ -63,6 +63,7 @@ public class SetUserLevel extends Command {
     try {
       pm.setUserLevel(args[0], Integer.parseInt(args[1]));
       bot.sendMessage(channel, Colors.DARK_GREEN + "PERMISSIONS: " + Colors.NORMAL + "Set account " + Colors.OLIVE + args[0] + Colors.NORMAL + " to level " + Colors.OLIVE + args[1]);
+      log.info("SETLEVEL " + args[0] + " TO " + args[1] + " FROM" + sender + " IN " + channel);
     } catch (NoSuchAccountException ex) {
       bot.sendMessage(channel, Colors.BROWN + "PERMISSIONS: " + Colors.NORMAL + "No such account " + ex.getMessage());
     }

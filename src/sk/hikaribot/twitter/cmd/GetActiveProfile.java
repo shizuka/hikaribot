@@ -67,7 +67,7 @@ public class GetActiveProfile extends Command {
       friendlyname = "no one";
     }
     bot.sendMessage(channel, Colors.BLUE + "TWITWHOAMI: " + Colors.NORMAL + "Currently authenticated for " + Colors.OLIVE + friendlyname);
-    log.info("TWITWHOAMI from " + sender + " in " + channel);
+    log.info("TWITWHOAMI FROM " + sender + " IN " + channel);
   }
 
 }
