@@ -51,6 +51,7 @@ public class RawLine extends Command {
 
   @Override
   public void execute(String channel, String sender, String params) throws ImproperArgsException {
+    log.warn("RAWLINE FROM " + sender + " IN " + channel + " : " + params);
     bot.sendRawLine(params.trim());
   }
 

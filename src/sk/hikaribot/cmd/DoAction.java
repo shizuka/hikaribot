@@ -60,7 +60,7 @@ public class DoAction extends Command {
       args[0] = "#" + args[0];
     }
     bot.sendAction(args[0], args[1]);
-    log.info("DO " + args[0] + " from " + sender + " in " + channel + ": " + args[1]);
+    log.info("DO AT " + args[0] + " FROM " + sender + " IN " + channel + ": " + args[1]);
   }
 
   @Override

@@ -59,9 +59,9 @@ public class Nick extends Command {
 
     if (!bot.getNick().equals(params)) {
       bot.sendMessage(channel, Colors.RED + "NICK: " + Colors.NORMAL + "Unable to change nick!");
-      log.error("NICK " + params + " from " + sender + " in " + channel + " FAILED");
+      log.error("NICK " + params + " FROM " + sender + " IN " + channel + " FAILED");
     } else {
-      log.info("NICK " + params + " from " + sender + " in " + channel);
+      log.info("NICK " + params + " FROM " + sender + " IN " + channel);
     }
   }
 

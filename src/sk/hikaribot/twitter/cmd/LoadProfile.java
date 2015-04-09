@@ -66,7 +66,7 @@ public class LoadProfile extends Command {
     TwitBot twit = this.bot.getTwitBot();
     try {
       twit.loadAccessToken(params);
-      bot.sendMessage(channel, Colors.DARK_GREEN + "TWITLOAD: " + Colors.NORMAL + "Successfully loaded AccessToken for " + Colors.OLIVE + "@" + params);
+      bot.sendMessage(channel, Colors.DARK_GREEN + "TWITLOAD: " + Colors.NORMAL + "Loaded AccessToken for " + Colors.OLIVE + "@" + params);
       log.info("TWITLOAD successful");
     } catch (IOException ex) {
       bot.sendMessage(channel, Colors.RED + "TWITLOAD: " + Colors.NORMAL + "Unable to read token file for " + Colors.OLIVE + params);

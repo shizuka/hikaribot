@@ -262,7 +262,7 @@ public final class PermissionsManager implements Observer {
       return;
     }
     cache.put(invoker, canonNick);
-    log.info("IDENTIFIED " + invoker + " FOR " + canonNick);
+    log.info("IDENTIFIED " + invoker + " FOR " + canonNick + " BY COMMAND IN " + channel);
     bot.sendMessage(channel, Colors.DARK_GREEN + "PERMISSIONS: " + Colors.NORMAL + invoker + ": You are now identified for " + Colors.OLIVE + canonNick);
   }
 

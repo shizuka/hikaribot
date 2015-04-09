@@ -62,7 +62,7 @@ public class Verbose extends Command {
           break;
         }
         bot.toggleVerbose(true);
-        log.info("VERBOSE ON from " + sender + " in " + channel);
+        log.info("VERBOSE ON FROM " + sender + " IN " + channel);
         log.warn("All rawlines will now be logged");
         bot.sendMessage(channel, Colors.OLIVE + "VERBOSE: " + Colors.NORMAL + "Enabled");
         break;
@@ -71,7 +71,7 @@ public class Verbose extends Command {
           break;
         }
         bot.toggleVerbose(false);
-        log.info("VERBOSE OFF from " + sender + " in " + channel);
+        log.info("VERBOSE OFF FROM " + sender + " IN " + channel);
         log.warn("Only bot commands will now be logged");
         bot.sendMessage(channel, Colors.OLIVE + "VERBOSE: " + Colors.NORMAL + "Disabled");
         break;

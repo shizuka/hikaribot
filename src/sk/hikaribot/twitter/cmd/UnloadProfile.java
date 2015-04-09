@@ -57,7 +57,7 @@ public class UnloadProfile extends Command {
 
   @Override
   public void execute(String channel, String sender) throws ImproperArgsException {
-    log.info("TWITUNLOAD from " + sender + " in " + channel);
+    log.info("TWITUNLOAD FROM " + sender + " IN " + channel);
     TwitBot twit = bot.getTwitBot();
     twit.clearAccessToken();
     bot.sendMessage(channel, Colors.DARK_GREEN + "TWITUNLOAD: " + Colors.NORMAL + "Profile unloaded");
