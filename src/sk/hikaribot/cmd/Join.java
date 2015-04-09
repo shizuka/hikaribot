@@ -59,8 +59,8 @@ public class Join extends Command {
       params = "#" + params;
     }
     bot.joinChannel(params);
-    bot.sendMessage(channel, Colors.DARK_GREEN + "JOIN: " + Colors.NORMAL + "Joined channel " + params);
-    log.info("JOIN " + params + " from " + sender + " in " + channel);
+    bot.sendMessage(channel, Colors.DARK_GREEN + "JOIN: " + Colors.NORMAL + "Joined channel " + Colors.OLIVE + params);
+    log.info("JOIN " + params + " FROM " + sender + " IN " + channel);
   }
 
   @Override
