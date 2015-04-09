@@ -166,6 +166,8 @@ public final class PermissionsManager implements Observer {
    */
   public void onPartOrQuit(String nick) {
     if (isIdentified(nick)) {
+      //TODO on PART check our other channels, on QUIT keep this logic
+      //TODO also call this if we part a channel
       String canonNick = cache.get(nick);
       cache.remove(nick);
       log.info("LOGGED OUT " + canonNick);
@@ -211,9 +213,19 @@ public final class PermissionsManager implements Observer {
     bot.sendMessage(channel, Colors.DARK_GREEN + "PERMISSIONS: " + Colors.NORMAL + invoker + ": You are now identified for " + Colors.OLIVE + canonNick);
   }
 
+  /**
+   * Called when Extended-Join reports a Nickserv account join.
+   * 
+   * @param nick the nick joining
+   * @param canonNick their Nickserv nick
+   */
   public void onAccount(String nick, String canonNick) {
-    log.debug("Account message for " + nick + " with account " + canonNick);
-    cache.put(nick, canonNick);
+    if (isRegistered(canonNick)) {
+      if (!isIdentified(nick)) {
+        cache.put(nick, canonNick);
+        log.info("IDENTIFIED " + nick + " FOR " + canonNick + " ON JOIN");
+      }
+    }
   }
 
   @Override
