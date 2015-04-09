@@ -59,10 +59,11 @@ public class ListenerAssign extends Command {
     TwitBot twit = bot.getTwitBot();
     try {
       twit.assignListener(params);
-      bot.sendMessage(channel, Colors.DARK_GREEN + "TWITASSIGN: " + Colors.NORMAL + "Assigned tweet listener to "
-              + params + ", add follows/tracks then call " + Colors.OLIVE + bot.getDelimiter() + "twitListen on" + Colors.NORMAL + " to start echoing");
+      bot.sendMessage(channel, Colors.DARK_GREEN + "TWITASSIGN: " + Colors.NORMAL + "Assigned tweet listener to " + params);
+      log.info("TWITASSIGN " + params + " FROM " + sender + " IN " + channel);
     } catch (NoProfileLoadedException ex) {
-      bot.sendMessage(channel, Colors.BROWN + "TWITASSIGN: " + Colors.NORMAL + "No profile loaded, call " + Colors.OLIVE + bot.getDelimiter() + "twitload <profile>");
+      bot.sendMessage(channel, Colors.BROWN + "TWITASSIGN: " + Colors.NORMAL + "No profile loaded!");
+      log.error("TWITASSIGN " + params + " FROM " + sender + " IN " + channel + " FAILED, NO PROFILE LOADED");
     }
   }
 

@@ -35,7 +35,9 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Observable;
 import java.util.Observer;
@@ -44,6 +46,7 @@ import java.util.Set;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jibble.pircbot.Colors;
+import org.jibble.pircbot.User;
 import sk.hikaribot.api.WhoResponse;
 import sk.hikaribot.api.WhoisResponse;
 import sk.hikaribot.api.exception.*;
@@ -158,17 +161,69 @@ public final class PermissionsManager implements Observer {
   }
 
   /**
-   * Removes nick from cache. If a user PARTs from a channel we're in, we won't
-   * know if they QUIT somewhere else, so we have to treat it the same as QUIT.
-   * Called by HikariBot.onQuit() and HikariBot.onPart()
+   * Scan remaining channels for accounts. Needs the channel we just parted due
+   * to race conditions in HikariBot.getChannels()
    *
-   * @param nick the nick that PARTed or QUIT
+   * @param channelParted the channel we just parted
    */
-  public void onPartOrQuit(String nick) {
-    if (isIdentified(nick)) {
-      String canonNick = cache.get(nick);
+  public void onBotPart(String channelParted) {
+    log.info("PARTING CHANNEL #" + channelParted);
+    //we parted a channel, we need to check all idented users
+    String[] channels = bot.getChannels();
+    Set<String> nicks = cache.keySet();
+    List<String> nicksToRemove = new ArrayList<>();
+    userLoop:
+    for (String nick : nicks) {
+      for (String channel : channels) {
+        if (channel.equals(channelParted)) {
+          continue; //we just left here! can't check what we can't see!
+        }
+        User[] users = bot.getUsers(channel);
+        for (User user : users) {
+          if (user.equals(nick)) {
+            log.debug("USER " + cache.get(nick) + " STILL VISIBLE");
+            continue userLoop; //found it, don't need to check the user anymore
+          }
+        }
+      }
+      log.warn("USER " + cache.get(nick) + " LOST, LOGGING OUT");
+      nicksToRemove.add(nick);
+    }
+    for (String nick : nicksToRemove) {
       cache.remove(nick);
-      log.info("LOGGED OUT " + canonNick);
+    }
+  }
+
+  /**
+   * Removes nick from cache due to user PART.
+   *
+   * @param nick the nick that PARTed
+   */
+  public void onPart(String nick) {
+    if (isIdentified(nick)) {
+      for (String channel : bot.getChannels()) {
+        if (bot.getUser(channel, nick) != null) {
+          //user is in one of our remaining channels
+          log.debug("USER " + cache.get(nick) + " PARTED, BUT FOUND IN " + channel);
+          return;
+        }
+      }
+      //user has PARTED completely out of sight
+      log.info("USER " + cache.get(nick) + " PARTED, NO LONGER VISIBLE, LOGGING OUT");
+      cache.remove(nick);
+    }
+  }
+
+  /**
+   * Removes nick from cache due to user QUIT. This could technically be us, but
+   * would obviously be overridden by us shutting down.
+   *
+   * @param nick the nick that QUIT
+   */
+  public void onQuit(String nick) {
+    if (isIdentified(nick)) {
+      log.info("USER " + cache.get(nick) + " QUIT, LOGGING OUT");
+      cache.remove(nick);
     }
   }
 
@@ -207,13 +262,23 @@ public final class PermissionsManager implements Observer {
       return;
     }
     cache.put(invoker, canonNick);
-    log.info("IDENTIFIED " + invoker + " FOR " + canonNick);
+    log.info("IDENTIFIED " + invoker + " FOR " + canonNick + " BY COMMAND IN " + channel);
     bot.sendMessage(channel, Colors.DARK_GREEN + "PERMISSIONS: " + Colors.NORMAL + invoker + ": You are now identified for " + Colors.OLIVE + canonNick);
   }
 
+  /**
+   * Called when Extended-Join reports a Nickserv account join.
+   *
+   * @param nick the nick joining
+   * @param canonNick their Nickserv nick
+   */
   public void onAccount(String nick, String canonNick) {
-    log.debug("Account message for " + nick + " with account " + canonNick);
-    cache.put(nick, canonNick);
+    if (isRegistered(canonNick)) {
+      if (!isIdentified(nick)) {
+        cache.put(nick, canonNick);
+        log.info("IDENTIFIED " + nick + " FOR " + canonNick + " ON JOIN");
+      }
+    }
   }
 
   @Override

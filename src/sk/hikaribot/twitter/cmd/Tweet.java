@@ -56,7 +56,7 @@ public class Tweet extends Command {
   @Override
   public void execute(String channel, String sender, String params) throws ImproperArgsException {
     TwitBot twit = bot.getTwitBot();
-    log.info("TWEET from " + sender + " in " + channel + ": " + params);
+    log.info("TWEET FROM " + sender + " IN " + channel + ": " + params);
     try {
       Status tweet = twit.tweet(params);
       //tweet echo now handled by TwitListener
