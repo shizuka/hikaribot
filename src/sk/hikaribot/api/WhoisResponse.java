@@ -32,7 +32,6 @@
  */
 package sk.hikaribot.api;
 
-import java.util.Arrays;
 import java.util.Observable;
 import java.util.Observer;
 import org.apache.logging.log4j.LogManager;
@@ -110,7 +109,6 @@ public class WhoisResponse extends Observable implements Observer {
     //bot nick <username hostname * :realname>
     this.realname = realname;
     this.usermask = this.target + "!" + username + "@" + hostname;
-    log.trace("WHOIS RESPONSE FOR " + this.target + ": " + this.usermask + " " + this.realname);
   }
 
   /**
@@ -121,7 +119,6 @@ public class WhoisResponse extends Observable implements Observer {
    */
   public void onWhoisChannels(String[] channels) {
     //bot nick <:#channel #channel @#channelwithop #channel>
-    log.trace("WHOIS RESPONSE FOR " + this.target + ": Is in channels: " + Arrays.toString(channels));
   }
 
   /**
@@ -134,7 +131,6 @@ public class WhoisResponse extends Observable implements Observer {
   public void onWhoisServer(String domainName, String friendlyName) {
     //bot nick <server.domain.name :friendly name>
     //don't care yet
-    log.trace("WHOIS RESPONSE FOR " + this.target + ": Is connected to server " + domainName + ": " + friendlyName);
   }
 
   /**
@@ -147,7 +143,6 @@ public class WhoisResponse extends Observable implements Observer {
   public void onWhoisIdle(String secsIdle, String signonTimestamp) {
     //bot nick <secsIdle signonTimestamp> :seconds idle, signon time
     //don't care yet
-    log.trace("WHOIS RESPONSE FOR " + this.target + ": Has been idle for " + secsIdle + " seconds and signed on at timestamp " + signonTimestamp);
   }
 
   /**
@@ -160,7 +155,6 @@ public class WhoisResponse extends Observable implements Observer {
     //bot nick <canonical> :is logged in as
     this.canonicalNick = canonicalNick;
     this.isIdented = true;
-    log.trace("WHOIS RESPONSE FOR " + this.target + ": Is logged in as: " + this.canonicalNick);
   }
 
   /**
@@ -170,7 +164,6 @@ public class WhoisResponse extends Observable implements Observer {
    */
   public void onEndOfWhois() {
     //bot nick :End of /WHOIS list.
-    log.trace("WHOIS RESPONSE FOR " + this.target + " ENDS");
     this.setChanged();
     this.notifyObservers(this);
   }
