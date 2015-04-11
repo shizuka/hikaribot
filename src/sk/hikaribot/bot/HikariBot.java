@@ -125,6 +125,8 @@ public class HikariBot extends PircBot {
     cr.add(new sk.hikaribot.twitter.cmd.ListenerAssign());
     cr.add(new sk.hikaribot.twitter.cmd.ListenerToggleEcho());
     cr.add(new sk.hikaribot.twitter.cmd.ListenerFollowUser());
+    
+    cr.add(new sk.hikaribot.cmd.ModeTest());
     log.info("Commands registered");
 
     /* start bot */
