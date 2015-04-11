@@ -80,7 +80,9 @@ public class HikariBot extends PircBot {
     this.startMillis = System.currentTimeMillis();
     log.debug("HikariBot started...");
 
-    /* load config */
+    /*
+     * load config
+     */
     this.owner = config.getProperty("owner");
     this.delimiter = config.getProperty("delimiter");
     this.defaultChannel = config.getProperty("chan");
@@ -90,13 +92,17 @@ public class HikariBot extends PircBot {
     this.version = config.getProperty("version");
     _isVerbose = false; //TODO load this from config
 
-    /* initialize components */
+    /*
+     * initialize components
+     */
     this.cr = new CommandRegistry(this);
     this.sr = new ServerResponse();
     this.pm = new PermissionsManager(this);
     this.twit = new TwitBot(this, twitConfig);
 
-    /* register commands */
+    /*
+     * register commands
+     */
     log.info("Registering commands...");
     cr.add(new sk.hikaribot.cmd.Verbose());
     cr.add(new sk.hikaribot.cmd.RawLine());
@@ -125,11 +131,13 @@ public class HikariBot extends PircBot {
     cr.add(new sk.hikaribot.twitter.cmd.ListenerAssign());
     cr.add(new sk.hikaribot.twitter.cmd.ListenerToggleEcho());
     cr.add(new sk.hikaribot.twitter.cmd.ListenerFollowUser());
-    
+
     cr.add(new sk.hikaribot.cmd.ModeTest());
     log.info("Commands registered");
 
-    /* start bot */
+    /*
+     * start bot
+     */
     this.setName(defaultNick);
     this.setVersion(version);
     this.setLogin("hikaribot");
@@ -154,10 +162,11 @@ public class HikariBot extends PircBot {
     try {
       cr.execute(channel, sender, permission, message);
     } catch (CommandNotFoundException ex) {
-      /* suppressing 404 altogether
-       if (permission > 0) { //only 404 if it was an op
-       this.sendMessage(channel, Colors.RED + "NO: " + Colors.NORMAL + "Command not found '" + ex.getMessage() + "'");
-       } */
+      /*
+       * suppressing 404 altogether if (permission > 0) { //only 404 if it was
+       * an op this.sendMessage(channel, Colors.RED + "NO: " + Colors.NORMAL +
+       * "Command not found '" + ex.getMessage() + "'"); }
+       */
     } catch (InsufficientPermissionsException ex) {
       if (permission > 0) {
         this.sendMessage(channel, Colors.RED + "NO: " + Colors.NORMAL + "Insufficient permissions - "
