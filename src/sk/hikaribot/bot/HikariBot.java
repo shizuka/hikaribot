@@ -39,6 +39,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import sk.hikaribot.api.ServerResponse;
 import sk.hikaribot.api.exception.*;
+import sk.hikaribot.banhammer.Banhammer;
 import sk.hikaribot.twitter.TwitBot;
 
 /**
@@ -53,9 +54,11 @@ public class HikariBot extends PircBot {
 
   private final long startMillis;
 
+  private final Banhammer bh;
   private final CommandRegistry cr;
-  private final ServerResponse sr;
   private final PermissionsManager pm;
+  private final ServerResponse sr;
+  
 
   private final TwitBot twit;
 
@@ -95,9 +98,10 @@ public class HikariBot extends PircBot {
     /*
      * initialize components
      */
+    this.bh = new Banhammer(this);
     this.cr = new CommandRegistry(this);
-    this.sr = new ServerResponse();
     this.pm = new PermissionsManager(this);
+    this.sr = new ServerResponse();
     this.twit = new TwitBot(this, twitConfig);
 
     /*
@@ -131,7 +135,7 @@ public class HikariBot extends PircBot {
     cr.add(new sk.hikaribot.twitter.cmd.ListenerAssign());
     cr.add(new sk.hikaribot.twitter.cmd.ListenerToggleEcho());
     cr.add(new sk.hikaribot.twitter.cmd.ListenerFollowUser());
-
+    cr.add(new sk.hikaribot.banhammer.cmd.BanCount());
     cr.add(new sk.hikaribot.cmd.ModeTest());
     log.info("Commands registered");
 
@@ -311,6 +315,22 @@ public class HikariBot extends PircBot {
   @Override
   protected void onAccount(String nick, String account) {
     pm.onAccount(nick, account);
+  }
+
+  /**
+   * Called when MODE +b is set on a user in a channel
+   */
+  @Override
+  protected void onSetChannelBan(String channel, String sourceNick, String sourceLogin, String sourceHostname, String hostmask) {
+    bh.onBan(channel, hostmask, sourceNick + "!" + sourceLogin + "@" + sourceHostname);
+  }
+
+  /**
+   * Called when MODE -b is set on a user in a channel
+   */
+  @Override
+  protected void onRemoveChannelBan(String channel, String sourceNick, String sourceLogin, String sourceHostname, String hostmask) {
+    bh.onUnban(channel, hostmask, sourceNick + "!" + sourceLogin + "@" + sourceHostname);
   }
 
   /**

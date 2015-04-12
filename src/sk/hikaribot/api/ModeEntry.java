@@ -1,5 +1,5 @@
 /*
- * hikaribot - ModeTest
+ * hikaribot - ModeEntry
  * Shizuka Kamishima - 2015-04-11
  * 
  * Copyright (c) 2015, Shizuka Kamishima
@@ -29,49 +29,45 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package sk.hikaribot.cmd;
-
-import java.util.Observable;
-import java.util.Observer;
-import sk.hikaribot.api.Command;
-import sk.hikaribot.api.ModeResponse;
-import sk.hikaribot.api.exception.ImproperArgsException;
+package sk.hikaribot.api;
 
 /**
- * Class description
- *
+ * A single entry in a list of modes set in a channel.
+ * 
  * @author Shizuka Kamishima
  */
-public class ModeTest extends Command implements Observer {
+public class ModeEntry {
+  
+  /**
+   * The mode. Generally 'b', but could be e/I/q, given by ModelistResponse.
+   */
+  public String mode;
+  
+  /**
+   * Channel the mode is set in.
+   */
+  public String channel;
+  
+  /**
+   * Mask the mode applies to. Could be wildcarded, *!*@foo.bar.baz
+   */
+  public String mask;
+  
+  /**
+   * The usermask of who set this mode.
+   */
+  public String usermaskWhoSet;
+  
+  /**
+   * Unix timestamp when the mode was set. Could be an int I suppose.
+   */
+  public String timestamp;
 
-  public ModeTest() {
-    this.name = "modetest";
-    this.numArgs = 0;
-    this.helpInfo = "tests mode listing";
-    this.reqPerm = 3; //owner
+  public ModeEntry(String channel, String mode, String mask, String usermaskWhoSet, String timestamp) {
+    this.channel = channel;
+    this.mode = mode;
+    this.mask = mask;
+    this.usermaskWhoSet = usermaskWhoSet;
+    this.timestamp = timestamp;
   }
-
-  @Override
-  public void execute(String channel, String sender, String params) throws ImproperArgsException {
-    this.execute(channel, sender);
-  }
-
-  @Override
-  public void execute(String channel, String sender) throws ImproperArgsException {
-    ModeResponse mr = new ModeResponse(channel, "b");
-    mr.addObserver(this);
-    bot.getServerResponder().addObserver(mr);
-    log.trace("MODE " + channel + " +b, testing list");
-    bot.sendRawLine("MODE " + channel + " +b");
-  }
-
-  @Override
-  public void update(Observable o, Object arg) {
-    if (arg instanceof ModeResponse) {
-      ModeResponse mr = (ModeResponse) arg;
-      log.trace("got modelistresponse");
-      bot.getServerResponder().deleteObserver((Observer) o);
-    }
-  }
-
 }
