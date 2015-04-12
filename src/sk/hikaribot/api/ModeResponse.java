@@ -1,5 +1,5 @@
 /*
- * hikaribot - ModelistResponse
+ * hikaribot - ModeResponse
  * Shizuka Kamishima - 2015-04-10
  * Observable
  * 
@@ -32,51 +32,47 @@
  */
 package sk.hikaribot.api;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import static org.jibble.pircbot.ReplyConstants.*;
 
 /**
  * Is passed to HikariBot when Banhammer wants a list of modes, populates with
  * active modes, then calls Observer.
- * 
+ *
  * @author Shizuka Kamishima
  */
-public class ModelistResponse extends Observable implements Observer {
-  
+public class ModeResponse extends Observable implements Observer {
+
   private static final Logger log = LogManager.getLogger("MODE");
-  
+
   private final String channel;
+  private final String replyToChannel;
   private final String mode;
-  
-  //this should probably be its own sk.hikaribot.api class if i go full java
-  private enum Mode {
-    I(346), //+I invite exemption
-    ENDI(347),
-    E(348), //+e ban exemption
-    ENDE(349),
-    B(367), //+b ban
-    ENDB(368),
-    Q(728), //+q quiet ban
-    ENDQ(729);
-    private final int val;
-    private Mode(int val) {
-      this.val = val;
-    }
-  }
-  
+
+  private final List<ModeEntry> entries;
+
   /**
    * Prepares ModelistResponse for MODE [channel] +[mode] responses.
-   * 
+   *
    * @param channel the channel to gather from
    * @param mode the mode to check
    */
-  public ModelistResponse(String channel, String mode) {
+  public ModeResponse(String channel, String mode, String replyToChannel) {
     this.channel = channel;
+    this.replyToChannel = replyToChannel;
     this.mode = mode;
+    this.entries = new ArrayList();
   }
   
+  public ModeResponse(String channel, String mode) {
+    this(channel, mode, channel);
+  }
+
   @Override
   public void update(Observable o, Object arg) {
     //368:Asuka #cathedral [q] *!*@foo.bar.baz Shizuka!hikari@shizuka.kamishima 1428726302
@@ -87,9 +83,55 @@ public class ModelistResponse extends Observable implements Observer {
     String response = serverResponse[1];
     this.onServerResponse(code, response);
   }
-  
+
   private void onServerResponse(int code, String response) {
-    log.trace(code + ":" + response);
+    if (!response.split(" ")[1].equals(channel)) {
+      //split out the channel at the front, if it's not ours, we don't care
+      return;
+    }
+
+    switch (code) {
+      case RPL_BANLIST:
+        this.onList(response);
+        break;
+      case RPL_ENDOFBANLIST:
+        this.onEndOfList();
+        break;
+      default:
+        break;
+    }
+  }
+
+  private void onEndOfList() {
+    this.setChanged();
+    this.notifyObservers(this);
+  }
+
+  private void onList(String response) {
+    String[] parts = response.split(" ");
+    /*
+     * [0] botname - always comes back
+     * [1] #cathedral - we already checked that this is our channel
+     * [n-3 / 2] *!*@foo.bar.baz - mask the mode applies to
+     * [n-2 / 3] Shizuka!hikari@shizuka.kamishima - who set it
+     * [n-1 / 4] timestamp - when
+     */
+    String mask = parts[parts.length-3];
+    String usermaskWhoSet = parts[parts.length-2];
+    String timestamp = parts[parts.length-1];
+    this.entries.add(new ModeEntry(channel, mode, mask, usermaskWhoSet, timestamp));
+  }
+  
+  public List<ModeEntry> getEntries() {
+    return this.entries;
+  }
+  
+  public String getChannel() {
+    return this.channel;
+  }
+  
+  public String getReplyToChannel() {
+    return this.replyToChannel;
   }
 
 }

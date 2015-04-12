@@ -1,5 +1,5 @@
 /*
- * hikaribot - ModeTest
+ * hikaribot - BanCount
  * Shizuka Kamishima - 2015-04-11
  * 
  * Copyright (c) 2015, Shizuka Kamishima
@@ -29,48 +29,50 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package sk.hikaribot.cmd;
+package sk.hikaribot.banhammer.cmd;
 
 import java.util.Observable;
 import java.util.Observer;
+import org.jibble.pircbot.Colors;
 import sk.hikaribot.api.Command;
 import sk.hikaribot.api.ModeResponse;
 import sk.hikaribot.api.exception.ImproperArgsException;
 
 /**
  * Class description
- *
+ * 
  * @author Shizuka Kamishima
  */
-public class ModeTest extends Command implements Observer {
+public class BanCount extends Command implements Observer {
 
-  public ModeTest() {
-    this.name = "modetest";
-    this.numArgs = 0;
-    this.helpInfo = "tests mode listing";
-    this.reqPerm = 3; //owner
+  public BanCount() {
+    this.name = "howManyBans";
+    this.helpInfo = "counts number of bans set in channel";
+    this.numArgs = 1;
+    this.helpArgs.add("channel");
+    this.reqPerm = 0;
   }
-
+  
   @Override
   public void execute(String channel, String sender, String params) throws ImproperArgsException {
-    this.execute(channel, sender);
+    ModeResponse mr = new ModeResponse(params, "b", channel);
+    mr.addObserver(this);
+    bot.getServerResponder().addObserver(mr);
+    bot.sendRawLine("MODE " + channel + " +b");
+    log.info("HOWMANYBANS IN " + params + " FROM " + sender + " IN " + channel);
   }
 
   @Override
   public void execute(String channel, String sender) throws ImproperArgsException {
-    ModeResponse mr = new ModeResponse(channel, "b");
-    mr.addObserver(this);
-    bot.getServerResponder().addObserver(mr);
-    log.trace("MODE " + channel + " +b, testing list");
-    bot.sendRawLine("MODE " + channel + " +b");
+    this.execute(channel, sender, channel);
   }
 
   @Override
   public void update(Observable o, Object arg) {
     if (arg instanceof ModeResponse) {
       ModeResponse mr = (ModeResponse) arg;
-      log.trace("got modelistresponse");
       bot.getServerResponder().deleteObserver((Observer) o);
+      bot.sendMessage(mr.getReplyToChannel(), Colors.BLUE + "BANHAMMER: " + Colors.NORMAL + "There are " + Colors.OLIVE + mr.getEntries().size() + Colors.NORMAL + " bans in " + mr.getChannel());
     }
   }
 
