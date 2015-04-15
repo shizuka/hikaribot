@@ -32,12 +32,14 @@
 package sk.hikaribot.bot;
 
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.Observer;
 import java.util.Properties;
 import org.jibble.pircbot.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import sk.hikaribot.api.ServerResponse;
+import sk.hikaribot.api.*;
 import sk.hikaribot.api.exception.*;
 import sk.hikaribot.banhammer.Banhammer;
 import sk.hikaribot.twitter.TwitBot;
@@ -54,12 +56,12 @@ public class HikariBot extends PircBot {
 
   private final long startMillis;
 
+  private Database db;
+
   private final Banhammer bh;
   private final CommandRegistry cr;
   private final PermissionsManager pm;
   private final ServerResponse sr;
-  
-
   private final TwitBot twit;
 
   private final String owner;
@@ -83,6 +85,16 @@ public class HikariBot extends PircBot {
     this.startMillis = System.currentTimeMillis();
     log.debug("HikariBot started...");
 
+    try {
+      this.db = new Database("hikaribot.sqlite");
+    } catch (ClassNotFoundException ex) {
+      log.fatal("SQLite Driver not found! " + ex.getMessage());
+      System.exit(1);
+    } catch (SQLException ex) {
+      log.fatal("SQL Error: " + ex.getMessage());
+      System.exit(1);
+    }
+
     /*
      * load config
      */
@@ -94,14 +106,14 @@ public class HikariBot extends PircBot {
     this.server = config.getProperty("server");
     this.version = config.getProperty("version");
     _isVerbose = false; //TODO load this from config
-
+    
     /*
      * initialize components
      */
-    this.bh = new Banhammer(this);
     this.cr = new CommandRegistry(this);
     this.pm = new PermissionsManager(this);
     this.sr = new ServerResponse();
+    this.bh = new Banhammer(this);
     this.twit = new TwitBot(this, twitConfig);
 
     /*
@@ -137,6 +149,7 @@ public class HikariBot extends PircBot {
     cr.add(new sk.hikaribot.twitter.cmd.ListenerFollowUser());
     cr.add(new sk.hikaribot.banhammer.cmd.BanCount());
     cr.add(new sk.hikaribot.cmd.ModeTest());
+    cr.add(new sk.hikaribot.cmd.SQLSelect());
     log.info("Commands registered");
 
     /*
@@ -222,12 +235,16 @@ public class HikariBot extends PircBot {
   protected void onDisconnect() {
     log.info("Disconnected, exiting...");
     try {
+      twit.stopListener();
       pm.storeAccounts();
+      db.disconnect();
     } catch (IOException ex) {
       log.fatal("Could not write permissions.properties!");
       System.exit(1);
+    } catch (SQLException ex) {
+      log.fatal("SQLException on close: " + ex.getMessage());
+      System.exit(1);
     }
-    twit.stopListener();
     System.exit(0);
   }
 
@@ -438,6 +455,10 @@ public class HikariBot extends PircBot {
   public void toggleVerbose(boolean set) {
     this.setVerbose(set);
     this._isVerbose = set;
+  }
+
+  public Connection getDatabase() {
+    return this.db.getDatabase();
   }
 
 }

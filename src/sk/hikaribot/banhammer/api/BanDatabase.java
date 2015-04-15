@@ -1,6 +1,6 @@
 /*
- * hikaribot - Banhammer
- * Shizuka Kamishima - 2015-04-14
+ * hikaribot - BanDatabase
+ * Shizuka Kamishima - 2015-04-15
  * 
  * Copyright (c) 2015, Shizuka Kamishima
  * All rights reserved.
@@ -29,57 +29,43 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package sk.hikaribot.banhammer;
+package sk.hikaribot.banhammer.api;
 
+import java.sql.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import sk.hikaribot.banhammer.api.*;
 import sk.hikaribot.bot.HikariBot;
 
 /**
- * Class description
+ * Provides queries to and from database for listing/updating bans. This should
+ * probably be an interface->implementation, to support non-SQLite, but I just
+ * want it done.
  *
  * @author Shizuka Kamishima
  */
-public class Banhammer {
-
-  private static final Logger log = LogManager.getLogger("BH");
+public class BanDatabase {
+  
+  private static final Logger log = LogManager.getLogger("BHDB");
+  private final Connection db;
   private final HikariBot bot;
-  private final BanDatabase db;
 
-  public Banhammer(HikariBot bot) {
+  public BanDatabase(HikariBot bot) {
     this.bot = bot;
-    this.db = new BanDatabase(bot);
-    //perform database sanity checks
-    //load default loThreshold hiThreshold kickMessage
-  }
-
-  public void initChannel(String channel) {
-    //call initChannel with default values
-  }
-
-  public void initChannel(String channel, String loThreshold, String hiThreshold, String kickMessage) {
-    //initialize channel worker object
-  }
-
-  public void enableChannel(String channel) {
-    //turn on ban rotation and monitoring for channel
-  }
-
-  public void disableChannel(String channel) {
-    //opposite of that
-  }
-
-  public void onJoin(String channel, String usermask) {
-    //pass usermask to channel worker for checking against inactive list
+    this.db = bot.getDatabase();
   }
   
-  public void onBan(String channel, String banmask, String userWhoSet) {
-    log.debug("MODE " + channel + " +b " + banmask + " BY " + userWhoSet);
-  }
-
-  public void onUnban(String channel, String banmask, String userWhoSet) {
-    log.debug("MODE " + channel + " -b " + banmask + " BY " + userWhoSet);
-  }
+  /*
+   * get
+   *  list of active bans - for completeness
+   *  list of inactive bans - for joins
+   *  list of all bans - for banlist scrape
+   *  next eligible rotatable ban (id)
+   *  arbitrary ban + notes
+   * 
+   * update
+   *  add new note
+   *  +b
+   *  -b
+   */
 
 }
