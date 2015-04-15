@@ -1,5 +1,5 @@
 /*
- * hikaribot - SQLSelect
+ * hikaribot - SQLQuery
  * Shizuka Kamishima - 2015-04-15
  * 
  * Copyright (c) 2015, Shizuka Kamishima
@@ -41,13 +41,13 @@ import sk.hikaribot.api.exception.ImproperArgsException;
  *
  * @author Shizuka Kamishima
  */
-public class SQLSelect extends Command {
+public class SQLQuery extends Command {
 
-  public SQLSelect() {
-    this.name = "sqlSelect";
+  public SQLQuery() {
+    this.name = "sql";
     this.numArgs = 1;
     this.helpArgs.add("query");
-    this.helpInfo = "perform SQL SELECT query - use with caution!";
+    this.helpInfo = "perform SQL query on database - use with caution!";
     this.reqPerm = 4;
   }
 
@@ -62,7 +62,7 @@ public class SQLSelect extends Command {
       Statement stat = db.createStatement();
       ResultSet rs = stat.executeQuery(params);
       ResultSetMetaData rsmd = rs.getMetaData();
-      
+
       int numOfColumns = rsmd.getColumnCount();
       String out = "";
       for (int i = 1; i <= numOfColumns; i++) {
@@ -82,11 +82,17 @@ public class SQLSelect extends Command {
         }
         log.debug(out);
       }
-      bot.sendMessage(channel, Colors.BLUE + "SQLSelect: " + Colors.NORMAL + "See log for query results");
+      bot.sendMessage(channel, Colors.BLUE + "SQL: " + Colors.NORMAL + "See log for query results");
       stat.close();
     } catch (SQLException ex) {
-      log.error("SQLException: " + ex.getMessage());
-      bot.sendMessage(channel, Colors.BROWN + "SQLSelect: " + Colors.NORMAL + "SQLException");
+
+      if (ex.getMessage().equals("query does not return ResultSet")) {
+        log.debug("No returns needed");
+        bot.sendMessage(channel, Colors.DARK_GREEN + "SQL: " + Colors.NORMAL + "Query successful");
+      } else {
+        log.error("SQLException: " + ex.getMessage());
+        bot.sendMessage(channel, Colors.BROWN + "SQLSelect: " + Colors.NORMAL + ex.getMessage());
+      }
     }
   }
 
