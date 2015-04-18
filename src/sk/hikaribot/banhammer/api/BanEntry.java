@@ -1,5 +1,5 @@
 /*
- * hikaribot - BanDatabase
+ * hikaribot - BanEntry
  * Shizuka Kamishima - 2015-04-15
  * 
  * Copyright (c) 2015, Shizuka Kamishima
@@ -31,52 +31,33 @@
  */
 package sk.hikaribot.banhammer.api;
 
-import java.sql.*;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import sk.hikaribot.bot.HikariBot;
+import java.util.List;
 
 /**
- * Provides queries to and from database for listing/updating bans. This should
- * probably be an interface->implementation, to support non-SQLite, but I just
- * want it done.
+ * Represents a ban with attendant metadata from the database.
  *
  * @author Shizuka Kamishima
  */
-public class BanDatabase {
-  
-  private static final Logger log = LogManager.getLogger("BHDB");
-  private final Connection db;
-  private final HikariBot bot;
+public class BanEntry {
 
-  public BanDatabase(HikariBot bot) {
-    this.bot = bot;
-    this.db = bot.getDatabase();
+  public int banId;
+  public String type;
+  public String banmask;
+  public String usermask;
+  public String author;
+  public String timeCreated;
+  public String timeModified;
+  public List<BanNote> notes;
+
+  public BanEntry(int banId, String type, String banmask, String usermask, String author, String timeCreated, String timeModified, List<BanNote> notes) {
+    this.banId = banId;
+    this.type = type;
+    this.banmask = banmask;
+    this.usermask = usermask;
+    this.author = author;
+    this.timeCreated = timeCreated;
+    this.timeModified = timeModified;
+    this.notes = notes;
   }
-  
-  /*
-   * get list of inactive banmasks - SELECT banId, banMask FROM bans WHERE type='I'
-   * HashMap int banId, String banmask
-   * 
-   * get list of active banmasks - SELECT banId, banMask FROM bans WHERE type IN ('A', 'P', 'T')
-   * HashMap int banId, String banmask
-   * 
-   * get list of all banmasks - SELECT banId, banMask FROM bans
-   * HashMap int banId, String banmask
-   * 
-   * get BanEntry for ban by id - SELECT * FROM bans WHERE banId=id
-   * populate with notes - SELECT * FROM notes WHERE banId=id
-   * return BanEntry
-   * 
-   * insert new active ban - INSERT INTO bans(banmask,usermask,author)
-   * 
-   * insert new scraped ban - INSERT INTO bans(banmask,author,timecreated)
-   * 
-   * insert new note - INSERT INTO notes(banid,author,note)
-   * 
-   * update ban to unset - UPDATE bans SET type WHERE banId=id
-   * 
-   * there's more i'm sure...
-   */
 
 }

@@ -1,5 +1,5 @@
 /*
- * hikaribot - BanDatabase
+ * hikaribot - ScrapedBan
  * Shizuka Kamishima - 2015-04-15
  * 
  * Copyright (c) 2015, Shizuka Kamishima
@@ -31,52 +31,21 @@
  */
 package sk.hikaribot.banhammer.api;
 
-import java.sql.*;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import sk.hikaribot.bot.HikariBot;
-
 /**
- * Provides queries to and from database for listing/updating bans. This should
- * probably be an interface->implementation, to support non-SQLite, but I just
- * want it done.
+ * Represents a ban scraped from MODE #channel +b.
  *
  * @author Shizuka Kamishima
  */
-public class BanDatabase {
-  
-  private static final Logger log = LogManager.getLogger("BHDB");
-  private final Connection db;
-  private final HikariBot bot;
+public class ScrapedBan {
 
-  public BanDatabase(HikariBot bot) {
-    this.bot = bot;
-    this.db = bot.getDatabase();
+  public String banmask;
+  public String author;
+  public String timestamp;
+
+  public ScrapedBan(String banmask, String author, String timestamp) {
+    this.banmask = banmask;
+    this.author = author;
+    this.timestamp = timestamp;
   }
-  
-  /*
-   * get list of inactive banmasks - SELECT banId, banMask FROM bans WHERE type='I'
-   * HashMap int banId, String banmask
-   * 
-   * get list of active banmasks - SELECT banId, banMask FROM bans WHERE type IN ('A', 'P', 'T')
-   * HashMap int banId, String banmask
-   * 
-   * get list of all banmasks - SELECT banId, banMask FROM bans
-   * HashMap int banId, String banmask
-   * 
-   * get BanEntry for ban by id - SELECT * FROM bans WHERE banId=id
-   * populate with notes - SELECT * FROM notes WHERE banId=id
-   * return BanEntry
-   * 
-   * insert new active ban - INSERT INTO bans(banmask,usermask,author)
-   * 
-   * insert new scraped ban - INSERT INTO bans(banmask,author,timecreated)
-   * 
-   * insert new note - INSERT INTO notes(banid,author,note)
-   * 
-   * update ban to unset - UPDATE bans SET type WHERE banId=id
-   * 
-   * there's more i'm sure...
-   */
 
 }
