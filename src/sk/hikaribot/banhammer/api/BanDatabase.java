@@ -43,7 +43,7 @@ import sk.hikaribot.bot.HikariBot;
  * "bh_CHANNEL_bans"
  * banid | type | banmask | usermask | author | timecreated | timemodified
  * banid - master identifier for this ban, could be banmask but this is nicer
- * banType - [P|A|T|I|U], permanent, active, timeban, inactive, unset
+ * type - [P|A|T|I|U], permanent, active, timeban, inactive, unset
  * --permanent bans cannot be unset except explicitly by -b - TODO
  * --active bans are currently +b
  * --timebans reference another table with their expiration time - TODO
@@ -198,7 +198,7 @@ public class BanDatabase {
       /*
        * EVIL SIDE EFFECT CODE BEGINS
        */
-      stat.execute("CREATE TABLE IF NOT EXISTS 'bh_" + channel + "_bans'(banId INTEGER PRIMARY KEY AUTOINCREMENT, banType, banMask UNIQUE, nick, author, timeCreated, timeModified)");
+      stat.execute("CREATE TABLE IF NOT EXISTS 'bh_" + channel + "_bans'(banId INTEGER PRIMARY KEY AUTOINCREMENT, type, banMask UNIQUE, nick, author, timeCreated, timeModified)");
       stat.execute("CREATE TABLE IF NOT EXISTS 'bh_" + channel + "_notes'(noteId INTEGER PRIMARY KEY AUTOINCREMENT, banId, timestamp, author, note)");
 
       //Inserting a scraped ban doesn't include time first created, so catch that and update it to be the same as scraped timestamp
@@ -210,25 +210,25 @@ public class BanDatabase {
       //command is responsible for logging
 
       //When a ban is set active (from a non-active type)
-      //can replace AND OLD.banType!='A' with AND OLD.banType NOT IN ('A','P','T') when we have the extra types
-      stat.execute("CREATE TRIGGER IF NOT EXISTS 'bh_" + channel + "_activateBan' AFTER UPDATE OF banType ON 'bh_" + channel + "_bans' WHEN NEW.banType='A' AND OLD.banType!='A' "
+      //can replace AND OLD.type!='A' with AND OLD.type NOT IN ('A','P','T') when we have the extra types
+      stat.execute("CREATE TRIGGER IF NOT EXISTS 'bh_" + channel + "_activateBan' AFTER UPDATE OF type ON 'bh_" + channel + "_bans' WHEN NEW.type='A' AND OLD.type!='A' "
               + "BEGIN INSERT INTO 'bh_" + channel + "_notes'(banId,timestamp,author,note) VALUES (NEW.banId,NEW.timeModified,'Banhammer','Ban marked Active'); "
               + "END;");
       //command is responsible for logging
 
       //When a ban is set inactive (always due to rotating out)
-      stat.execute("CREATE TRIGGER IF NOT EXISTS 'bh_" + channel + "_inactivateBan' AFTER UPDATE OF banType ON 'bh_" + channel + "_bans' WHEN NEW.banType='I' "
+      stat.execute("CREATE TRIGGER IF NOT EXISTS 'bh_" + channel + "_inactivateBan' AFTER UPDATE OF type ON 'bh_" + channel + "_bans' WHEN NEW.type='I' "
               + "BEGIN INSERT INTO 'bh_" + channel + "_notes'(banId,timestamp,author,note) VALUES (NEW.banId,NEW.timeModified,'Banhammer','Rotated out of list, now Inactive'); "
               + "END;");
 
       //When a ban is unset due to missing from scrape
-      stat.execute("CREATE TRIGGER IF NOT EXISTS 'bh_" + channel + "_missingBan' AFTER UPDATE OF banType ON 'bh_" + channel + "_bans' WHEN NEW.banType='M' "
+      stat.execute("CREATE TRIGGER IF NOT EXISTS 'bh_" + channel + "_missingBan' AFTER UPDATE OF type ON 'bh_" + channel + "_bans' WHEN NEW.type='M' "
               + "BEGIN INSERT INTO 'bh_" + channel + "_notes'(banId,timestamp,author,note) VALUES (NEW.banId,NEW.timeModified,'Banhammer','Missing from scraped list'); "
-              + "UPDATE 'bh_" + channel + "_bans' SET banType='U' WHERE banId=NEW.banId; "
+              + "UPDATE 'bh_" + channel + "_bans' SET type='U' WHERE banId=NEW.banId; "
               + "END;");
 
       //When a ban is unset due to command
-      stat.execute("CREATE TRIGGER IF NOT EXISTS 'bh_" + channel + "_unsetBan' AFTER UPDATE OF banType ON 'bh_" + channel + "_bans' WHEN NEW.banType='U' "
+      stat.execute("CREATE TRIGGER IF NOT EXISTS 'bh_" + channel + "_unsetBan' AFTER UPDATE OF type ON 'bh_" + channel + "_bans' WHEN NEW.type='U' "
               + "BEGIN INSERT INTO 'bh_" + channel + "_notes'(banId,timestamp,author,note) VALUES (NEW.banId,NEW.timeModified,'Banhammer','Ban unset'); "
               + "END;");
       //whoever sets the ban type is responsible for logging who did it
@@ -271,9 +271,6 @@ public class BanDatabase {
    */
   public void upsertScrapedBan(String channel, String banmask, String author, String timeModified) {
     /*
-     * Incoming upserted bans are always marked Active
-     * because we would only see them if they are currently +b
-     *
      * INSERT OR IGNORE INTO bh_#CHANNEL_bans(type,banmask,author,timeModified)
      * VALUES ('A', banmask, author, timeModified)
      *
