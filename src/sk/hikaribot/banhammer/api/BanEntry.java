@@ -43,17 +43,17 @@ public class BanEntry {
   public int banId;
   public String type;
   public String banmask;
-  public String usermask;
+  public String nick;
   public String author;
   public String timeCreated;
   public String timeModified;
   public List<BanNote> notes;
 
-  public BanEntry(int banId, String type, String banmask, String usermask, String author, String timeCreated, String timeModified, List<BanNote> notes) {
+  public BanEntry(int banId, String type, String banmask, String nick, String author, String timeCreated, String timeModified, List<BanNote> notes) {
     this.banId = banId;
     this.type = type;
     this.banmask = banmask;
-    this.usermask = usermask;
+    this.nick = nick;
     this.author = author;
     this.timeCreated = timeCreated;
     this.timeModified = timeModified;

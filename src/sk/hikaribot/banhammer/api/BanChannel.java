@@ -114,6 +114,23 @@ public class BanChannel implements Observer {
      */
     int activebans = scrapedBans.size();
     log.debug(channel + " FOUND " + activebans + " BANS");
+    
+    //foreach in scrapelist
+    //--db.upsertBan()
+    
+    //foreach (meant to be +b) in database
+    //--unset if not in scrapelist
+    //--mark to set if type permanent
+    
+    //if count of active exceeds hithreshold
+    //--get error
+    //--run rotation for that many bans (mark to unset)
+    
+    //apply -b
+    //apply +b
+    
+    //report status scrape finished
+    
   }
 
   /**
