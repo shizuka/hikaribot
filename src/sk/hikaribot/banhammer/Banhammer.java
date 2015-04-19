@@ -104,13 +104,12 @@ public class Banhammer {
 
   public Banhammer(HikariBot bot) {
     this.bot = bot;
-    this.db = new BanDatabase(bot);
+    this.db = new BanDatabase(bot); //will sanity check DB for options
     this.channels = new HashMap();
   }
 
   public void addChannel(String channel) {
     if (this.channels.containsKey(channel)) {
-      //re-init the worker?
       return;
     }
     BanChannel bc = new BanChannel(this, channel);
@@ -122,8 +121,6 @@ public class Banhammer {
     if (!this.channels.containsKey(channel)) {
       return;
     }
-    //BanChannel bc = this.channels.get(channel);
-    //we may need that for any destruction logic (like final commits?)
     this.channels.remove(channel);
   }
 

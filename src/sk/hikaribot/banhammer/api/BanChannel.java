@@ -96,7 +96,7 @@ public class BanChannel implements Observer {
     //else copy options from bh_global_options
     //BanDatabase will have already checked that
     
-    log.info("Initialized in " + channel);
+    log.info(channel + ": INITIALIZED");
   }
 
   /**
