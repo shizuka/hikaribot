@@ -69,7 +69,6 @@ public class BanChannel implements Observer {
   private final String tbBans;
   private final String tbNotes;
   private final String tbOptions;
-  private final String tbTemp;
 
   /**
    * Initialize and perform sanity checks.
@@ -89,7 +88,6 @@ public class BanChannel implements Observer {
     this.tbBans = prefix + "_bans";
     this.tbNotes = prefix + "_notes";
     this.tbOptions = prefix + "_options";
-    this.tbTemp = prefix + "_temp";
 
     //check if our tables exist
     //create if not
