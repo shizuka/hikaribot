@@ -31,6 +31,7 @@
  */
 package sk.hikaribot.banhammer.api;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
@@ -53,6 +54,7 @@ public class BanChannel implements Observer {
   private final BanDatabase db;
   private final String channel;
   private final ChannelOptions ops;
+  private final HashMap<String, Integer> inactiveBans;  //<banmask, banId>
 
   /**
    * Initialize and perform sanity checks.
@@ -67,6 +69,7 @@ public class BanChannel implements Observer {
     this.bh = bot.getBanhammer();
     this.db = bh.getDatabase();
     this.channel = channel;
+    this.inactiveBans = new HashMap<>();
     this.ops = db.getChannelOptions(channel); //creates us if we don't exist
     log.info(channel + " DONE: L=" + ops.loThreshold + " H=" + ops.hiThreshold + " K=" + ops.kickMessage);
     bot.sendMessage(channel, Colors.DARK_GREEN + "BANHAMMER: " + Colors.NORMAL
@@ -82,7 +85,7 @@ public class BanChannel implements Observer {
     BanlistResponse br = new BanlistResponse(channel);
     br.addObserver(this);
     bot.getServerResponder().addObserver(br);
-    log.debug(channel + " starting banlist scrape...");
+    log.debug(channel + " REQUESTING BANLIST...");
     bot.sendRawLine("MODE " + channel + " +b");
   }
 
@@ -100,27 +103,20 @@ public class BanChannel implements Observer {
   /**
    * Handle the returning List of bans from BanlistResponse.
    *
-   * @param scrapedBans
+   * @param scrapedBans List of scraped bans: banmask, author, timestamp
    */
   private void scrapeBanlist(List<ScrapedBan> scrapedBans) {
-    /*
-     * get list of all bans from BanDatabase
-     * merge channel active list with database
-     * --if mask exists in db, mark it Active
-     * --if mask is not in db, insert it Active
-     * merge database active list with channel list
-     * --if mask is not in active list, mark it Unset
-     * --if mask is permanent and not in active list, SET it
-     */
-    int activebans = scrapedBans.size();
-    log.debug(channel + " FOUND " + activebans + " BANS");
-    
-    //foreach in scrapelist
-    //--db.upsertBan()
-    
+    int numScraped = scrapedBans.size();
+    log.debug(channel + " SCRAPED " + numScraped + " BANS");
+    log.debug(channel + " MERGING WITH DB... this may take a while");
+    for (ScrapedBan ban : scrapedBans) {
+      db.upsertScrapedBan(channel, ban.banmask, ban.author, ban.timestamp);
+    }
+    log.debug(channel + " MERGED SCRAPED BANS WITH DB");
     //foreach (meant to be +b) in database
     //--unset if not in scrapelist
     //--mark to set if type permanent
+    
     
     //if count of active exceeds hithreshold
     //--get error
@@ -139,17 +135,17 @@ public class BanChannel implements Observer {
    * @param usermask
    */
   public void onJoin(String usermask) {
-    //get inactive list from database
-    //regex against the list for this usermask
-    //if it matches, call function to transfer inactive->active
+    
   }
 
   public void onBan(String banmask, String userWhoSet) {
     log.debug("MODE " + channel + " +b " + banmask + " BY " + userWhoSet);
+    //db.upsertNewBan()
   }
 
   public void onUnban(String banmask, String userWhoSet) {
     log.debug("MODE " + channel + " -b " + banmask + " BY " + userWhoSet);
+    //db.unsetBan()
   }
 
   /*

@@ -32,6 +32,7 @@
 package sk.hikaribot.banhammer.api;
 
 import java.sql.*;
+import java.util.logging.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import sk.hikaribot.bot.HikariBot;
@@ -270,13 +271,28 @@ public class BanDatabase {
    * @param timeModified timestamp the ban was set
    */
   public void upsertScrapedBan(String channel, String banmask, String author, String timeModified) {
-    /*
-     * INSERT OR IGNORE INTO bh_#CHANNEL_bans(type,banmask,author,timeModified)
-     * VALUES ('A', banmask, author, timeModified)
-     *
-     * UPDATE bh_#CHANNEL_bans SET type='A', banmask=banmask, author=author,
-     * timeModified=timeModified
-     */
+    try {
+      /*
+       * INSERT OR IGNORE INTO bh_#CHANNEL_bans(type,banmask,author,timeModified)
+       * VALUES ('A', banmask, author, timeModified)
+       *
+       * UPDATE bh_#CHANNEL_bans SET type='A', banmask=banmask, author=author,
+       * timeModified=timeModified
+       */
+      PreparedStatement prep = db.prepareStatement("INSERT OR IGNORE INTO 'bh_" + channel + "_bans'(type,banmask,author,timeModified) VALUES ('A',?,?,?);");
+      prep.setString(1, banmask);
+      prep.setString(2, author);
+      prep.setString(3, timeModified);
+      prep.execute();
+      prep = db.prepareStatement("UPDATE 'bh_" + channel + "_bans' SET type='A',author=?,timeModified=? WHERE banmask=?;");
+      prep.setString(1, author);
+      prep.setString(2, timeModified);
+      prep.setString(3, banmask);
+      prep.execute();
+      prep.close();
+    } catch (SQLException ex) {
+      this.handleSQLException(ex);
+    }
   }
 
   /**
@@ -294,6 +310,14 @@ public class BanDatabase {
      * VALUES ('A',banmask,nick,author,<now>,<now>)
      * UPDATE bh_#channel_bans SET type='A',author=author,
      */
+  }
+  
+  public void unsetBan(String channel, String banmask) {
+    
+  }
+  
+  public void unsetBan(String channel, int banId) {
+    
   }
 
   /*
