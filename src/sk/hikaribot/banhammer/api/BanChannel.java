@@ -72,11 +72,11 @@ public class BanChannel implements Observer {
     bot.sendMessage(channel, Colors.DARK_GREEN + "BANHAMMER: " + Colors.NORMAL
             + "Initialized with thresholds " + Colors.OLIVE + ops.loThreshold + Colors.NORMAL
             + "/" + Colors.BROWN + ops.hiThreshold + Colors.NORMAL + ", scraping list...");
+    this.requestBanlist();
   }
 
   /*
    * ON INIT
-   * scrape banlist from channel
    * merge scraped list with database
    * -any mask found in db becomes Active
    * -any mask not found in db gets ADDed, and becomes Active
@@ -96,22 +96,27 @@ public class BanChannel implements Observer {
    * [PRINT STATUS MESSAGE: X/threshold active bans, tracking Y inactive bans
    *
    */
+  
   /**
    * Create a BanlistResponse and send request to HikariBot for server.
    */
-  public void requestBanlist() {
-    //create BanlistResponse
-    //subscribe to it
-    //subscribe it to ServerResponse
+  private void requestBanlist() {
+    BanlistResponse br = new BanlistResponse(channel);
+    br.addObserver(this);
+    bot.getServerResponder().addObserver(br);
+    log.debug(channel + " starting banlist scrape...");
+    bot.sendRawLine("MODE " + channel + " +b");
   }
 
   //BanlistResponse has called us, pass it along and destroy the object
   @Override
   public void update(Observable o, Object arg) {
-    //o is the BanlistResponse
-    //arg is a List<BanEntry> of bans
-
-    //unsubscribe o from ServerResponse
+    if (o instanceof BanlistResponse) {
+      //don't know why it ever wouldn't be but sanity check nonetheless
+      List<ScrapedBan> sb = (List<ScrapedBan>) arg;
+      bot.getServerResponder().deleteObserver((Observer) o);
+      this.scrapeBanlist(sb);
+    }
   }
 
   /**
@@ -119,7 +124,7 @@ public class BanChannel implements Observer {
    *
    * @param scrapedBans
    */
-  public void scrapeBanlist(List<ScrapedBan> scrapedBans) {
+  private void scrapeBanlist(List<ScrapedBan> scrapedBans) {
     /*
      * get list of all bans from BanDatabase
      * merge channel active list with database
@@ -129,6 +134,9 @@ public class BanChannel implements Observer {
      * --if mask is not in active list, mark it Unset
      * --if mask is permanent and not in active list, SET it
      */
+    for (ScrapedBan ban : scrapedBans) {
+      log.trace(ban.banmask + " set " + ban.timestamp + " by " + ban.author);
+    }
   }
 
   /**
