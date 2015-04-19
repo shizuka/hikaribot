@@ -43,14 +43,14 @@ import sk.hikaribot.bot.HikariBot;
  * "bh_CHANNEL_bans"
  * banid | type | banmask | usermask | author | timecreated | timemodified
  * banid - master identifier for this ban, could be banmask but this is nicer
- * type - [P|A|T|I|U], permanent, active, timeban, inactive, unset
+ * banType - [P|A|T|I|U], permanent, active, timeban, inactive, unset
  * --permanent bans cannot be unset except explicitly by -b - TODO
  * --active bans are currently +b
  * --timebans reference another table with their expiration time - TODO
  * --inactive bans are not +b but are scanned on user JOINs
  * --unset bans are kept for logging purposes
  * banmask - the actual +b mask
- * usermask - attempts to find a user in channel that matches the +b on set
+ * nick - nick of user just banned (logic is left to BanChannel)
  * author - who set the ban (nick or server)
  * timecreated - when this ban was first set (scraped from banlist, or now)
  * timemodified - when this ban was most recently set (ie inactive->active)
@@ -156,6 +156,7 @@ public class BanDatabase {
   public void setOptions(String target, int loThreshold, int hiThreshold, String kickMessage) {
     try {
       Statement stat = db.createStatement();
+      kickMessage = kickMessage.replace("'", "''");
       stat.execute("INSERT OR REPLACE INTO bh_options VALUES ('" + target + "', " + loThreshold + ", " + hiThreshold + ", '" + kickMessage + "');");
       //because channel is the PRIMARY KEY, we don't need to use a WHERE
       stat.close();
@@ -179,7 +180,12 @@ public class BanDatabase {
   }
 
   /**
-   * Fetches channel options, and loads global defaults if necessary.
+   * Fetches channel options, creates default channel if necessary.
+   * Flagrant violation of do one thing, but getting options effectively doubles
+   * as the channel's initialization, so what better time to perform this logic?
+   *
+   * If they don't yet exist, creates the _bans and _notes tables, along with
+   * triggers for automatic recordkeeping.
    *
    * @param channel the channel to load
    *
@@ -188,8 +194,48 @@ public class BanDatabase {
   public ChannelOptions getChannelOptions(String channel) {
     try {
       Statement stat = db.createStatement();
-      stat.execute("CREATE TABLE IF NOT EXISTS 'bh_" + channel + "_bans'(banId INTEGER PRIMARY KEY AUTOINCREMENT, banMask, userMask, author, timeCreated, timeModified)");
+
+      /*
+       * EVIL SIDE EFFECT CODE BEGINS
+       */
+      stat.execute("CREATE TABLE IF NOT EXISTS 'bh_" + channel + "_bans'(banId INTEGER PRIMARY KEY AUTOINCREMENT, banType, banMask UNIQUE, nick, author, timeCreated, timeModified)");
       stat.execute("CREATE TABLE IF NOT EXISTS 'bh_" + channel + "_notes'(noteId INTEGER PRIMARY KEY AUTOINCREMENT, banId, timestamp, author, note)");
+
+      //Inserting a scraped ban doesn't include time first created, so catch that and update it to be the same as scraped timestamp
+      //also add a new note indicating it was scraped
+      stat.execute("CREATE TRIGGER IF NOT EXISTS 'bh_" + channel + "_scrapedNewBan' AFTER INSERT ON 'bh_" + channel + "_bans' WHEN NEW.timeCreated IS NULL "
+              + "BEGIN UPDATE 'bh_" + channel + "_bans' SET timeCreated=timeModified, nick='' WHERE banMask=NEW.banMask; "
+              + "INSERT INTO 'bh_" + channel + "_notes'(banId,timestamp,author,note) VALUES (NEW.banId,strftime('%s','now'),'Banhammer','Scraped from banlist'); "
+              + "END;");
+      //command is responsible for logging
+
+      //When a ban is set active (from a non-active type)
+      //can replace AND OLD.banType!='A' with AND OLD.banType NOT IN ('A','P','T') when we have the extra types
+      stat.execute("CREATE TRIGGER IF NOT EXISTS 'bh_" + channel + "_activateBan' AFTER UPDATE OF banType ON 'bh_" + channel + "_bans' WHEN NEW.banType='A' AND OLD.banType!='A' "
+              + "BEGIN INSERT INTO 'bh_" + channel + "_notes'(banId,timestamp,author,note) VALUES (NEW.banId,NEW.timeModified,'Banhammer','Ban marked Active'); "
+              + "END;");
+      //command is responsible for logging
+
+      //When a ban is set inactive (always due to rotating out)
+      stat.execute("CREATE TRIGGER IF NOT EXISTS 'bh_" + channel + "_inactivateBan' AFTER UPDATE OF banType ON 'bh_" + channel + "_bans' WHEN NEW.banType='I' "
+              + "BEGIN INSERT INTO 'bh_" + channel + "_notes'(banId,timestamp,author,note) VALUES (NEW.banId,NEW.timeModified,'Banhammer','Rotated out of list, now Inactive'); "
+              + "END;");
+
+      //When a ban is unset due to missing from scrape
+      stat.execute("CREATE TRIGGER IF NOT EXISTS 'bh_" + channel + "_missingBan' AFTER UPDATE OF banType ON 'bh_" + channel + "_bans' WHEN NEW.banType='M' "
+              + "BEGIN INSERT INTO 'bh_" + channel + "_notes'(banId,timestamp,author,note) VALUES (NEW.banId,NEW.timeModified,'Banhammer','Missing from scraped list'); "
+              + "UPDATE 'bh_" + channel + "_bans' SET banType='U' WHERE banId=NEW.banId; "
+              + "END;");
+
+      //When a ban is unset due to command
+      stat.execute("CREATE TRIGGER IF NOT EXISTS 'bh_" + channel + "_unsetBan' AFTER UPDATE OF banType ON 'bh_" + channel + "_bans' WHEN NEW.banType='U' "
+              + "BEGIN INSERT INTO 'bh_" + channel + "_notes'(banId,timestamp,author,note) VALUES (NEW.banId,NEW.timeModified,'Banhammer','Ban unset'); "
+              + "END;");
+      //whoever sets the ban type is responsible for logging who did it
+      /*
+       * EVIL SIDE EFFECT CODE ENDS
+       */
+
       ResultSet rs = stat.executeQuery("SELECT * FROM bh_options WHERE channel IS '" + channel + "';");
       if (rs.next()) {
         //we'll assume all values are present and sane
@@ -212,6 +258,45 @@ public class BanDatabase {
     }
     //if all fails, return the magic defaults
     return new ChannelOptions(defLoThreshold, defHiThreshold, defKickMessage);
+  }
+
+  /**
+   * Insert or update a ban currently +b in channel. Always marks Active because
+   * this gets called from the banlist scrape, which is obviously all +b modes.
+   *
+   * @param channel the channel the ban is in
+   * @param banmask the ban
+   * @param author nick of who set the ban
+   * @param timeModified timestamp the ban was set
+   */
+  public void upsertScrapedBan(String channel, String banmask, String author, String timeModified) {
+    /*
+     * Incoming upserted bans are always marked Active
+     * because we would only see them if they are currently +b
+     *
+     * INSERT OR IGNORE INTO bh_#CHANNEL_bans(type,banmask,author,timeModified)
+     * VALUES ('A', banmask, author, timeModified)
+     *
+     * UPDATE bh_#CHANNEL_bans SET type='A', banmask=banmask, author=author,
+     * timeModified=timeModified
+     */
+  }
+
+  /**
+   * Insert or update a new +b in channel.
+   *
+   * @param channel the channel the ban is in
+   * @param banmask the ban
+   * @param author nick of who set the ban
+   * @param nick nick of who the ban applies to
+   */
+  public void upsertNewBan(String channel, String banmask, String author, String nick) {
+    /*
+     * INSERT OR IGNORE INTO
+     * bh_#CHANNEL_BANS(type,banmask,usermask,author,timeCreated,timeModified)
+     * VALUES ('A',banmask,nick,author,<now>,<now>)
+     * UPDATE bh_#channel_bans SET type='A',author=author,
+     */
   }
 
   /*
