@@ -34,6 +34,7 @@ package sk.hikaribot.bot;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.Observer;
 import java.util.Properties;
 import org.jibble.pircbot.*;
@@ -464,6 +465,13 @@ public class HikariBot extends PircBot {
   
   public Banhammer getBanhammer() {
     return this.bh;
+  }
+  
+  public boolean inChannel(String channel) {
+    if (Arrays.asList(this.getChannels()).contains(channel)) {
+      return true;
+    }
+    return false;
   }
 
 }
