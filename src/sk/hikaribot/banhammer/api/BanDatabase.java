@@ -179,15 +179,6 @@ public class BanDatabase {
   }
 
   /**
-   * Creates tables for a new channel for Banhammer to track.
-   *
-   * @param channel the channel to create
-   */
-  public void createChannel(String channel) {
-    this.setOptions(channel, defLoThreshold, defHiThreshold, defKickMessage);
-  }
-
-  /**
    * Fetches channel options, and loads global defaults if necessary.
    *
    * @param channel the channel to load
@@ -197,6 +188,8 @@ public class BanDatabase {
   public ChannelOptions getChannelOptions(String channel) {
     try {
       Statement stat = db.createStatement();
+      stat.execute("CREATE TABLE IF NOT EXISTS 'bh_" + channel + "_bans'(banId INTEGER PRIMARY KEY AUTOINCREMENT, banMask, userMask, author, timeCreated, timeModified)");
+      stat.execute("CREATE TABLE IF NOT EXISTS 'bh_" + channel + "_notes'(noteId INTEGER PRIMARY KEY AUTOINCREMENT, banId, timestamp, author, note)");
       ResultSet rs = stat.executeQuery("SELECT * FROM bh_options WHERE channel IS '" + channel + "';");
       if (rs.next()) {
         //we'll assume all values are present and sane
@@ -212,7 +205,7 @@ public class BanDatabase {
         this.setOptions(channel);
         rs.close();
         stat.close();
-        return this.getChannelOptions(channel); //bad idea?
+        return this.getChannelOptions(channel); //recursion ftw
       }
     } catch (SQLException ex) {
       this.handleSQLException(ex);
