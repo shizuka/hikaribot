@@ -37,9 +37,49 @@ import org.apache.logging.log4j.Logger;
 import sk.hikaribot.bot.HikariBot;
 
 /**
- * Provides queries to and from database for listing/updating bans. This should
- * probably be an interface->implementation, to support non-SQLite, but I just
- * want it done.
+ * Interface between SQLite database and Banhammer.
+ * 
+ * DATABASE STRUCTURE
+ * bh_#CHANNEL_bans
+ * banid | type | banmask | usermask | author | timecreated | timemodified
+ * banid - master identifier for this ban, could be banmask but this is nicer
+ * type - [P|A|T|I|U], permanent, active, timeban, inactive, unset
+ * --permanent bans cannot be unset except explicitly by -b - TODO
+ * --active bans are currently +b
+ * --timebans reference another table with their expiration time - TODO
+ * --inactive bans are not +b but are scanned on user JOINs
+ * --unset bans are kept for logging purposes
+ * banmask - the actual +b mask
+ * usermask - attempts to find a user in channel that matches the +b on set
+ * author - who set the ban (nick or server)
+ * timecreated - when this ban was first set (scraped from banlist, or now)
+ * timemodified - when this ban was most recently set (ie inactive->active)
+ * --both times are unix timestamps, treated as String until parsed, stored int
+ * 
+ * bh_#CHANNEL_notes
+ * banid | timestamp | author | note
+ * banid - the ban this note applies to, get all notes WHERE banid=X
+ * timestamp - when note was created
+ * author - who created the note (nick, or Banhammer for automatic logs)
+ * note - content of the note, such as "ban initially set", or "what an asshole"
+ * 
+ * bh_#CHANNEL_options
+ * key | value
+ * keys: loThreshold, hiThreshold, kickMessage
+ * values: cloned from bh_global_options, or provided on BanChannel config
+ * loThreshold - above this, new +b causes oldest Active ban to go Inactive
+ * hiThreshold - above this, Inactive-ate oldest Active bans until below again
+ * kickMessage - message to give a returning Inactive-banned user on KICK
+ * 
+ * bh_#CHANNEL_timebans - future enhancement
+ * banid | expires
+ * banid - the ban
+ * expires - timestamp the ban expires on
+ * 
+ * bh_global_options - defaults for new BanChannels
+ * loThreshold = 40
+ * hiThreshold = 45
+ * kickMessage = Your ban was not lifted.
  *
  * @author Shizuka Kamishima
  */

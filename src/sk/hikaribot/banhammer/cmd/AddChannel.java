@@ -1,6 +1,6 @@
 /*
- * hikaribot - BanCount
- * Shizuka Kamishima - 2015-04-11
+ * hikaribot - Banhammer AddChannel
+ * Shizuka Kamishima - 2015-04-18
  * 
  * Copyright (c) 2015, Shizuka Kamishima
  * All rights reserved.
@@ -31,49 +31,45 @@
  */
 package sk.hikaribot.banhammer.cmd;
 
-import java.util.Observable;
-import java.util.Observer;
+import java.util.Arrays;
 import org.jibble.pircbot.Colors;
 import sk.hikaribot.api.Command;
-import sk.hikaribot.api.ModeResponse;
 import sk.hikaribot.api.exception.ImproperArgsException;
 
 /**
- * Testing command for ModelistResponse handling +b.
- * 
+ * Creates a BanChannel worker for a channel.
+ * In turn, initializes channel and starts ban tracking.
+ *
  * @author Shizuka Kamishima
  */
-public class BanCount extends Command implements Observer {
+public class AddChannel extends Command {
 
-  public BanCount() {
-    this.name = "howManyBans";
-    this.helpInfo = "counts number of bans set in channel - temporary";
+  public AddChannel() {
+    this.name = "bhAdd";
     this.numArgs = 1;
     this.helpArgs.add("channel");
-    this.reqPerm = 0;
+    this.helpInfo = "enables Banhammer in <channel>";
+    this.reqPerm = 4; //admin
   }
-  
+
   @Override
   public void execute(String channel, String sender, String params) throws ImproperArgsException {
-    ModeResponse mr = new ModeResponse(params, "b", channel);
-    mr.addObserver(this);
-    bot.getServerResponder().addObserver(mr);
-    bot.sendRawLine("MODE " + channel + " +b");
-    log.info("HOWMANYBANS IN " + params + " FROM " + sender + " IN " + channel);
+    //sanity check params to be a channel name and one we're in
+    if (params.charAt(0) != '#') {
+      params = "#" + params;
+    }
+    if (!Arrays.asList(bot.getChannels()).contains(params)) {
+      bot.sendMessage(channel, Colors.BROWN + "BANHAMMER: " + Colors.NORMAL + "I'm not in channel " + Colors.OLIVE + params);
+      return;
+    }
+    bot.getBanhammer().addChannel(channel);
+    log.info("BH-ADDCHANNEL " + params + " FROM " + sender + " IN " + channel);
+    //the resulting BanChannel will handle any further messages/logs
   }
 
   @Override
   public void execute(String channel, String sender) throws ImproperArgsException {
     this.execute(channel, sender, channel);
-  }
-
-  @Override
-  public void update(Observable o, Object arg) {
-    if (arg instanceof ModeResponse) {
-      ModeResponse mr = (ModeResponse) arg;
-      bot.getServerResponder().deleteObserver((Observer) o);
-      bot.sendMessage(mr.getReplyToChannel(), Colors.BLUE + "BANHAMMER: " + Colors.NORMAL + "There are " + Colors.OLIVE + mr.getEntries().size() + Colors.NORMAL + " bans in " + mr.getChannel());
-    }
   }
 
 }
