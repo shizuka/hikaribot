@@ -138,6 +138,7 @@ public class HikariBot extends PircBot {
     cr.add(new sk.hikaribot.cmd.AccountRegister());
     cr.add(new sk.hikaribot.cmd.AccountSave());
     cr.add(new sk.hikaribot.cmd.AccountReload());
+    cr.add(new sk.hikaribot.cmd.SQLQuery());
     cr.add(new sk.hikaribot.twitter.cmd.LoadProfile());
     cr.add(new sk.hikaribot.twitter.cmd.UnloadProfile());
     cr.add(new sk.hikaribot.twitter.cmd.GetActiveProfile());
@@ -148,10 +149,9 @@ public class HikariBot extends PircBot {
     cr.add(new sk.hikaribot.twitter.cmd.ListenerAssign());
     cr.add(new sk.hikaribot.twitter.cmd.ListenerToggleEcho());
     cr.add(new sk.hikaribot.twitter.cmd.ListenerFollowUser());
-    cr.add(new sk.hikaribot.cmd.ModeTest());
-    cr.add(new sk.hikaribot.cmd.SQLQuery());
     cr.add(new sk.hikaribot.banhammer.cmd.BanCount());
     cr.add(new sk.hikaribot.banhammer.cmd.AddChannel());
+    cr.add(new sk.hikaribot.banhammer.cmd.SetOptions());
     log.info("Commands registered");
 
     /*

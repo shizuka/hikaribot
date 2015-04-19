@@ -34,13 +34,14 @@ package sk.hikaribot.banhammer.api;
 import java.sql.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import sk.hikaribot.api.exception.NoRecordException;
 import sk.hikaribot.bot.HikariBot;
 
 /**
  * Interface between SQLite database and Banhammer.
  *
  * DATABASE STRUCTURE
- * bh_#CHANNEL_bans
+ * "bh_#CHANNEL_bans"
  * banid | type | banmask | usermask | author | timecreated | timemodified
  * banid - master identifier for this ban, could be banmask but this is nicer
  * type - [P|A|T|I|U], permanent, active, timeban, inactive, unset
@@ -56,30 +57,29 @@ import sk.hikaribot.bot.HikariBot;
  * timemodified - when this ban was most recently set (ie inactive->active)
  * --both times are unix timestamps, treated as String until parsed, stored int
  *
- * bh_#CHANNEL_notes
- * banid | timestamp | author | note
+ * "bh_#CHANNEL_notes"
+ * noteid PK | banid | timestamp | author | note
+ * noteid - to unambiguously grab a note for editing
  * banid - the ban this note applies to, get all notes WHERE banid=X
  * timestamp - when note was created
  * author - who created the note (nick, or Banhammer for automatic logs)
  * note - content of the note, such as "ban initially set", or "what an asshole"
  *
- * bh_#CHANNEL_options
- * key | value
+ * "bh_#CHANNEL_options"
+ * key PK | value
  * keys: loThreshold, hiThreshold, kickMessage
- * values: cloned from bh_global_options, or provided on BanChannel config
+ * values: cloned from bh_global_options, then setOptions to save
  * loThreshold - above this, new +b causes oldest Active ban to go Inactive
  * hiThreshold - above this, Inactive-ate oldest Active bans until below again
  * kickMessage - message to give a returning Inactive-banned user on KICK
  *
- * bh_#CHANNEL_timebans - future enhancement
- * banid | expires
- * banid - the ban
- * expires - timestamp the ban expires on
- *
- * bh_global_options - defaults for new BanChannels
+ * "bh_global_options" - defaults for new BanChannels
  * loThreshold = 40
  * hiThreshold = 45
  * kickMessage = Your ban was not lifted.
+ *
+ * bh_global_channels - channel PK
+ * simple channel listing
  *
  * @author Shizuka Kamishima
  */
@@ -88,7 +88,7 @@ public class BanDatabase {
   private static final Logger log = LogManager.getLogger("BHDB");
   private final Connection db;
   private final HikariBot bot;
-  
+
   //Magic values to insert into DB if the global options table is missing
   private int defLoThreshold = 40;
   private int defHiThreshold = 45;
@@ -97,7 +97,7 @@ public class BanDatabase {
   public BanDatabase(HikariBot bot) {
     this.bot = bot;
     this.db = bot.getDatabase();
-    log.info("Initialized, loading defaults...");
+    log.info("Initialized");
     this.loadDefaults();
   }
 
@@ -116,10 +116,11 @@ public class BanDatabase {
    * kickMessage - "Your ban was not lifted."
    */
   private void loadDefaults() {
+    log.info("Loading default options...");
     try {
       Statement stat = db.createStatement();
-      stat.execute("CREATE TABLE IF NOT EXISTS bh_global_options(key,value);");
-      
+      stat.execute("CREATE TABLE IF NOT EXISTS bh_global_options(key PRIMARY KEY,value);");
+      stat.execute("CREATE TABLE IF NOT EXISTS bh_global_channels(channel PRIMARY KEY);");
       //get loThreshold
       ResultSet rs = stat.executeQuery("SELECT * FROM bh_global_options WHERE key='loThreshold';");
       if (rs.next()) {
@@ -157,7 +158,67 @@ public class BanDatabase {
     } catch (SQLException ex) {
       this.handleSQLException(ex);
     }
-    log.info("Defaults loaded");
+    log.info("Done");
+  }
+
+  /**
+   * Sets options in the database.
+   *
+   * @param target #channel to modify, @ for global defaults, must have #
+   * @param loThreshold above which we rotate on new +b
+   * @param hiThreshold above which we rotate until below it
+   * @param kickMessage message to send on Inactive->Active kick
+   */
+  public void setOptions(String target, int loThreshold, int hiThreshold, String kickMessage) throws NoRecordException {
+    if ("@".equals(target)) {
+      target = "global";
+    } else if (!this.hasChan(target)) {
+      throw new NoRecordException(target);
+    }
+    String tblOptions = "\"bh_" + target + "_options\"";
+    try {
+      PreparedStatement prep = db.prepareStatement("REPLACE INTO " + tblOptions + " VALUES (?,?);");
+      //low
+      prep.setString(1, "loThreshold");
+      prep.setInt(2, loThreshold);
+      prep.addBatch();
+      //high
+      prep.setString(1, "hiThreshold");
+      prep.setInt(2, hiThreshold);
+      prep.addBatch();
+      //kicks
+      prep.setString(1, "kickMessage");
+      prep.setString(2, kickMessage);
+      prep.addBatch();
+      //commit
+      db.setAutoCommit(false);
+      prep.executeBatch();
+      db.setAutoCommit(true);
+      prep.close();
+    } catch (SQLException ex) {
+      this.handleSQLException(ex);
+    }
+  }
+
+  /**
+   * @param channel
+   *
+   * @return is this channel in bh_global_channels? (do we have records for it)
+   */
+  public boolean hasChan(String channel) {
+    boolean has = false;
+    try {
+      Statement stat = db.createStatement();
+      ResultSet rs = stat.executeQuery("SELECT * FROM bh_global_channels WHERE channel='" + channel + "';");
+      if (rs.next()) {
+        has = true;
+      }
+      rs.close();
+      stat.close();
+    } catch (SQLException ex) {
+      this.handleSQLException(ex);
+    }
+    return has;
   }
 
   /*
@@ -165,7 +226,7 @@ public class BanDatabase {
    * SELECT banId, banMask FROM bans WHERE type='I'
    * HashMap int banId, String banmask
    *
-   * get list of active banmasks - 
+   * get list of active banmasks -
    * SELECT banId, banMask FROM bans WHERE type IN ('A', 'P', 'T')
    * HashMap int banId, String banmask
    *
