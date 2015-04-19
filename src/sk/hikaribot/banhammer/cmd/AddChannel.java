@@ -31,7 +31,6 @@
  */
 package sk.hikaribot.banhammer.cmd;
 
-import java.util.Arrays;
 import org.jibble.pircbot.Colors;
 import sk.hikaribot.api.Command;
 import sk.hikaribot.api.exception.ImproperArgsException;
