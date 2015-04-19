@@ -74,28 +74,6 @@ public class BanChannel implements Observer {
             + "/" + Colors.BROWN + ops.hiThreshold + Colors.NORMAL + ", scraping list...");
     this.requestBanlist();
   }
-
-  /*
-   * ON INIT
-   * merge scraped list with database
-   * -any mask found in db becomes Active
-   * -any mask not found in db gets ADDed, and becomes Active
-   * merge database active list back with banlist
-   * -any Active mask not found in scraped list becomes Unset
-   * -any Permanent mask not found in scraped list is put on SET list
-   * check timebans
-   * -all timebans whose expiration passed, put on UNSET list and become Unset
-   * [PRINT STATUS MESSAGE: Banlist scraped, found X bans]
-   * check threshold
-   * -if Permanent+Active+Timeban exceeds hiThreshold
-   * -mark Inactive the oldest Active bans until hiThreshold is met
-   * -put those on UNSET list
-   * apply modes
-   * -foreach SET list, ban
-   * -foreach UNSET list, unban
-   * [PRINT STATUS MESSAGE: X/threshold active bans, tracking Y inactive bans
-   *
-   */
   
   /**
    * Create a BanlistResponse and send request to HikariBot for server.
@@ -134,9 +112,8 @@ public class BanChannel implements Observer {
      * --if mask is not in active list, mark it Unset
      * --if mask is permanent and not in active list, SET it
      */
-    for (ScrapedBan ban : scrapedBans) {
-      log.trace(ban.banmask + " set " + ban.timestamp + " by " + ban.author);
-    }
+    int activebans = scrapedBans.size();
+    log.debug(channel + " FOUND " + activebans + " BANS");
   }
 
   /**
