@@ -56,13 +56,13 @@ public class SQLQuery extends Command {
     if (params.split(" ").length < numArgs) {
       throw new ImproperArgsException(this.name);
     }
-    log.info("SQLSELECT FROM " + sender + " IN " + channel + ": " + params);
+    log.info("SQL FROM " + sender + " IN " + channel + ": " + params);
     Connection db = bot.getDatabase();
     try {
       Statement stat = db.createStatement();
+      bot.sendMessage(sender, Colors.BLUE + "SQL: " + Colors.OLIVE + params);
       ResultSet rs = stat.executeQuery(params);
       ResultSetMetaData rsmd = rs.getMetaData();
-
       int numOfColumns = rsmd.getColumnCount();
       String out = "";
       for (int i = 1; i <= numOfColumns; i++) {
@@ -72,6 +72,7 @@ public class SQLQuery extends Command {
         out += rsmd.getColumnName(i);
       }
       log.debug(out);
+      bot.sendMessage(sender, Colors.CYAN + "SQL: " + Colors.NORMAL + out);
       while (rs.next()) {
         out = "";
         for (int i = 1; i <= numOfColumns; i++) {
@@ -81,17 +82,17 @@ public class SQLQuery extends Command {
           out += rs.getString(i);
         }
         log.debug(out);
+        bot.sendMessage(sender, Colors.TEAL + "SQL: " + Colors.NORMAL + out);
       }
-      bot.sendMessage(channel, Colors.BLUE + "SQL: " + Colors.NORMAL + "See log for query results");
       stat.close();
+      bot.sendMessage(sender, Colors.DARK_GREEN + "SQL: " + Colors.NORMAL + "Query ends.");
     } catch (SQLException ex) {
-
       if (ex.getMessage().equals("query does not return ResultSet")) {
         log.debug("No returns needed");
-        bot.sendMessage(channel, Colors.DARK_GREEN + "SQL: " + Colors.NORMAL + "Query successful");
+        bot.sendMessage(sender, Colors.DARK_GREEN + "SQL: " + Colors.NORMAL + "Query successful");
       } else {
         log.error("SQLException: " + ex.getMessage());
-        bot.sendMessage(channel, Colors.BROWN + "SQLSelect: " + Colors.NORMAL + ex.getMessage());
+        bot.sendMessage(sender, Colors.BROWN + "SQLException: " + Colors.NORMAL + ex.getMessage());
       }
     }
   }
