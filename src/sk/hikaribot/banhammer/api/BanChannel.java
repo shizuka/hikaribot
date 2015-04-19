@@ -65,11 +65,6 @@ public class BanChannel implements Observer {
    */
   private String kickMessage;
 
-  //Table names
-  private final String tbBans;
-  private final String tbNotes;
-  private final String tbOptions;
-
   /**
    * Initialize and perform sanity checks.
    *
@@ -83,12 +78,6 @@ public class BanChannel implements Observer {
     this.db = bh.getDatabase();
     this.channel = channel;
 
-    //define our table names
-    String prefix = "bh_" + channel;
-    this.tbBans = prefix + "_bans";
-    this.tbNotes = prefix + "_notes";
-    this.tbOptions = prefix + "_options";
-
     //check if our tables exist
     //create if not
     
@@ -97,18 +86,6 @@ public class BanChannel implements Observer {
     //BanDatabase will have already checked that
     
     log.info(channel + ": INITIALIZED");
-  }
-
-  /**
-   * Input options to this channel. For use when just starting out.
-   *
-   * @param loThreshold above this we rotate old bans to make room for +b
-   * @param hiThreshold above this we inactive bans until we meet it
-   * @param kickMessage message for user upon being kickbanned on inactive
-   */
-  public void setOptions(int loThreshold, int hiThreshold, String kickMessage) {
-    //set options in tbOptions
-    //load to our vars
   }
 
   /*
