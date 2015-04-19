@@ -1,7 +1,6 @@
 /*
- * hikaribot - NoRecordException
+ * hikaribot - ChannelOptions
  * Shizuka Kamishima - 2015-04-18
- * Exception
  * 
  * Copyright (c) 2015, Shizuka Kamishima
  * All rights reserved.
@@ -30,21 +29,23 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package sk.hikaribot.api.exception;
+package sk.hikaribot.banhammer.api;
 
 /**
- * Indicates Banhammer does not have records in database for this channel. To be
- * thrown by BanDatabase when asked to setOptions on a channel with no tables.
- * To be caught by the command that asked it to.
- * 
+ * Represents channel Banhammer options.
+ *
  * @author Shizuka Kamishima
  */
-public class NoRecordException extends Exception {
+public class ChannelOptions {
 
-    /**
-     * @param channel the channel we have no records for
-     */
-    public NoRecordException(String channel) {
-        super(channel);
-    }
+  public int loThreshold;
+  public int hiThreshold;
+  public String kickMessage;
+
+  public ChannelOptions(int loThreshold, int hiThreshold, String kickMessage) {
+    this.loThreshold = loThreshold;
+    this.hiThreshold = hiThreshold;
+    this.kickMessage = kickMessage;
+  }
+
 }

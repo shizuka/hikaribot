@@ -57,7 +57,7 @@ public class AddChannel extends Command {
     if (params.charAt(0) != '#') {
       params = "#" + params;
     }
-    if (bot.inChannel(params)) {
+    if (!bot.inChannel(params)) {
       bot.sendMessage(channel, Colors.BROWN + "BANHAMMER: " + Colors.NORMAL + "I'm not in channel " + Colors.OLIVE + params);
       return;
     }

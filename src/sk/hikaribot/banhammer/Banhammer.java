@@ -112,7 +112,7 @@ public class Banhammer {
     if (this.channels.containsKey(channel)) {
       return;
     }
-    BanChannel bc = new BanChannel(this, channel);
+    BanChannel bc = new BanChannel(bot, channel);
     this.channels.put(channel, bc);
     //BanChannel will establish itself in the database and start scraping
   }
