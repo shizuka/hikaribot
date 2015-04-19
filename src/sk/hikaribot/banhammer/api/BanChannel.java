@@ -36,7 +36,9 @@ import java.util.Observable;
 import java.util.Observer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jibble.pircbot.Colors;
 import sk.hikaribot.banhammer.Banhammer;
+import sk.hikaribot.bot.HikariBot;
 
 /**
  * Handles Banhammer operations for a single channel.
@@ -46,46 +48,30 @@ import sk.hikaribot.banhammer.Banhammer;
 public class BanChannel implements Observer {
 
   private static final Logger log = LogManager.getLogger("BHC");
+  private final HikariBot bot;
   private final Banhammer bh;
   private final BanDatabase db;
   private final String channel;
-
-  /**
-   * Number of active bans above which we will rotate out oldest ban on a new +b
-   */
-  private int loThreshold;
-
-  /**
-   * Number of active bans above which we will rotate out oldest ban until equal
-   */
-  private int hiThreshold;
-
-  /**
-   * Message to be sent to user upon being kickbanned for Inactive->Active ban
-   */
-  private String kickMessage;
+  private final ChannelOptions ops;
 
   /**
    * Initialize and perform sanity checks.
    *
-   * @param bh our parent Banhammer
+   * @param bot our HikariBot
    * @param channel the channel we operate in
    */
-  public BanChannel(Banhammer bh, String channel) {
-
+  public BanChannel(HikariBot bot, String channel) {
+    log.info(channel + " initializing...");
     //wake up
-    this.bh = bh;
+    this.bot = bot;
+    this.bh = bot.getBanhammer();
     this.db = bh.getDatabase();
     this.channel = channel;
-
-    //check if our tables exist
-    //create if not
-    
-    //if our options table exists, load thresholds and message
-    //else copy options from bh_global_options
-    //BanDatabase will have already checked that
-    
-    log.info(channel + ": INITIALIZED");
+    this.ops = db.getChannelOptions(channel); //creates us if we don't exist
+    log.info(channel + " DONE: L=" + ops.loThreshold + " H=" + ops.hiThreshold + " K=" + ops.kickMessage);
+    bot.sendMessage(channel, Colors.DARK_GREEN + "BANHAMMER: " + Colors.NORMAL
+            + "Initialized with thresholds " + Colors.OLIVE + ops.loThreshold + Colors.NORMAL
+            + "/" + Colors.BROWN + ops.hiThreshold + Colors.NORMAL + ", scraping list...");
   }
 
   /*
@@ -110,7 +96,6 @@ public class BanChannel implements Observer {
    * [PRINT STATUS MESSAGE: X/threshold active bans, tracking Y inactive bans
    *
    */
-  
   /**
    * Create a BanlistResponse and send request to HikariBot for server.
    */
@@ -119,19 +104,20 @@ public class BanChannel implements Observer {
     //subscribe to it
     //subscribe it to ServerResponse
   }
-  
+
   //BanlistResponse has called us, pass it along and destroy the object
   @Override
   public void update(Observable o, Object arg) {
     //o is the BanlistResponse
     //arg is a List<BanEntry> of bans
-    
+
     //unsubscribe o from ServerResponse
   }
-  
+
   /**
    * Handle the returning List of bans from BanlistResponse.
-   * @param scrapedBans 
+   *
+   * @param scrapedBans
    */
   public void scrapeBanlist(List<ScrapedBan> scrapedBans) {
     /*
@@ -144,10 +130,11 @@ public class BanChannel implements Observer {
      * --if mask is permanent and not in active list, SET it
      */
   }
-  
+
   /**
    * Incoming JOIN, check against the Inactive ban list.
-   * @param usermask 
+   *
+   * @param usermask
    */
   public void onJoin(String usermask) {
     //get inactive list from database
@@ -162,7 +149,7 @@ public class BanChannel implements Observer {
   public void onUnban(String banmask, String userWhoSet) {
     log.debug("MODE " + channel + " -b " + banmask + " BY " + userWhoSet);
   }
-  
+
   /*
    * TODO: configuration and query ops
    * like search ban by id, mask, nick
@@ -173,5 +160,4 @@ public class BanChannel implements Observer {
    * setting commands: unban by id, unbanLast, force active/inactive?
    * permanent bans config
    */
-
 }

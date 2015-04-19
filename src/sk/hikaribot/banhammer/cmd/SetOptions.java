@@ -34,7 +34,6 @@ package sk.hikaribot.banhammer.cmd;
 import org.jibble.pircbot.Colors;
 import sk.hikaribot.api.Command;
 import sk.hikaribot.api.exception.ImproperArgsException;
-import sk.hikaribot.api.exception.NoRecordException;
 
 /**
  * Sets Banhammer options for a channel.
@@ -79,15 +78,8 @@ public class SetOptions extends Command {
       throw new ImproperArgsException(this.name);
     }
     String kickMessage = args[3];
-    
-    try {
-      //by now we will assume the values are okay
-      bot.getBanhammer().getDatabase().setOptions(target, loThreshold, hiThreshold, kickMessage); //TODO: exception to catch if we have no tables here
-    } catch (NoRecordException ex) {
-      bot.sendMessage(channel, Colors.BROWN + "BANHAMMER: " + Colors.NORMAL + "Channel " + Colors.OLIVE + ex.getMessage() + Colors.NORMAL + " was never initialized");
-      log.error("BH-SETOPTIONS FROM " + sender + " IN " + channel + " FAILED DUE TO NO CHANNEL RECORDS");
-      return;
-    }
+    //by now we will assume the values are okay
+    bot.getBanhammer().getDatabase().setOptions(target, loThreshold, hiThreshold, kickMessage);
     log.warn("BH-SETOPTIONS FROM " + sender + " IN " + channel + ": lo=" + loThreshold + " hi=" + hiThreshold + " kick=" + kickMessage);
     String chan = "Channel " + Colors.OLIVE + target + Colors.NORMAL;
     if (global) {

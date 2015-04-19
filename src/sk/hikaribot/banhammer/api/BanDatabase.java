@@ -34,14 +34,13 @@ package sk.hikaribot.banhammer.api;
 import java.sql.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import sk.hikaribot.api.exception.NoRecordException;
 import sk.hikaribot.bot.HikariBot;
 
 /**
  * Interface between SQLite database and Banhammer.
  *
  * DATABASE STRUCTURE
- * "bh_#CHANNEL_bans"
+ * "bh_CHANNEL_bans"
  * banid | type | banmask | usermask | author | timecreated | timemodified
  * banid - master identifier for this ban, could be banmask but this is nicer
  * type - [P|A|T|I|U], permanent, active, timeban, inactive, unset
@@ -57,7 +56,7 @@ import sk.hikaribot.bot.HikariBot;
  * timemodified - when this ban was most recently set (ie inactive->active)
  * --both times are unix timestamps, treated as String until parsed, stored int
  *
- * "bh_#CHANNEL_notes"
+ * "bh_CHANNEL_notes"
  * noteid PK | banid | timestamp | author | note
  * noteid - to unambiguously grab a note for editing
  * banid - the ban this note applies to, get all notes WHERE banid=X
@@ -65,21 +64,13 @@ import sk.hikaribot.bot.HikariBot;
  * author - who created the note (nick, or Banhammer for automatic logs)
  * note - content of the note, such as "ban initially set", or "what an asshole"
  *
- * "bh_#CHANNEL_options"
- * key PK | value
- * keys: loThreshold, hiThreshold, kickMessage
- * values: cloned from bh_global_options, then setOptions to save
- * loThreshold - above this, new +b causes oldest Active ban to go Inactive
- * hiThreshold - above this, Inactive-ate oldest Active bans until below again
- * kickMessage - message to give a returning Inactive-banned user on KICK
- *
- * "bh_global_options" - defaults for new BanChannels
- * loThreshold = 40
- * hiThreshold = 45
- * kickMessage = Your ban was not lifted.
- *
- * bh_global_channels - channel PK
- * simple channel listing
+ * "bh_options"
+ * channel PK | loThreshold | hiThreshold | kickMessage
+ * channel - channel this applies to, or @ for the global defaults
+ * loThreshold - above which we rotate oldest active ban to make room for new +b
+ * hiThreshold - above which we Inactivate bans until below
+ * kickMessage - message to give when KICKing an Inactive ban JOINing
+ * NOTE: Thresholds must be greater than zero, for obvious reasons.
  *
  * @author Shizuka Kamishima
  */
@@ -89,7 +80,7 @@ public class BanDatabase {
   private final Connection db;
   private final HikariBot bot;
 
-  //Magic values to insert into DB if the global options table is missing
+  //Magic values to insert into DB if the options table is missing
   private int defLoThreshold = 40;
   private int defHiThreshold = 45;
   private String defKickMessage = "Your ban was not lifted.";
@@ -110,48 +101,41 @@ public class BanDatabase {
    * they don't exist.
    *
    * Defaults:
-   * TABLE bh_global_options
-   * loThreshold - 40
-   * hiThreshold - 45
-   * kickMessage - "Your ban was not lifted."
+   * TABLE bh_options
+   * channel | loThreshold | hiThreshold | kickMessage
+   *
+   * @ | 40 | 45 | Your ban was not lifted.
    */
   private void loadDefaults() {
     log.info("Loading default options...");
     try {
       Statement stat = db.createStatement();
-      stat.execute("CREATE TABLE IF NOT EXISTS bh_global_options(key PRIMARY KEY,value);");
-      stat.execute("CREATE TABLE IF NOT EXISTS bh_global_channels(channel PRIMARY KEY);");
-      //get loThreshold
-      ResultSet rs = stat.executeQuery("SELECT * FROM bh_global_options WHERE key='loThreshold';");
+      stat.execute("CREATE TABLE IF NOT EXISTS bh_options(channel PRIMARY KEY, loThreshold, hiThreshold, kickMessage);");
+      ResultSet rs = stat.executeQuery("SELECT * FROM bh_options WHERE channel IS '@';");
       if (rs.next()) {
-        this.defLoThreshold = rs.getInt("value");
-        log.debug("Default loThreshold loaded from DB: " + this.defLoThreshold);
+        int loThreshold = rs.getInt("loThreshold");
+        int hiThreshold = rs.getInt("hiThreshold");
+        String kickMessage = rs.getString("kickMessage");
+        if (loThreshold == 0) {
+          log.warn("Default loThreshold missing, using magic value: " + this.defLoThreshold);
+          stat.execute("UPDATE bh_options SET loThreshold=" + this.defLoThreshold + " WHERE channel IS '@';");
+        }
+        if (hiThreshold == 0) {
+          log.warn("Default hiThreshold missing, using magic value: " + this.defHiThreshold);
+          stat.execute("UPDATE bh_options SET hiThreshold=" + this.defHiThreshold + " WHERE channel IS '@';");
+        }
+        if (kickMessage == null) {
+          log.warn("Default kickMessage missing, using magic value: " + this.defKickMessage);
+          stat.execute("UPDATE bh_options SET kickMessage='" + this.defKickMessage + "' WHERE channel IS '@';");
+        }
+        this.defLoThreshold = loThreshold;
+        this.defHiThreshold = hiThreshold;
+        this.defKickMessage = kickMessage;
       } else {
-        //loThreshold not defined in DB
-        log.warn("Default loThreshold loaded from magic: " + this.defLoThreshold);
-        stat.execute("INSERT INTO bh_global_options VALUES ('loThreshold'," + this.defLoThreshold + ");");
-      }
-      rs.close();
-      //get hiThreshold
-      rs = stat.executeQuery("SELECT * FROM bh_global_options WHERE key='hiThreshold';");
-      if (rs.next()) {
-        this.defHiThreshold = rs.getInt("value");
-        log.debug("Default hiThreshold loaded from DB: " + this.defHiThreshold);
-      } else {
-        //hiThreshold not defined in DB
-        log.warn("Default hiThreshold loaded from magic: " + this.defHiThreshold);
-        stat.execute("INSERT INTO bh_global_options VALUES ('hiThreshold'," + this.defHiThreshold + ");");
-      }
-      rs.close();
-      //get kick message
-      rs = stat.executeQuery("SELECT * FROM bh_global_options WHERE key='kickMessage';");
-      if (rs.next()) {
-        this.defKickMessage = rs.getString("value");
-        log.debug("Default kick message loaded from DB: " + this.defKickMessage);
-      } else {
-        //kickMessage not defined in DB
-        log.warn("Default kick message loaded from magic: " + this.defKickMessage);
-        stat.execute("INSERT INTO bh_global_options VALUES ('kickMessage', '" + this.defKickMessage + "');");
+        //global entry didn't exist
+        log.error("Default options missing, adding using magic values");
+        log.warn("loThreshold=" + this.defLoThreshold + ", hiThreshold=" + this.defHiThreshold + ", kickMessage=" + this.defKickMessage);
+        this.setOptions("@");
       }
       rs.close();
       stat.close();
@@ -162,63 +146,79 @@ public class BanDatabase {
   }
 
   /**
-   * Sets options in the database.
+   * Sets channel options in the database.
    *
-   * @param target #channel to modify, @ for global defaults, must have #
-   * @param loThreshold above which we rotate on new +b
-   * @param hiThreshold above which we rotate until below it
-   * @param kickMessage message to send on Inactive->Active kick
+   * @param target the channel to modify, @ for global defaults
+   * @param loThreshold the low threshold
+   * @param hiThreshold the high threshold
+   * @param kickMessage the message for KICKing an Inactive-banned JOINer
    */
-  public void setOptions(String target, int loThreshold, int hiThreshold, String kickMessage) throws NoRecordException {
-    if ("@".equals(target)) {
-      target = "global";
-    } else if (!this.hasChan(target)) {
-      throw new NoRecordException(target);
-    }
-    String tblOptions = "\"bh_" + target + "_options\"";
+  public void setOptions(String target, int loThreshold, int hiThreshold, String kickMessage) {
     try {
-      PreparedStatement prep = db.prepareStatement("REPLACE INTO " + tblOptions + " VALUES (?,?);");
-      //low
-      prep.setString(1, "loThreshold");
-      prep.setInt(2, loThreshold);
-      prep.addBatch();
-      //high
-      prep.setString(1, "hiThreshold");
-      prep.setInt(2, hiThreshold);
-      prep.addBatch();
-      //kicks
-      prep.setString(1, "kickMessage");
-      prep.setString(2, kickMessage);
-      prep.addBatch();
-      //commit
-      db.setAutoCommit(false);
-      prep.executeBatch();
-      db.setAutoCommit(true);
-      prep.close();
+      Statement stat = db.createStatement();
+      stat.execute("INSERT OR REPLACE INTO bh_options VALUES ('" + target + "', " + loThreshold + ", " + hiThreshold + ", '" + kickMessage + "');");
+      //because channel is the PRIMARY KEY, we don't need to use a WHERE
+      stat.close();
+      if ("@".equals(target)) {
+        this.defLoThreshold = loThreshold;
+        this.defHiThreshold = hiThreshold;
+        this.defKickMessage = kickMessage;
+      }
     } catch (SQLException ex) {
       this.handleSQLException(ex);
     }
   }
 
   /**
-   * @param channel
+   * Sets default channel options.
    *
-   * @return is this channel in bh_global_channels? (do we have records for it)
+   * @param target the channel to modify
    */
-  public boolean hasChan(String channel) {
-    boolean has = false;
+  public void setOptions(String target) {
+    this.setOptions(target, defLoThreshold, defHiThreshold, defKickMessage);
+  }
+
+  /**
+   * Creates tables for a new channel for Banhammer to track.
+   *
+   * @param channel the channel to create
+   */
+  public void createChannel(String channel) {
+    this.setOptions(channel, defLoThreshold, defHiThreshold, defKickMessage);
+  }
+
+  /**
+   * Fetches channel options, and loads global defaults if necessary.
+   *
+   * @param channel the channel to load
+   *
+   * @return struct of options
+   */
+  public ChannelOptions getChannelOptions(String channel) {
     try {
       Statement stat = db.createStatement();
-      ResultSet rs = stat.executeQuery("SELECT * FROM bh_global_channels WHERE channel='" + channel + "';");
+      ResultSet rs = stat.executeQuery("SELECT * FROM bh_options WHERE channel IS '" + channel + "';");
       if (rs.next()) {
-        has = true;
+        //we'll assume all values are present and sane
+        //database-side checks could be put in if we get really paranoid
+        int lo = rs.getInt("loThreshold");
+        int hi = rs.getInt("hiThreshold");
+        String kick = rs.getString("kickMessage");
+        ChannelOptions ops = new ChannelOptions(lo, hi, kick);
+        rs.close();
+        stat.close();
+        return ops;
+      } else {
+        this.setOptions(channel);
+        rs.close();
+        stat.close();
+        return this.getChannelOptions(channel); //bad idea?
       }
-      rs.close();
-      stat.close();
     } catch (SQLException ex) {
       this.handleSQLException(ex);
     }
-    return has;
+    //if all fails, return the magic defaults
+    return new ChannelOptions(defLoThreshold, defHiThreshold, defKickMessage);
   }
 
   /*
