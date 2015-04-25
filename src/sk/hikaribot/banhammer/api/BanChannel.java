@@ -108,15 +108,21 @@ public class BanChannel implements Observer {
   private void scrapeBanlist(List<ScrapedBan> scrapedBans) {
     int numScraped = scrapedBans.size();
     log.debug(channel + " SCRAPED " + numScraped + " BANS");
-    log.debug(channel + " MERGING WITH DB... this may take a while");
-    for (ScrapedBan ban : scrapedBans) {
-      db.upsertScrapedBan(channel, ban.banmask, ban.author, ban.timestamp);
-    }
-    log.debug(channel + " MERGED SCRAPED BANS WITH DB");
+    /*
+     * FIRST PASS
+     * Insert or ignore new bans into the DB
+     * --TRIGGERs bh_#CHANNEL_scrapedNewBan because no timeCreated field
+     * Update existing non-active bans to be Active
+     * --TRIGGERs bh_#CHANNEL_activateBan because type moved from anything to A
+     */
+    log.debug(channel + " FIRST PASS MERGE BANLIST WITH DB...");
+    db.upsertScrapedBans(this.channel, scrapedBans);
+    log.debug(channel + " DONE");
+    
     //foreach (meant to be +b) in database
     //--unset if not in scrapelist
     //--mark to set if type permanent
-    
+
     
     //if count of active exceeds hithreshold
     //--get error
