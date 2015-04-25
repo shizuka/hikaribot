@@ -69,8 +69,8 @@ public class Tweet extends Command {
               + Colors.RED + params.length() + Colors.OLIVE + "/140 >" + Colors.NORMAL + params.substring(140));
       log.error("TWEET Message too long");
     } catch (TwitterException ex) {
-      bot.sendMessage(channel, Colors.RED + "TWEET: " + Colors.NORMAL + "TwitterException occurred");
-      log.error("TWEET Twitter Exception");
+      bot.sendMessage(channel, Colors.RED + "TWEET: " + Colors.NORMAL + "TwitterException occurred: " + Colors.OLIVE + ex.getMessage());
+      log.error("TWEET Twitter Exception: " + ex.getMessage());
     }
   }
 
