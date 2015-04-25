@@ -32,6 +32,7 @@
 package sk.hikaribot.banhammer.api;
 
 import java.sql.*;
+import java.util.List;
 import java.util.logging.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -262,39 +263,42 @@ public class BanDatabase {
   }
 
   /**
-   * Insert or update a ban currently +b in channel. Always marks Active because
-   * this gets called from the banlist scrape, which is obviously all +b modes.
+   * Merge the scraped list of +b from channel with the database, inserting new
+   * records or marking old records as active.
+   * 
+   * FIRST PASS for banlist synchronization.
    *
-   * @param channel the channel the ban is in
-   * @param banmask the ban
-   * @param author nick of who set the ban
-   * @param timeModified timestamp the ban was set
+   * @param channel the channel to modify
+   * @param scrapedBans list of ScrapedBans: banmask, author, timestamp
    */
-  public void upsertScrapedBan(String channel, String banmask, String author, String timeModified) {
+  public void upsertScrapedBans(String channel, List<ScrapedBan> scrapedBans) {
     try {
-      /*
-       * INSERT OR IGNORE INTO bh_#CHANNEL_bans(type,banmask,author,timeModified)
-       * VALUES ('A', banmask, author, timeModified)
-       *
-       * UPDATE bh_#CHANNEL_bans SET type='A', banmask=banmask, author=author,
-       * timeModified=timeModified
-       */
-      PreparedStatement prep = db.prepareStatement("INSERT OR IGNORE INTO 'bh_" + channel + "_bans'(type,banmask,author,timeModified) VALUES ('A',?,?,?);");
-      prep.setString(1, banmask);
-      prep.setString(2, author);
-      prep.setString(3, timeModified);
-      prep.execute();
-      prep = db.prepareStatement("UPDATE 'bh_" + channel + "_bans' SET type='A',author=?,timeModified=? WHERE banmask=?;");
-      prep.setString(1, author);
-      prep.setString(2, timeModified);
-      prep.setString(3, banmask);
-      prep.execute();
-      prep.close();
+      db.setAutoCommit(false); //could replace with BEGIN TRANSACTION
+      PreparedStatement insertStat = db.prepareStatement("INSERT OR IGNORE INTO 'bh_" + channel + "_bans'(type,banmask,author,timeModified) VALUES ('A',?,?,?);");
+      PreparedStatement updateStat = db.prepareStatement("UPDATE 'bh_" + channel + "_bans' SET type='A',author=?,timeModified=? WHERE banmask=?;");
+      for (ScrapedBan ban : scrapedBans) {
+        insertStat.setString(1, ban.banmask);
+        insertStat.setString(2, ban.author);
+        insertStat.setString(3, ban.timestamp);
+        insertStat.execute();
+        updateStat.setString(1, ban.author);
+        updateStat.setString(2, ban.timestamp);
+        updateStat.setString(3, ban.banmask);
+        updateStat.execute();
+      }
+      db.commit(); //could replace with COMMIT TRANSACTION
+      db.setAutoCommit(true); //this too
     } catch (SQLException ex) {
       this.handleSQLException(ex);
+    } finally { //could drop this if we replace the setAutoCommit's
+      try {
+        db.setAutoCommit(true);
+      } catch (SQLException ex) {
+        log.error("Impossible SQLException! : " + ex.getMessage());
+      }
     }
   }
-
+  
   /**
    * Insert or update a new +b in channel.
    *
@@ -311,13 +315,13 @@ public class BanDatabase {
      * UPDATE bh_#channel_bans SET type='A',author=author,
      */
   }
-  
+
   public void unsetBan(String channel, String banmask) {
-    
+
   }
-  
+
   public void unsetBan(String channel, int banId) {
-    
+
   }
 
   /*
