@@ -151,6 +151,7 @@ public class HikariBot extends PircBot {
     cr.add(new sk.hikaribot.twitter.cmd.ListenerFollowUser());
     cr.add(new sk.hikaribot.banhammer.cmd.BanCount());
     cr.add(new sk.hikaribot.banhammer.cmd.AddChannel());
+    cr.add(new sk.hikaribot.banhammer.cmd.RemoveChannel());
     cr.add(new sk.hikaribot.banhammer.cmd.SetOptions());
     log.info("Commands registered");
 
