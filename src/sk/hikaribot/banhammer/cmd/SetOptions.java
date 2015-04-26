@@ -79,13 +79,11 @@ public class SetOptions extends Command {
     }
     String kickMessage = args[3];
     //by now we will assume the values are okay
-    bot.getBanhammer().getDatabase().setOptions(target, loThreshold, hiThreshold, kickMessage);
-    log.warn("BH-SETOPTIONS FROM " + sender + " IN " + channel + ": lo=" + loThreshold + " hi=" + hiThreshold + " kick=" + kickMessage);
-    String chan = "Channel " + Colors.OLIVE + target + Colors.NORMAL;
+    bot.getBanhammer().setOptions(target, loThreshold, hiThreshold, kickMessage); //it will do messaging
+    log.info("BH-SETOPTIONS FROM " + sender + " IN " + channel + ": lo=" + loThreshold + " hi=" + hiThreshold + " kick=" + kickMessage);
     if (global) {
-      chan = "Global";
+      bot.sendMessage(channel, Colors.DARK_GREEN + "BANHAMMER: " + Colors.NORMAL + "Global options set.");
     }
-    bot.sendMessage(channel, Colors.DARK_GREEN + "BANHAMMER: " + Colors.NORMAL + chan + " options set.");
   }
 
   @Override

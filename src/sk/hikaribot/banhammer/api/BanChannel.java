@@ -50,7 +50,7 @@ public class BanChannel implements Observer {
   private final Banhammer bh;
   private final BanDatabase db;
   private final String channel;
-  private final ChannelOptions ops;
+  private ChannelOptions ops;
   private List<String> inactiveBanmasks;
   private final HashMap<String, String> regexableInactives; //inactiveBanmasks, but able to regex
   private int numActive;
@@ -63,7 +63,7 @@ public class BanChannel implements Observer {
    * @param channel the channel we operate in
    */
   public BanChannel(HikariBot bot, String channel) {
-    log.info(channel + " initializing...");
+    log.info(channel + " INITIALIZING...");
     //wake up
     this.bot = bot;
     this.bh = bot.getBanhammer();
@@ -72,7 +72,7 @@ public class BanChannel implements Observer {
     this.inactiveBanmasks = new ArrayList();
     this.regexableInactives = new HashMap();
     this.ops = db.getChannelOptions(channel); //creates us if we don't exist
-    log.info(channel + " DONE: L=" + ops.loThreshold + " H=" + ops.hiThreshold + " K=" + ops.kickMessage);
+    log.info(channel + " LOADED: L=" + ops.loThreshold + " H=" + ops.hiThreshold + " K=" + ops.kickMessage);
     /*
      * bot.sendMessage(channel, Colors.DARK_GREEN + "BANHAMMER: " +
      * Colors.NORMAL
@@ -122,7 +122,7 @@ public class BanChannel implements Observer {
     int inactive = db.countInactiveBans(channel);
 
     //report status scrape finished
-    String status = Colors.DARK_GREEN + "BANHAMMER: " + Colors.NORMAL + "Initialized with ";
+    String status = Colors.DARK_GREEN + "BANHAMMER: " + Colors.NORMAL + "Activated with ";
     if (active > this.ops.hiThreshold) {
       status += Colors.OLIVE + this.ops.loThreshold + Colors.NORMAL + "/" + Colors.BROWN + this.ops.hiThreshold + Colors.NORMAL + "/" + Colors.RED + "[" + active + "] " + Colors.NORMAL;
     } else if (active > this.ops.loThreshold) {
@@ -190,7 +190,7 @@ public class BanChannel implements Observer {
   private void setNumInactive(int num) {
     this.numInactive = num;
   }
-  
+
   private void updateInactiveBanmasks(List<String> ib) {
     this.inactiveBanmasks = ib;
     for (String mask : ib) {
@@ -200,6 +200,17 @@ public class BanChannel implements Observer {
       this.regexableInactives.put(regexable, mask);
     }
     log.debug(channel + " inactives updated");
+  }
+
+  /**
+   * Request channel options from database.
+   */
+  public void updateChannelOptions() {
+    this.ops = db.getChannelOptions(channel);
+    bot.sendMessage(channel, Colors.DARK_GREEN + "BANHAMMER: " + Colors.NORMAL + "Channel options updated, "
+            + "thresholds: " + Colors.OLIVE + this.ops.loThreshold + Colors.NORMAL + "/" + Colors.BROWN + this.ops.hiThreshold
+            + Colors.NORMAL + ", reloading...");
+    this.requestBanlist();
   }
 
   /*

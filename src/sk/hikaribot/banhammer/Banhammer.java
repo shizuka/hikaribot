@@ -144,6 +144,13 @@ public class Banhammer {
     }
     this.channels.get(channel).onUnban(banmask, userWhoSet);
   }
+  
+  public void setOptions(String channel, int loThreshold, int hiThreshold, String kickMessage) {
+    db.setOptions(channel, loThreshold, hiThreshold, kickMessage);
+    if (!channel.equals("@") && this.channels.containsKey(channel)) { //global defaults has no worker
+      this.channels.get(channel).updateChannelOptions();
+    }
+  }
 
   public BanDatabase getDatabase() {
     return this.db;
