@@ -163,7 +163,7 @@ public class BanChannel implements Observer {
    */
   public void onBan(String banmask, String author) {
     log.debug("MODE " + channel + " +b " + banmask + " BY " + author);
-    db.upsertNewBan(channel, banmask, author, ":NYI:");
+    db.upsertNewBan(channel, banmask, author);
     this.setNumActive(numActive++);
   }
 
