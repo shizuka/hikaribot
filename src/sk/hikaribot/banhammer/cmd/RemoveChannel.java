@@ -1,6 +1,6 @@
 /*
- * hikaribot - Banhammer AddChannel
- * Shizuka Kamishima - 2015-04-18
+ * hikaribot - RemoveChannel
+ * Shizuka Kamishima - 2015-04-26
  * 
  * Copyright (c) 2015, Shizuka Kamishima
  * All rights reserved.
@@ -36,18 +36,17 @@ import sk.hikaribot.api.Command;
 import sk.hikaribot.api.exception.ImproperArgsException;
 
 /**
- * Creates a BanChannel worker for a channel.
- * In turn, initializes channel and starts ban tracking.
- *
+ * Destroys BanChannel worker for a channel. Turns off Banhammer.
+ * 
  * @author Shizuka Kamishima
  */
-public class AddChannel extends Command {
-
-  public AddChannel() {
-    this.name = "bhAdd";
+public class RemoveChannel extends Command {
+  
+  public RemoveChannel() {
+    this.name = "bhDel";
     this.numArgs = 1;
     this.helpArgs.add("channel");
-    this.helpInfo = "enables Banhammer in <channel>, default here";
+    this.helpInfo = "disables Banhammer in <channel>, default here";
     this.reqPerm = 4; //admin
   }
 
@@ -61,8 +60,8 @@ public class AddChannel extends Command {
       bot.sendMessage(channel, Colors.BROWN + "BANHAMMER: " + Colors.NORMAL + "I'm not in channel " + Colors.OLIVE + params);
       return;
     }
-    bot.getBanhammer().addChannel(channel);
-    log.info("BH-ADDCHANNEL " + params + " FROM " + sender + " IN " + channel);
+    bot.getBanhammer().removeChannel(channel);
+    log.info("BH-REMCHANNEL " + params + " FROM " + sender + " IN " + channel);
     //the resulting BanChannel will handle any further messages/logs
   }
 
