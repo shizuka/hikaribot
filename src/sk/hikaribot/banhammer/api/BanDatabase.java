@@ -272,9 +272,6 @@ public class BanDatabase {
   public void upsertScrapedBans(String channel, List<ScrapedBan> scrapedBans) {
     try {
       db.setAutoCommit(false);
-
-      //PreparedStatement insertStat = db.prepareStatement("INSERT OR IGNORE INTO 'bh_" + channel + "_bans'(type,banmask,author,timeModified) VALUES ('A',?,?,?);");
-      //PreparedStatement updateStat = db.prepareStatement("UPDATE 'bh_" + channel + "_bans' SET type='A',author=?,timeModified=? WHERE banmask=?;");
       log.debug(channel + " CREATING TEMPORARY BANLIST TABLE...");
       //create temp table for scraped banlist, include type column all 'A'
       Statement stat = db.createStatement();
@@ -305,8 +302,9 @@ public class BanDatabase {
       log.debug(channel + " DROP TEMPORARY TABLE...");
       stat.execute("DROP TABLE 'bh_" + channel + "_temp';");
       db.commit();
+      
       stat.close();
-      db.setAutoCommit(true); //this too
+      db.setAutoCommit(true);
       log.debug(channel + " SCRAPE DONE");
     } catch (SQLException ex) {
       this.handleSQLException(ex);
@@ -329,12 +327,12 @@ public class BanDatabase {
    */
   public void upsertNewBan(String channel, String banmask, String author, String nick) {
     /*
-     * INSERT OR IGNORE INTO
-     * bh_#CHANNEL_BANS(type,banmask,usermask,author,timeCreated,timeModified)
-     * VALUES ('A',banmask,nick,author,<now>,<now>)
-     * UPDATE bh_#channel_bans SET type='A',author=author,
-     */
-  }
+       * INSERT OR IGNORE INTO
+       * bh_#CHANNEL_BANS(type,banmask,usermask,author,timeCreated,timeModified)
+       * VALUES ('A',banmask,nick,author,<now>,<now>)
+       * UPDATE bh_#channel_bans SET type='A',author=author,
+       */
+    }
 
   public void unsetBan(String channel, String banmask) {
 
