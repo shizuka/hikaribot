@@ -44,20 +44,20 @@ import sk.hikaribot.bot.HikariBot;
  *
  * DATABASE STRUCTURE
  * "bh_CHANNEL_bans"
- * banid | type | banmask | usermask | author | timecreated | timemodified
+ * banid PK | type | banmask UNIQUE | author | timeSet
  * banid - master identifier for this ban, could be banmask but this is nicer
- * type - [P|A|T|I|U], permanent, active, timeban, inactive, unset
- * --permanent bans cannot be unset except explicitly by -b - TODO
- * --active bans are currently +b
- * --timebans reference another table with their expiration time - TODO
- * --inactive bans are not +b but are scanned on user JOINs
- * --unset bans are kept for logging purposes
+ * type - [P|S|N|A|T|I|M|U]
+ * --[P]ermanent bans cannot be rotated out, and will be pushed in if missing
+ * --[S]craped bans are on their way to being [A]ctive
+ * --[N]ew bans were just inserted
+ * --[A]ctive bans are currently +b in channel
+ * --[T]imebans will be unset at a specific expiration time
+ * --[I]nactive bans will be reapplied with a kickban if a user matches them
+ * --[M]issing bans are [A]ctive bans not in the scraped list, becoming [U]nset
+ * --[U]nset bans are maintained for logging
  * banmask - the actual +b mask
- * nick - nick of user just banned (logic is left to BanChannel)
  * author - who set the ban (nick or server)
- * timecreated - when this ban was first set (scraped from banlist, or now)
- * timemodified - when this ban was most recently set (ie inactive->active)
- * --both times are unix timestamps, treated as String until parsed, stored int
+ * timeSet - when this ban was set (or unset, more details in logging)
  *
  * "bh_CHANNEL_notes"
  * noteid PK | banid | timestamp | author | note
@@ -65,6 +65,11 @@ import sk.hikaribot.bot.HikariBot;
  * banid - the ban this note applies to, get all notes WHERE banid=X
  * timestamp - when note was created
  * author - who created the note (nick, or Banhammer for automatic logs)
+ * type - [A|I|U|N]
+ * --[A]ctivated bans, note indicates why BH activated it
+ * --[I]nactivated bans, notes time the ban was rotated out
+ * --[U]nset bans, when the ban was unset (and by whom)
+ * --[N]otes, for all other logs
  * note - content of the note, such as "ban initially set", or "what an asshole"
  *
  * "bh_options"
@@ -93,10 +98,6 @@ public class BanDatabase {
     this.db = bot.getDatabase();
     log.info("Initialized");
     this.loadDefaults();
-  }
-
-  private void handleSQLException(SQLException ex) {
-    log.error(ex.getMessage());
   }
 
   /**
@@ -143,7 +144,7 @@ public class BanDatabase {
       rs.close();
       stat.close();
     } catch (SQLException ex) {
-      this.handleSQLException(ex);
+      log.error(ex.getMessage());
     }
     log.info("Done");
   }
@@ -159,9 +160,8 @@ public class BanDatabase {
   public void setOptions(String target, int loThreshold, int hiThreshold, String kickMessage) {
     try {
       Statement stat = db.createStatement();
-      kickMessage = kickMessage.replace("'", "''");
+      kickMessage = kickMessage.replace("'", "''"); //escape the 's for SQLite
       stat.execute("INSERT OR REPLACE INTO bh_options VALUES ('" + target + "', " + loThreshold + ", " + hiThreshold + ", '" + kickMessage + "');");
-      //because channel is the PRIMARY KEY, we don't need to use a WHERE
       stat.close();
       if ("@".equals(target)) {
         this.defLoThreshold = loThreshold;
@@ -169,7 +169,7 @@ public class BanDatabase {
         this.defKickMessage = kickMessage;
       }
     } catch (SQLException ex) {
-      this.handleSQLException(ex);
+      log.error(ex.getMessage());
     }
   }
 
@@ -201,36 +201,46 @@ public class BanDatabase {
       /*
        * EVIL SIDE EFFECT CODE BEGINS
        */
-      stat.execute("CREATE TABLE IF NOT EXISTS 'bh_" + channel + "_bans'(banId INTEGER PRIMARY KEY AUTOINCREMENT, type, banMask UNIQUE, nick, author, timeCreated, timeModified)");
-      stat.execute("CREATE TABLE IF NOT EXISTS 'bh_" + channel + "_notes'(noteId INTEGER PRIMARY KEY AUTOINCREMENT, banId, timestamp, author, note)");
+      stat.execute("CREATE TABLE IF NOT EXISTS 'bh_" + channel + "_bans'(banId INTEGER PRIMARY KEY AUTOINCREMENT, type, banMask UNIQUE, author, timeSet)");
+      stat.execute("CREATE TABLE IF NOT EXISTS 'bh_" + channel + "_notes'(noteId INTEGER PRIMARY KEY AUTOINCREMENT, banId, timestamp, author, type, note)");
 
-      //Inserting a scraped ban doesn't include time first created, so catch that and update it to be the same as scraped timestamp
-      //also add a new note indicating it was scraped
-      stat.execute("CREATE TRIGGER IF NOT EXISTS 'bh_" + channel + "_scrapedNewBan' AFTER INSERT ON 'bh_" + channel + "_bans' WHEN NEW.timeCreated IS NULL "
-              + "BEGIN UPDATE 'bh_" + channel + "_bans' SET timeCreated=timeModified, nick='' WHERE banMask=NEW.banMask; "
-              + "INSERT INTO 'bh_" + channel + "_notes'(banId,timestamp,author,note) VALUES (NEW.banId,strftime('%s','now'),'Banhammer','A: Scraped from banlist, set by '||NEW.author); "
+      //When a new ban is scraped (type S)
+      stat.execute("CREATE TRIGGER IF NOT EXISTS 'bh_" + channel + "_scrapedNewBan' AFTER INSERT ON 'bh_" + channel + "_bans' FOR EACH ROW WHEN NEW.type='S' BEGIN "
+              + "INSERT INTO 'bh_" + channel + "_notes'(banId,timestamp,author,type,note) VALUES (NEW.banId,NEW.timeSet,'Banhammer','A','Newly found on scraped list, set by '||NEW.author); "
+              + "UPDATE 'bh_" + channel + "_bans' SET type='A' WHERE banId=NEW.banId; "
+              + "END;");
+      
+      //When a ban is set by command (that didn't exist) (type N)
+      stat.execute("CREATE TRIGGER IF NOT EXISTS 'bh_" + channel + "_newBan' AFTER INSERT ON 'bh_" + channel + "_bans' WHEN NEW.type='N' BEGIN "
+              + "INSERT INTO 'bh_" + channel + "_notes'(banId,timestamp,author,type,note) VALUES (NEW.banId,strftime('%s','now'),'Banhammer','A','Ban set by '||NEW.author); "
+              + "UPDATE 'bh_" + channel + "_bans' SET type='A' WHERE banId=NEW.banId; "
               + "END;");
 
-      //Inserting a fresh ban (when timeCreated is present) should log who set it
-      stat.execute("CREATE TRIGGER IF NOT EXISTS 'bh_" + channel + "_newBan' AFTER INSERT ON 'bh_" + channel + "_bans' WHEN NEW.timeCreated IS NOT NULL "
-              + "BEGIN INSERT INTO 'bh_" + channel + "_notes'(banId,timestamp,author,note) VALUES (NEW.banId,strftime('%s','now'),'Banhammer','A: Ban set by '||NEW.author); "
+      //When an existing ban is scraped (type S where OLD.type not A/P/T)
+      stat.execute("CREATE TRIGGER IF NOT EXISTS 'bh_" + channel + "_scrapedOldBan' AFTER UPDATE OF type ON 'bh_" + channel + "_bans' FOR EACH ROW WHEN NEW.type='S' AND OLD.type NOT IN ('A') BEGIN "
+              + "INSERT INTO 'bh_" + channel + "_notes'(banId,timestamp,author,type,note) VALUES (NEW.banId,NEW.timeSet,'Banhammer','A','Found on scraped list, set by '||NEW.author); "
+              + "UPDATE 'bh_" + channel + "_bans' SET type='A' WHERE banId=NEW.banId; "
               + "END;");
 
-      //When a ban is set active (from a non-active type)
-      //can replace AND OLD.type!='A' with AND OLD.type NOT IN ('A','P','T') when we have the extra types
-      stat.execute("CREATE TRIGGER IF NOT EXISTS 'bh_" + channel + "_activateBan' AFTER UPDATE OF type ON 'bh_" + channel + "_bans' WHEN NEW.type='A' AND OLD.type!='A' "
-              + "BEGIN INSERT INTO 'bh_" + channel + "_notes'(banId,timestamp,author,note) VALUES (NEW.banId,NEW.timeModified,'Banhammer','A: Ban re-set by '||NEW.author); "
+      //When a ban is set active (type A where OLD.type not A/S/P/T)
+      stat.execute("CREATE TRIGGER IF NOT EXISTS 'bh_" + channel + "_activateBan' AFTER UPDATE OF type ON 'bh_" + channel + "_bans' WHEN NEW.type='A' AND OLD.type NOT IN ('A', 'N', 'S') BEGIN "
+              + "INSERT INTO 'bh_" + channel + "_notes'(banId,timestamp,author,type,note) VALUES (NEW.banId,NEW.timeSet,'Banhammer','A','Ban re-set by '||NEW.author); "
               + "END;");
 
-      //When a ban is set inactive (always due to rotating out)
-      stat.execute("CREATE TRIGGER IF NOT EXISTS 'bh_" + channel + "_inactivateBan' AFTER UPDATE OF type ON 'bh_" + channel + "_bans' WHEN NEW.type='I' "
-              + "BEGIN INSERT INTO 'bh_" + channel + "_notes'(banId,timestamp,author,note) VALUES (NEW.banId,NEW.timeModified,'Banhammer','I: Rotated out of list'); "
+      //When a ban is set inactive (type I)
+      stat.execute("CREATE TRIGGER IF NOT EXISTS 'bh_" + channel + "_inactivateBan' AFTER UPDATE OF type ON 'bh_" + channel + "_bans' WHEN NEW.type='I' BEGIN "
+              + "INSERT INTO 'bh_" + channel + "_notes'(banId,timestamp,author,type,note) VALUES (NEW.banId,NEW.timeSet,'Banhammer','I','Rotated out of list'); "
               + "END;");
 
-      //When a ban is unset due to missing from scrape
-      stat.execute("CREATE TRIGGER IF NOT EXISTS 'bh_" + channel + "_missingBan' AFTER UPDATE OF type ON 'bh_" + channel + "_bans' WHEN NEW.type='M' "
-              + "BEGIN INSERT INTO 'bh_" + channel + "_notes'(banId,timestamp,author,note) VALUES (NEW.banId,NEW.timeModified,'Banhammer','U: Missing from scraped list'); "
+      //When a ban is unset due to missing from scrape (type M)
+      stat.execute("CREATE TRIGGER IF NOT EXISTS 'bh_" + channel + "_missingBan' AFTER UPDATE OF type ON 'bh_" + channel + "_bans' FOR EACH ROW WHEN NEW.type='M' BEGIN "
+              + "INSERT INTO 'bh_" + channel + "_notes'(banId,timestamp,author,type,note) VALUES (NEW.banId,NEW.timeSet,'Banhammer','U','Missing from scraped list'); "
               + "UPDATE 'bh_" + channel + "_bans' SET type='U' WHERE banId=NEW.banId; "
+              + "END;");
+
+      //When ban is unset by command (type U where OLD.type not M)
+      stat.execute("CREATE TRIGGER IF NOT EXISTS 'bh_" + channel + "_unsetBan' AFTER UPDATE OF type ON 'bh_" + channel + "_bans' WHEN NEW.type='U' AND OLD.type!='M' BEGIN "
+              + "INSERT INTO 'bh_" + channel + "_notes'(banId,timestamp,author,type,note) VALUES (NEW.banId,NEW.timeSet,'Banhammer','U','Ban unset by '||NEW.author); "
               + "END;");
       /*
        * EVIL SIDE EFFECT CODE ENDS
@@ -254,7 +264,7 @@ public class BanDatabase {
         return this.getChannelOptions(channel); //recursion ftw
       }
     } catch (SQLException ex) {
-      this.handleSQLException(ex);
+      log.error(ex.getMessage());
     }
     //if all fails, return the magic defaults
     return new ChannelOptions(defLoThreshold, defHiThreshold, defKickMessage);
@@ -269,15 +279,14 @@ public class BanDatabase {
    */
   public void upsertScrapedBans(String channel, List<ScrapedBan> scrapedBans) {
     try {
-      db.setAutoCommit(false);
       log.debug(channel + " CREATING TEMPORARY BANLIST TABLE...");
       //create temp table for scraped banlist, include type column all 'A'
       Statement stat = db.createStatement();
       stat.execute("DROP TABLE IF EXISTS 'bh_" + channel + "_temp';");
-      stat.execute("CREATE TABLE 'bh_" + channel + "_temp'(banmask,author,timeModified);");
-      db.commit();
+      stat.execute("CREATE TABLE 'bh_" + channel + "_temp'(banmask,author,timeSet);");
 
-      PreparedStatement insScrapeTemp = db.prepareStatement("INSERT INTO 'bh_" + channel + "_temp'(banmask,author,timeModified) VALUES (?,?,?);");
+      PreparedStatement insScrapeTemp = db.prepareStatement("INSERT INTO 'bh_" + channel + "_temp'(banmask,author,timeSet) VALUES (?,?,?);");
+      db.setAutoCommit(false);
       for (ScrapedBan ban : scrapedBans) {
         insScrapeTemp.setString(1, ban.banmask);
         insScrapeTemp.setString(2, ban.author);
@@ -285,27 +294,24 @@ public class BanDatabase {
         insScrapeTemp.execute();
       }
       db.commit();
+      db.setAutoCommit(true);
       insScrapeTemp.close();
       log.debug(channel + " DONE temp banlist table");
 
       log.debug(channel + " MERGE BANLIST TO DATABASE, MARK BANS ACTIVE...");
-      stat.execute("INSERT OR IGNORE INTO 'bh_" + channel + "_bans'(type,banmask,author,timeModified) SELECT 'A',* FROM 'bh_" + channel + "_temp';");
-      stat.execute("UPDATE 'bh_" + channel + "_bans' SET type='A' WHERE banmask IN (SELECT banmask FROM 'bh_" + channel + "_temp');");
-      db.commit();
+      stat.execute("UPDATE 'bh_" + channel + "_bans' SET type='S' WHERE banmask IN (SELECT banmask FROM 'bh_" + channel + "_temp') AND type NOT IN ('A');");
+      stat.execute("INSERT OR IGNORE INTO 'bh_" + channel + "_bans'(type,banmask,author,timeSet) SELECT 'S',* FROM 'bh_" + channel + "_temp';");
 
       log.debug(channel + " MERGE DATABASE TO BANLIST, MARK MISSING BANS...");
       stat.execute("UPDATE 'bh_" + channel + "_bans' SET type='M' WHERE banmask NOT IN (SELECT banmask FROM 'bh_" + channel + "_temp') AND type NOT IN ('I', 'U');");
-      db.commit();
 
-      log.debug(channel + " DROP TEMPORARY TABLE...");
-      stat.execute("DROP TABLE 'bh_" + channel + "_temp';");
-      db.commit();
-
+      //log.debug(channel + " DROP SCRAPING TABLE...");
+      //stat.execute("DROP TABLE 'bh_" + channel + "_temp';");
+      
       stat.close();
-      db.setAutoCommit(true);
       log.debug(channel + " SCRAPE DONE");
     } catch (SQLException ex) {
-      this.handleSQLException(ex);
+      log.error(ex.getMessage());
     } finally {
       try {
         db.setAutoCommit(true);
@@ -321,21 +327,19 @@ public class BanDatabase {
    * @param channel the channel the ban is in
    * @param banmask the ban
    * @param author nick of who set the ban
-   * @param nick nick of who the ban applies to
    */
-  public void upsertNewBan(String channel, String banmask, String author, String nick) {
+  public void upsertNewBan(String channel, String banmask, String author) {
     /*
      * INSERT OR IGNORE INTO
-     * bh_#CHANNEL_BANS(type,banmask,usermask,author,timeCreated,timeModified)
+     * bh_#CHANNEL_BANS(type,banmask,author,timeSet)
      * VALUES ('A',banmask,nick,author,<now>,<now>)
      * UPDATE bh_#channel_bans SET type='A',author=author,
      */
     try {
-      PreparedStatement insPrep = db.prepareStatement("INSERT OR IGNORE INTO 'bh_" + channel + "_bans'(type,banmask,author,nick,timeCreated,timeModified) VALUES ('A',?,?,?,strftime('%s','now'),strftime('%s','now'));");
-      PreparedStatement updPrep = db.prepareStatement("UPDATE 'bh_" + channel + "_bans' SET type='A',author=?,timeModified=strftime('%s','now') WHERE banmask=?;");
+      PreparedStatement updPrep = db.prepareStatement("UPDATE 'bh_" + channel + "_bans' SET type='N',author=?,timeSet=strftime('%s','now') WHERE banmask=?;");
+      PreparedStatement insPrep = db.prepareStatement("INSERT OR IGNORE INTO 'bh_" + channel + "_bans'(type,banmask,author,timeSet) VALUES ('N',?,?,strftime('%s','now'));");
       insPrep.setString(1, banmask);
       insPrep.setString(2, author);
-      insPrep.setString(3, nick);
       insPrep.executeUpdate();
       updPrep.setString(1, author);
       updPrep.setString(2, banmask);
@@ -344,7 +348,7 @@ public class BanDatabase {
       updPrep.close();
       log.info(channel + " INSERTED NEW BAN ON " + banmask + " BY " + author);
     } catch (SQLException ex) {
-      this.handleSQLException(ex);
+      log.error(ex.getMessage());
     }
   }
 
@@ -364,7 +368,7 @@ public class BanDatabase {
       prep.close();
       log.info(channel + " UPDATED BAN UNSET ON " + banmask + " BY " + author);
     } catch (SQLException ex) {
-      this.handleSQLException(ex);
+      log.error(ex.getMessage());
     }
   }
 
@@ -383,7 +387,7 @@ public class BanDatabase {
       rs.next();
       count = rs.getInt(1);
     } catch (SQLException ex) {
-      this.handleSQLException(ex);
+      log.error(ex.getMessage());
       count = -1;
     }
     return count;
@@ -404,17 +408,17 @@ public class BanDatabase {
       rs.next();
       count = rs.getInt(1);
     } catch (SQLException ex) {
-      this.handleSQLException(ex);
+      log.error(ex.getMessage());
       count = -1;
     }
     return count;
   }
-  
+
   /**
    * Returns a List of banmasks marked Inactive, for comparing against JOINs.
-   * 
+   *
    * @param channel the channel to fetch from
-   * 
+   *
    * @return List of banmask strings, possibly empty
    */
   public List<String> getInactiveBanmasks(String channel) {
@@ -428,7 +432,7 @@ public class BanDatabase {
       rs.close();
       stat.close();
     } catch (SQLException ex) {
-      this.handleSQLException(ex);
+      log.error(ex.getMessage());
     }
     log.debug(channel + " fetched list of inactive bans");
     return bans;
@@ -440,7 +444,7 @@ public class BanDatabase {
    * return BanEntry
    *
    * insert new note - INSERT INTO notes(banid,author,note)
-   * 
+   *
    * there's more i'm sure...
    */
 }
