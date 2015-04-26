@@ -349,7 +349,7 @@ public class BanDatabase {
 
   /**
    * Update a new -b in channel.
-   * 
+   *
    * @param channel the channel the ban was unset in
    * @param banmask the ban
    * @param author nick of who unset it
@@ -365,6 +365,48 @@ public class BanDatabase {
     } catch (SQLException ex) {
       this.handleSQLException(ex);
     }
+  }
+
+  /**
+   * Return the number of bans marked Active in the database.
+   *
+   * @param channel the channel to query
+   *
+   * @return
+   */
+  public int countActiveBans(String channel) {
+    int count;
+    try {
+      Statement stat = db.createStatement();
+      ResultSet rs = stat.executeQuery("SELECT COUNT() FROM 'bh_" + channel + "_bans' WHERE type IN ('A');");
+      rs.next();
+      count = rs.getInt(1);
+    } catch (SQLException ex) {
+      this.handleSQLException(ex);
+      count = -1;
+    }
+    return count;
+  }
+
+  /**
+   * Return the number of bans marked Inactive in the database.
+   *
+   * @param channel the channel to query
+   *
+   * @return
+   */
+  public int countInactiveBans(String channel) {
+    int count;
+    try {
+      Statement stat = db.createStatement();
+      ResultSet rs = stat.executeQuery("SELECT COUNT() FROM 'bh_" + channel + "_bans' WHERE type IN ('I');");
+      rs.next();
+      count = rs.getInt(1);
+    } catch (SQLException ex) {
+      this.handleSQLException(ex);
+      count = -1;
+    }
+    return count;
   }
 
   /*
