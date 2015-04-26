@@ -55,6 +55,8 @@ public class BanChannel implements Observer {
   private final String channel;
   private final ChannelOptions ops;
   private final List<String> inactiveBanmasks;
+  private int numActive;
+  private int numInactive;
 
   /**
    * Initialize and perform sanity checks.
@@ -72,12 +74,17 @@ public class BanChannel implements Observer {
     this.inactiveBanmasks = new ArrayList();
     this.ops = db.getChannelOptions(channel); //creates us if we don't exist
     log.info(channel + " DONE: L=" + ops.loThreshold + " H=" + ops.hiThreshold + " K=" + ops.kickMessage);
-    bot.sendMessage(channel, Colors.DARK_GREEN + "BANHAMMER: " + Colors.NORMAL
-            + "Initialized with thresholds " + Colors.OLIVE + ops.loThreshold + Colors.NORMAL
-            + "/" + Colors.BROWN + ops.hiThreshold + Colors.NORMAL + ", scraping list...");
+    /*
+     * bot.sendMessage(channel, Colors.DARK_GREEN + "BANHAMMER: " +
+     * Colors.NORMAL
+     * + "Initialized with thresholds " + Colors.OLIVE + ops.loThreshold +
+     * Colors.NORMAL
+     * + "/" + Colors.BROWN + ops.hiThreshold + Colors.NORMAL + ", scraping list...");
+     */
+    bot.sendMessage(channel, Colors.OLIVE + "BANHAMMER: " + Colors.NORMAL + "Standby...");
     this.requestBanlist();
   }
-  
+
   /**
    * Create a BanlistResponse and send request to HikariBot for server.
    */
@@ -107,22 +114,31 @@ public class BanChannel implements Observer {
    */
   private void scrapeBanlist(List<ScrapedBan> scrapedBans) {
     int numScraped = scrapedBans.size();
-    int numActive = 0;
-    int numInactive = 0;
-    
+
     log.debug(channel + " SCRAPED " + numScraped + " BANS...");
     db.upsertScrapedBans(channel, scrapedBans);
-    
-    //get count of active bans, inactive bans
-    //if count of active exceeds hithreshold
-    //--get error
-    //--run rotation for that many bans (mark to unset)
-    
-    //apply -b
-    //apply +b
-    
+
+    numActive = db.countActiveBans(channel);
+    numInactive = db.countInactiveBans(channel);
+
     //report status scrape finished
-    //bot.sendMessage(channel, Colors.DARK_GREEN + "BANHAMMER: " + Colors.NORMAL);
+    String status = Colors.DARK_GREEN + "BANHAMMER: " + Colors.NORMAL + "Initialized with ";
+    if (numActive > this.ops.hiThreshold) {
+      status += Colors.OLIVE + this.ops.loThreshold + Colors.NORMAL + "/" + Colors.BROWN + this.ops.hiThreshold + Colors.NORMAL + "/" + Colors.RED + "[" + numActive + "] " + Colors.NORMAL;
+    } else if (numActive > this.ops.loThreshold) {
+      status += Colors.OLIVE + this.ops.loThreshold + Colors.NORMAL + "/" + Colors.YELLOW + "[" + numActive + "]" + Colors.NORMAL + "/" + Colors.BROWN + this.ops.hiThreshold + " " + Colors.NORMAL;
+    } else {
+      status += Colors.GREEN + "[" + numActive + "]" + Colors.NORMAL + "/" + Colors.OLIVE + this.ops.loThreshold + Colors.NORMAL + "/" + Colors.BROWN + this.ops.hiThreshold + " " + Colors.NORMAL;
+    }
+    status += "bans";
+    if (numInactive > 0) {
+      status += " and tracking " + Colors.OLIVE + numInactive + Colors.NORMAL + " inactive bans";
+    }
+    bot.sendMessage(channel, status);
+
+    if (numActive > this.ops.hiThreshold) {
+      //do rotation until it would be below
+    }
   }
 
   /**
@@ -131,12 +147,12 @@ public class BanChannel implements Observer {
    * @param usermask of the user that just joined
    */
   public void onJoin(String usermask) {
-    
+
   }
 
   /**
    * Passed from HikariBot.onSetChannelBan() by Banhammer, updates database.
-   * 
+   *
    * @param banmask the ban set
    * @param author nick of who set it
    */
@@ -148,7 +164,7 @@ public class BanChannel implements Observer {
 
   /**
    * Passed from HikariBot.onRemoveChannelBan() by Banhammer, updates database.
-   * 
+   *
    * @param banmask the ban unset
    * @param author nick of who unset it
    */
