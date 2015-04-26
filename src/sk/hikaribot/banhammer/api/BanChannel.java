@@ -134,14 +134,27 @@ public class BanChannel implements Observer {
     
   }
 
-  public void onBan(String banmask, String userWhoSet) {
-    log.debug("MODE " + channel + " +b " + banmask + " BY " + userWhoSet);
-    //db.upsertNewBan()
+  /**
+   * Passed from HikariBot.onSetChannelBan() by Banhammer, updates database.
+   * 
+   * @param banmask the ban set
+   * @param author nick of who set it
+   */
+  public void onBan(String banmask, String author) {
+    log.debug("MODE " + channel + " +b " + banmask + " BY " + author);
+    //get userlist from HikariBot, try and find a user that matches the banmask
+    db.upsertNewBan(channel, banmask, author, ":NYI:");
   }
 
-  public void onUnban(String banmask, String userWhoSet) {
-    log.debug("MODE " + channel + " -b " + banmask + " BY " + userWhoSet);
-    //db.unsetBan()
+  /**
+   * Passed from HikariBot.onRemoveChannelBan() by Banhammer, updates database.
+   * 
+   * @param banmask the ban unset
+   * @param author nick of who unset it
+   */
+  public void onUnban(String banmask, String author) {
+    log.debug("MODE " + channel + " -b " + banmask + " BY " + author);
+    db.unsetBan(channel, banmask, author);
   }
 
   /*
