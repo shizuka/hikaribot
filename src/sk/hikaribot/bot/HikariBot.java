@@ -341,7 +341,7 @@ public class HikariBot extends PircBot {
    */
   @Override
   protected void onSetChannelBan(String channel, String sourceNick, String sourceLogin, String sourceHostname, String hostmask) {
-    bh.onBan(channel, hostmask, sourceNick + "!" + sourceLogin + "@" + sourceHostname);
+    bh.onBan(channel, hostmask, sourceNick);
   }
 
   /**
@@ -349,7 +349,7 @@ public class HikariBot extends PircBot {
    */
   @Override
   protected void onRemoveChannelBan(String channel, String sourceNick, String sourceLogin, String sourceHostname, String hostmask) {
-    bh.onUnban(channel, hostmask, sourceNick + "!" + sourceLogin + "@" + sourceHostname);
+    bh.onUnban(channel, hostmask, sourceNick);
   }
 
   /**
