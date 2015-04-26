@@ -32,6 +32,7 @@
 package sk.hikaribot.banhammer.api;
 
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import org.apache.logging.log4j.LogManager;
@@ -293,7 +294,7 @@ public class BanDatabase {
       db.commit();
 
       log.debug(channel + " MERGE DATABASE TO BANLIST, MARK MISSING BANS...");
-      stat.execute("UPDATE 'bh_" + channel + "_bans' SET type='M' WHERE banmask NOT IN (SELECT banmask FROM 'bh_" + channel + "_temp');");
+      stat.execute("UPDATE 'bh_" + channel + "_bans' SET type='M' WHERE banmask NOT IN (SELECT banmask FROM 'bh_" + channel + "_temp') AND type NOT IN ('I', 'U');");
       db.commit();
 
       log.debug(channel + " DROP TEMPORARY TABLE...");
@@ -408,31 +409,38 @@ public class BanDatabase {
     }
     return count;
   }
+  
+  /**
+   * Returns a List of banmasks marked Inactive, for comparing against JOINs.
+   * 
+   * @param channel the channel to fetch from
+   * 
+   * @return List of banmask strings, possibly empty
+   */
+  public List<String> getInactiveBanmasks(String channel) {
+    List<String> bans = new ArrayList();
+    try {
+      Statement stat = db.createStatement();
+      ResultSet rs = stat.executeQuery("SELECT banmask FROM 'bh_" + channel + "_bans' WHERE type IN ('I');");
+      while (rs.next()) {
+        bans.add(rs.getString("banmask"));
+      }
+      rs.close();
+      stat.close();
+    } catch (SQLException ex) {
+      this.handleSQLException(ex);
+    }
+    log.debug(channel + " fetched list of inactive bans");
+    return bans;
+  }
 
   /*
-   * get list of inactive banmasks
-   * SELECT banId, banMask FROM bans WHERE type='I'
-   * HashMap int banId, String banmask
-   *
-   * get list of active banmasks -
-   * SELECT banId, banMask FROM bans WHERE type IN ('A', 'P', 'T')
-   * HashMap int banId, String banmask
-   *
-   * get list of all banmasks - SELECT banId, banMask FROM bans
-   * HashMap int banId, String banmask
-   *
    * get BanEntry for ban by id - SELECT * FROM bans WHERE banId=id
    * populate with notes - SELECT * FROM notes WHERE banId=id
    * return BanEntry
    *
-   * insert new active ban - INSERT INTO bans(banmask,usermask,author)
-   *
-   * insert new scraped ban - INSERT INTO bans(banmask,author,timecreated)
-   *
    * insert new note - INSERT INTO notes(banid,author,note)
-   *
-   * update ban to unset - UPDATE bans SET type WHERE banId=id
-   *
+   * 
    * there's more i'm sure...
    */
 }

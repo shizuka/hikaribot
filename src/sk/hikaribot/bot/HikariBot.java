@@ -353,6 +353,17 @@ public class HikariBot extends PircBot {
   }
 
   /**
+   * Called when user (possibly us) joins a channel
+   */
+  @Override
+  protected void onJoin(String channel, String sender, String login, String hostname) {
+    if (sender.equals(this.getNick())) {
+      return;
+    }
+    bh.onJoin(channel, sender + "!" + login + "@" + hostname);
+  }
+
+  /**
    * Requests a WHOIS for a nick.
    *
    * @param target nick to WHOIS
