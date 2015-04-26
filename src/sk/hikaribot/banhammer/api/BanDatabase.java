@@ -264,33 +264,53 @@ public class BanDatabase {
 
   /**
    * Merge the scraped list of +b from channel with the database, inserting new
-   * records or marking old records as active.
-   * 
-   * FIRST PASS for banlist synchronization.
+   * records or marking old records as active, marking missing bans as Unset.
    *
    * @param channel the channel to modify
    * @param scrapedBans list of ScrapedBans: banmask, author, timestamp
    */
   public void upsertScrapedBans(String channel, List<ScrapedBan> scrapedBans) {
     try {
-      db.setAutoCommit(false); //could replace with BEGIN TRANSACTION
-      PreparedStatement insertStat = db.prepareStatement("INSERT OR IGNORE INTO 'bh_" + channel + "_bans'(type,banmask,author,timeModified) VALUES ('A',?,?,?);");
-      PreparedStatement updateStat = db.prepareStatement("UPDATE 'bh_" + channel + "_bans' SET type='A',author=?,timeModified=? WHERE banmask=?;");
+      db.setAutoCommit(false);
+
+      //PreparedStatement insertStat = db.prepareStatement("INSERT OR IGNORE INTO 'bh_" + channel + "_bans'(type,banmask,author,timeModified) VALUES ('A',?,?,?);");
+      //PreparedStatement updateStat = db.prepareStatement("UPDATE 'bh_" + channel + "_bans' SET type='A',author=?,timeModified=? WHERE banmask=?;");
+      log.debug(channel + " CREATING TEMPORARY BANLIST TABLE...");
+      //create temp table for scraped banlist, include type column all 'A'
+      Statement stat = db.createStatement();
+      stat.execute("DROP TABLE IF EXISTS 'bh_" + channel + "_temp';");
+      stat.execute("CREATE TABLE 'bh_" + channel + "_temp'(banmask,author,timeModified);");
+      db.commit();
+
+      PreparedStatement insScrapeTemp = db.prepareStatement("INSERT INTO 'bh_" + channel + "_temp'(banmask,author,timeModified) VALUES (?,?,?);");
       for (ScrapedBan ban : scrapedBans) {
-        insertStat.setString(1, ban.banmask);
-        insertStat.setString(2, ban.author);
-        insertStat.setString(3, ban.timestamp);
-        insertStat.execute();
-        updateStat.setString(1, ban.author);
-        updateStat.setString(2, ban.timestamp);
-        updateStat.setString(3, ban.banmask);
-        updateStat.execute();
+        insScrapeTemp.setString(1, ban.banmask);
+        insScrapeTemp.setString(2, ban.author);
+        insScrapeTemp.setString(3, ban.timestamp);
+        insScrapeTemp.execute();
       }
-      db.commit(); //could replace with COMMIT TRANSACTION
+      db.commit();
+      insScrapeTemp.close();
+      log.debug(channel + " DONE temp banlist table");
+
+      log.debug(channel + " MERGE BANLIST TO DATABASE, MARK BANS ACTIVE...");
+      stat.execute("INSERT OR IGNORE INTO 'bh_" + channel + "_bans'(type,banmask,author,timeModified) SELECT 'A',* FROM 'bh_" + channel + "_temp';");
+      stat.execute("UPDATE 'bh_" + channel + "_bans' SET type='A' WHERE banmask IN (SELECT banmask FROM 'bh_" + channel + "_temp');");
+      db.commit();
+
+      log.debug(channel + " MERGE DATABASE TO BANLIST, MARK MISSING BANS UNSET...");
+      stat.execute("UPDATE 'bh_" + channel + "_bans' SET type='U' WHERE banmask NOT IN (SELECT banmask FROM 'bh_" + channel + "_temp');");
+      db.commit();
+
+      log.debug(channel + " DROP TEMPORARY TABLE...");
+      stat.execute("DROP TABLE 'bh_" + channel + "_temp';");
+      db.commit();
+      stat.close();
       db.setAutoCommit(true); //this too
+      log.debug(channel + " SCRAPE DONE");
     } catch (SQLException ex) {
       this.handleSQLException(ex);
-    } finally { //could drop this if we replace the setAutoCommit's
+    } finally {
       try {
         db.setAutoCommit(true);
       } catch (SQLException ex) {
@@ -298,7 +318,7 @@ public class BanDatabase {
       }
     }
   }
-  
+
   /**
    * Insert or update a new +b in channel.
    *

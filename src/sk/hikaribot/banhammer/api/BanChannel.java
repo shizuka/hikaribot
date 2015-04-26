@@ -31,7 +31,7 @@
  */
 package sk.hikaribot.banhammer.api;
 
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
@@ -54,7 +54,7 @@ public class BanChannel implements Observer {
   private final BanDatabase db;
   private final String channel;
   private final ChannelOptions ops;
-  private final HashMap<String, Integer> inactiveBans;  //<banmask, banId>
+  private final List<String> inactiveBanmasks;
 
   /**
    * Initialize and perform sanity checks.
@@ -69,7 +69,7 @@ public class BanChannel implements Observer {
     this.bh = bot.getBanhammer();
     this.db = bh.getDatabase();
     this.channel = channel;
-    this.inactiveBans = new HashMap<>();
+    this.inactiveBanmasks = new ArrayList();
     this.ops = db.getChannelOptions(channel); //creates us if we don't exist
     log.info(channel + " DONE: L=" + ops.loThreshold + " H=" + ops.hiThreshold + " K=" + ops.kickMessage);
     bot.sendMessage(channel, Colors.DARK_GREEN + "BANHAMMER: " + Colors.NORMAL
@@ -107,23 +107,13 @@ public class BanChannel implements Observer {
    */
   private void scrapeBanlist(List<ScrapedBan> scrapedBans) {
     int numScraped = scrapedBans.size();
-    log.debug(channel + " SCRAPED " + numScraped + " BANS");
-    /*
-     * FIRST PASS
-     * Insert or ignore new bans into the DB
-     * --TRIGGERs bh_#CHANNEL_scrapedNewBan because no timeCreated field
-     * Update existing non-active bans to be Active
-     * --TRIGGERs bh_#CHANNEL_activateBan because type moved from anything to A
-     */
-    log.debug(channel + " FIRST PASS MERGE BANLIST WITH DB...");
-    db.upsertScrapedBans(this.channel, scrapedBans);
-    log.debug(channel + " DONE");
+    int numActive = 0;
+    int numInactive = 0;
     
-    //foreach (meant to be +b) in database
-    //--unset if not in scrapelist
-    //--mark to set if type permanent
-
+    log.debug(channel + " SCRAPED " + numScraped + " BANS...");
+    db.upsertScrapedBans(channel, scrapedBans);
     
+    //get count of active bans, inactive bans
     //if count of active exceeds hithreshold
     //--get error
     //--run rotation for that many bans (mark to unset)
@@ -132,13 +122,13 @@ public class BanChannel implements Observer {
     //apply +b
     
     //report status scrape finished
-    
+    //bot.sendMessage(channel, Colors.DARK_GREEN + "BANHAMMER: " + Colors.NORMAL);
   }
 
   /**
    * Incoming JOIN, check against the Inactive ban list.
    *
-   * @param usermask
+   * @param usermask of the user that just joined
    */
   public void onJoin(String usermask) {
     
