@@ -79,7 +79,8 @@ public class BanChannel implements Observer {
      * Colors.NORMAL
      * + "Initialized with thresholds " + Colors.OLIVE + ops.loThreshold +
      * Colors.NORMAL
-     * + "/" + Colors.BROWN + ops.hiThreshold + Colors.NORMAL + ", scraping list...");
+     * + "/" + Colors.BROWN + ops.hiThreshold + Colors.NORMAL + ", scraping
+     * list...");
      */
     bot.sendMessage(channel, Colors.OLIVE + "BANHAMMER: " + Colors.NORMAL + "Standby...");
     this.requestBanlist();
@@ -118,27 +119,25 @@ public class BanChannel implements Observer {
     log.debug(channel + " SCRAPED " + numScraped + " BANS...");
     db.upsertScrapedBans(channel, scrapedBans);
 
-    numActive = db.countActiveBans(channel);
-    numInactive = db.countInactiveBans(channel);
+    int active = db.countActiveBans(channel);
+    int inactive = db.countInactiveBans(channel);
 
     //report status scrape finished
     String status = Colors.DARK_GREEN + "BANHAMMER: " + Colors.NORMAL + "Initialized with ";
-    if (numActive > this.ops.hiThreshold) {
-      status += Colors.OLIVE + this.ops.loThreshold + Colors.NORMAL + "/" + Colors.BROWN + this.ops.hiThreshold + Colors.NORMAL + "/" + Colors.RED + "[" + numActive + "] " + Colors.NORMAL;
-    } else if (numActive > this.ops.loThreshold) {
-      status += Colors.OLIVE + this.ops.loThreshold + Colors.NORMAL + "/" + Colors.YELLOW + "[" + numActive + "]" + Colors.NORMAL + "/" + Colors.BROWN + this.ops.hiThreshold + " " + Colors.NORMAL;
+    if (active > this.ops.hiThreshold) {
+      status += Colors.OLIVE + this.ops.loThreshold + Colors.NORMAL + "/" + Colors.BROWN + this.ops.hiThreshold + Colors.NORMAL + "/" + Colors.RED + "[" + active + "] " + Colors.NORMAL;
+    } else if (active > this.ops.loThreshold) {
+      status += Colors.OLIVE + this.ops.loThreshold + Colors.NORMAL + "/" + Colors.YELLOW + "[" + active + "]" + Colors.NORMAL + "/" + Colors.BROWN + this.ops.hiThreshold + " " + Colors.NORMAL;
     } else {
-      status += Colors.GREEN + "[" + numActive + "]" + Colors.NORMAL + "/" + Colors.OLIVE + this.ops.loThreshold + Colors.NORMAL + "/" + Colors.BROWN + this.ops.hiThreshold + " " + Colors.NORMAL;
+      status += Colors.GREEN + "[" + active + "]" + Colors.NORMAL + "/" + Colors.OLIVE + this.ops.loThreshold + Colors.NORMAL + "/" + Colors.BROWN + this.ops.hiThreshold + " " + Colors.NORMAL;
     }
     status += "bans";
-    if (numInactive > 0) {
-      status += " and tracking " + Colors.OLIVE + numInactive + Colors.NORMAL + " inactive bans";
+    if (inactive > 0) {
+      status += " and tracking " + Colors.OLIVE + inactive + Colors.NORMAL + " inactive bans";
     }
     bot.sendMessage(channel, status);
-
-    if (numActive > this.ops.hiThreshold) {
-      //do rotation until it would be below
-    }
+    this.setNumActive(active);
+    this.setNumInactive(inactive);
   }
 
   /**
@@ -158,8 +157,8 @@ public class BanChannel implements Observer {
    */
   public void onBan(String banmask, String author) {
     log.debug("MODE " + channel + " +b " + banmask + " BY " + author);
-    //get userlist from HikariBot, try and find a user that matches the banmask
     db.upsertNewBan(channel, banmask, author, ":NYI:");
+    this.setNumActive(numActive++);
   }
 
   /**
@@ -171,6 +170,19 @@ public class BanChannel implements Observer {
   public void onUnban(String banmask, String author) {
     log.debug("MODE " + channel + " -b " + banmask + " BY " + author);
     db.unsetBan(channel, banmask, author);
+    this.setNumActive(numActive--);
+  }
+
+  private void setNumActive(int num) {
+    this.numActive = num;
+    if (this.numActive > this.ops.hiThreshold) {
+      //call rotation until below
+      log.warn(channel + " ACTIVE BANS EXCEEDS HI THRESHOLD!");
+    }
+  }
+
+  private void setNumInactive(int num) {
+    this.numInactive = num;
   }
 
   /*
