@@ -31,10 +31,7 @@
  */
 package sk.hikaribot.banhammer.api;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Observable;
-import java.util.Observer;
+import java.util.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jibble.pircbot.Colors;
@@ -54,7 +51,8 @@ public class BanChannel implements Observer {
   private final BanDatabase db;
   private final String channel;
   private final ChannelOptions ops;
-  private final List<String> inactiveBanmasks;
+  private List<String> inactiveBanmasks;
+  private final HashMap<String, String> regexableInactives; //inactiveBanmasks, but able to regex
   private int numActive;
   private int numInactive;
 
@@ -72,6 +70,7 @@ public class BanChannel implements Observer {
     this.db = bh.getDatabase();
     this.channel = channel;
     this.inactiveBanmasks = new ArrayList();
+    this.regexableInactives = new HashMap();
     this.ops = db.getChannelOptions(channel); //creates us if we don't exist
     log.info(channel + " DONE: L=" + ops.loThreshold + " H=" + ops.hiThreshold + " K=" + ops.kickMessage);
     /*
@@ -136,6 +135,7 @@ public class BanChannel implements Observer {
       status += " and tracking " + Colors.OLIVE + inactive + Colors.NORMAL + " inactive bans";
     }
     bot.sendMessage(channel, status);
+    this.updateInactiveBanmasks(db.getInactiveBanmasks(channel));
     this.setNumActive(active);
     this.setNumInactive(inactive);
   }
@@ -146,7 +146,13 @@ public class BanChannel implements Observer {
    * @param usermask of the user that just joined
    */
   public void onJoin(String usermask) {
-
+    for (String rxmask : this.regexableInactives.keySet()) {
+      if (usermask.matches(rxmask)) {
+        log.warn(channel + " FOUND INACTIVE JOIN: " + usermask + " MATCHES BAN " + this.regexableInactives.get(rxmask));
+        //proceed to re-ban and kick
+        //TODO have this called for userlist on bot join too
+      }
+    }
   }
 
   /**
@@ -183,6 +189,17 @@ public class BanChannel implements Observer {
 
   private void setNumInactive(int num) {
     this.numInactive = num;
+  }
+  
+  private void updateInactiveBanmasks(List<String> ib) {
+    this.inactiveBanmasks = ib;
+    for (String mask : ib) {
+      String regexable = mask.replace(".", "\\.");
+      regexable = regexable.replace("*", ".*");
+      log.trace(regexable);
+      this.regexableInactives.put(regexable, mask);
+    }
+    log.debug(channel + " inactives updated");
   }
 
   /*
