@@ -151,7 +151,11 @@ public class Banhammer {
       this.channels.get(channel).updateChannelOptions();
     }
   }
-
+  
+  public BanChannel get(String channel) {
+    return this.channels.get(channel);
+  }
+  
   public BanDatabase getDatabase() {
     return this.db;
   }

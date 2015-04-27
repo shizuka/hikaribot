@@ -212,6 +212,14 @@ public class BanChannel implements Observer {
             + Colors.NORMAL + ", reloading...");
     this.requestBanlist();
   }
+  
+  public int getNewestBanId() {
+    return db.getNewestBanId(channel);
+  }
+  
+  public void addNote(int banId, String author, String note) {
+    db.addNote(channel, banId, author, note);
+  }
 
   /*
    * TODO: configuration and query ops

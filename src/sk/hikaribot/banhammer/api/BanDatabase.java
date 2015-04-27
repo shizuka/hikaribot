@@ -63,7 +63,7 @@ import sk.hikaribot.bot.HikariBot;
  * noteid PK | banid | timestamp | author | note
  * noteid - to unambiguously grab a note for editing
  * banid - the ban this note applies to, get all notes WHERE banid=X
- * timestamp - when note was created
+ * timestamp - when note was created, now unless specified
  * author - who created the note (nick, or Banhammer for automatic logs)
  * type - [A|I|U|N]
  * --[A]ctivated bans, note indicates why BH activated it
@@ -209,7 +209,7 @@ public class BanDatabase {
               + "INSERT INTO 'bh_" + channel + "_notes'(banId,timestamp,author,type,note) VALUES (NEW.banId,NEW.timeSet,'Banhammer','A','Newly found on scraped list, set by '||NEW.author); "
               + "UPDATE 'bh_" + channel + "_bans' SET type='A' WHERE banId=NEW.banId; "
               + "END;");
-      
+
       //When a ban is set by command (that didn't exist) (type N)
       stat.execute("CREATE TRIGGER IF NOT EXISTS 'bh_" + channel + "_newBan' AFTER INSERT ON 'bh_" + channel + "_bans' WHEN NEW.type='N' BEGIN "
               + "INSERT INTO 'bh_" + channel + "_notes'(banId,timestamp,author,type,note) VALUES (NEW.banId,strftime('%s','now'),'Banhammer','A','Ban set by '||NEW.author); "
@@ -242,6 +242,12 @@ public class BanDatabase {
       stat.execute("CREATE TRIGGER IF NOT EXISTS 'bh_" + channel + "_unsetBan' AFTER UPDATE OF type ON 'bh_" + channel + "_bans' WHEN NEW.type='U' AND OLD.type!='M' BEGIN "
               + "INSERT INTO 'bh_" + channel + "_notes'(banId,timestamp,author,type,note) VALUES (NEW.banId,NEW.timeSet,'Banhammer','U','Ban unset by '||NEW.author); "
               + "END;");
+
+      //The most recently set Active ban
+      stat.execute("CREATE VIEW IF NOT EXISTS 'bh_" + channel + "_newestActive' AS SELECT * FROM 'bh_" + channel + "_bans' WHERE type='A' ORDER BY timeSet DESC LIMIT 1;");
+
+      //The oldest active ban (for rotating out)
+      stat.execute("CREATE VIEW IF NOT EXISTS 'bh_" + channel + "_oldestActive' AS SELECT * FROM 'bh_" + channel + "_bans' WHERE type='A' ORDER BY timeSet ASC LIMIT 1;");
       /*
        * EVIL SIDE EFFECT CODE ENDS
        */
@@ -307,7 +313,6 @@ public class BanDatabase {
 
       //log.debug(channel + " DROP SCRAPING TABLE...");
       //stat.execute("DROP TABLE 'bh_" + channel + "_temp';");
-      
       stat.close();
       log.debug(channel + " SCRAPE DONE");
     } catch (SQLException ex) {
@@ -438,12 +443,37 @@ public class BanDatabase {
     return bans;
   }
 
+  public int getNewestBanId(String channel) {
+    int count = -1;
+    try {
+      Statement stat = db.createStatement();
+      ResultSet rs = stat.executeQuery("SELECT banId FROM 'bh_" + channel + "_newestActive'");
+      if (rs.next()) {
+        count = rs.getInt("banId");
+      }
+      rs.close();
+      stat.close();
+    } catch (SQLException ex) {
+      log.error(ex.getMessage());
+    }
+    return count;
+  }
+
+  public void addNote(String channel, int banId, String author, String note) {
+    try {
+      Statement stat = db.createStatement();
+      note = note.replace("'", "''");
+      stat.execute("INSERT INTO 'bh_" + channel + "_notes'(banId,timestamp,author,type,note) VALUES (" + banId + ",strftime('%s','now'),'" + author + "','N','" + note + "');");
+      stat.close();
+    } catch (SQLException ex) {
+      log.error(ex.getMessage());
+    }
+  }
+
   /*
    * get BanEntry for ban by id - SELECT * FROM bans WHERE banId=id
    * populate with notes - SELECT * FROM notes WHERE banId=id
    * return BanEntry
-   *
-   * insert new note - INSERT INTO notes(banid,author,note)
    *
    * there's more i'm sure...
    */
