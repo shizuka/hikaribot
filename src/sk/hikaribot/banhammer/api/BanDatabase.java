@@ -222,9 +222,10 @@ public class BanDatabase {
               + "UPDATE 'bh_" + channel + "_bans' SET type='A' WHERE banId=NEW.banId; "
               + "END;");
 
-      //When a ban is set active (type A where OLD.type not A/S/P/T)
-      stat.execute("CREATE TRIGGER IF NOT EXISTS 'bh_" + channel + "_activateBan' AFTER UPDATE OF type ON 'bh_" + channel + "_bans' WHEN NEW.type='A' AND OLD.type NOT IN ('A', 'N', 'S') BEGIN "
+      //When a ban is set active (type A/N where OLD.type not A/N/S)
+      stat.execute("CREATE TRIGGER IF NOT EXISTS 'bh_" + channel + "_activateBan' AFTER UPDATE OF type ON 'bh_" + channel + "_bans' WHEN NEW.type IN ('A', 'N') AND OLD.type NOT IN ('A', 'N', 'S') BEGIN "
               + "INSERT INTO 'bh_" + channel + "_notes'(banId,timestamp,author,type,note) VALUES (NEW.banId,NEW.timeSet,'Banhammer','A','Ban re-set by '||NEW.author); "
+              + "UPDATE OR IGNORE 'bh_" + channel + "_bans' SET type='A' WHERE banId=NEW.banId; "
               + "END;");
 
       //When a ban is set inactive (type I)
@@ -232,7 +233,7 @@ public class BanDatabase {
               + "INSERT INTO 'bh_" + channel + "_notes'(banId,timestamp,author,type,note) VALUES (NEW.banId,NEW.timeSet,'Banhammer','I','Rotated out of list'); "
               + "END;");
 
-      //When a ban is unset due to missing from scrape (type M)
+      //When a ban is unset due to missing from scrape (type M set when OLD.type not I/U)
       stat.execute("CREATE TRIGGER IF NOT EXISTS 'bh_" + channel + "_missingBan' AFTER UPDATE OF type ON 'bh_" + channel + "_bans' FOR EACH ROW WHEN NEW.type='M' BEGIN "
               + "INSERT INTO 'bh_" + channel + "_notes'(banId,timestamp,author,type,note) VALUES (NEW.banId,NEW.timeSet,'Banhammer','U','Missing from scraped list'); "
               + "UPDATE 'bh_" + channel + "_bans' SET type='U' WHERE banId=NEW.banId; "
@@ -351,7 +352,7 @@ public class BanDatabase {
       updPrep.executeUpdate();
       insPrep.close();
       updPrep.close();
-      log.info(channel + " INSERTED NEW BAN ON " + banmask + " BY " + author);
+      log.info(channel + " UPSERTED BAN ON " + banmask + " BY " + author);
     } catch (SQLException ex) {
       log.error(ex.getMessage());
     }
