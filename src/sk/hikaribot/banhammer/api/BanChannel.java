@@ -186,9 +186,17 @@ public class BanChannel implements Observer {
       log.warn(channel + " ACTIVE BANS EXCEEDS HI THRESHOLD!");
     }
   }
+  
+  public int getNumActive() {
+    return this.numActive;
+  }
 
   private void setNumInactive(int num) {
     this.numInactive = num;
+  }
+  
+  public int getNumInactive() {
+    return this.numInactive;
   }
 
   private void updateInactiveBanmasks(List<String> ib) {
@@ -219,6 +227,10 @@ public class BanChannel implements Observer {
   
   public void addNote(int banId, String author, String note) {
     db.addNote(channel, banId, author, note);
+  }
+  
+  public ChannelOptions ops() {
+    return this.ops;
   }
 
   /*

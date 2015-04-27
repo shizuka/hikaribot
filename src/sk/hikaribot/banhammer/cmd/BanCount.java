@@ -31,23 +31,22 @@
  */
 package sk.hikaribot.banhammer.cmd;
 
-import java.util.Observable;
-import java.util.Observer;
 import org.jibble.pircbot.Colors;
 import sk.hikaribot.api.Command;
-import sk.hikaribot.api.ModeResponse;
 import sk.hikaribot.api.exception.ImproperArgsException;
+import sk.hikaribot.banhammer.api.BanChannel;
 
 /**
- * Testing command for ModelistResponse handling +b.
+ * Prints status of Banhammer in a channel.
+ * BANHAMMER: Tracking [x]/lo/hi active (and y inactive) bans
  * 
  * @author Shizuka Kamishima
  */
-public class BanCount extends Command implements Observer {
+public class BanCount extends Command {
 
   public BanCount() {
-    this.name = "howManyBans";
-    this.helpInfo = "counts number of bans set in channel - temporary";
+    this.name = "bhstatus";
+    this.helpInfo = "prints status of Banhammer in <channel>, default here";
     this.numArgs = 1;
     this.helpArgs.add("channel");
     this.reqPerm = 0;
@@ -55,25 +54,38 @@ public class BanCount extends Command implements Observer {
   
   @Override
   public void execute(String channel, String sender, String params) throws ImproperArgsException {
-    ModeResponse mr = new ModeResponse(params, "b", channel);
-    mr.addObserver(this);
-    bot.getServerResponder().addObserver(mr);
-    bot.sendRawLine("MODE " + channel + " +b");
-    log.info("HOWMANYBANS IN " + params + " FROM " + sender + " IN " + channel);
+    if (!bot.inChannel(channel)) {
+      bot.sendMessage(channel, Colors.BROWN + "BANHAMMER: " + Colors.NORMAL + "Not in that channel.");
+      return;
+    }
+    BanChannel ch = bot.getBanhammer().get(channel);
+    int numActive = ch.getNumActive();
+    int numInactive = ch.getNumInactive();
+    String fLo = Colors.OLIVE + ch.ops().loThreshold + Colors.NORMAL;
+    String fHi = Colors.BROWN + ch.ops().hiThreshold + Colors.NORMAL;
+    String num = "[" + numActive + "]" + Colors.NORMAL;
+    String prefix = Colors.BLUE + "BANHAMMER: " + Colors.NORMAL + "Tracking ";
+    String midNoIn = " active bans";
+    String midWIn = " active and " + numInactive + " inactive bans";
+    String out = prefix;
+    if (numActive > ch.ops().hiThreshold) {
+      out += fLo + "/" + fHi + "/" + Colors.RED + num;
+    } else if (numActive > ch.ops().loThreshold) {
+      out += fLo + "/" + Colors.YELLOW + num + "/" + fHi;
+    } else {
+      out += Colors.GREEN + num + "/" + fLo + "/" + fHi;
+    }
+    if (numInactive > 0) {
+      out += midWIn;
+    } else {
+      out += midNoIn;
+    }
+    bot.sendMessage(channel, out);
   }
 
   @Override
   public void execute(String channel, String sender) throws ImproperArgsException {
     this.execute(channel, sender, channel);
-  }
-
-  @Override
-  public void update(Observable o, Object arg) {
-    if (arg instanceof ModeResponse) {
-      ModeResponse mr = (ModeResponse) arg;
-      bot.getServerResponder().deleteObserver((Observer) o);
-      bot.sendMessage(mr.getReplyToChannel(), Colors.BLUE + "BANHAMMER: " + Colors.NORMAL + "There are " + Colors.OLIVE + mr.getEntries().size() + Colors.NORMAL + " bans in " + mr.getChannel());
-    }
   }
 
 }
